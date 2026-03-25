@@ -1,4 +1,7 @@
 import { useState, useEffect } from "react";
+import logo1 from "./assets/logo1.png";
+import logo2 from "./assets/logo2.png";
+import header from "./assets/header.png";
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
