@@ -18,27 +18,13 @@ export default function LandingPage() {
         style={{
           ...styles.nav,
           boxShadow: scrolled
-            ? "0 1px 4px rgba(0,0,0,0.1)"
+            ? "0 1px 6px rgba(0,0,0,0.12)"
             : "0 1px 0 #e8e8e8",
         }}
       >
         <div style={styles.navInner}>
           <div style={styles.logoWrap}>
-            <svg width="32" height="32" viewBox="0 0 100 100" fill="none">
-              <rect width="100" height="100" rx="4" fill="#ED1B2F" />
-              <text
-                x="50"
-                y="68"
-                textAnchor="middle"
-                fill="white"
-                fontSize="52"
-                fontWeight="700"
-                fontFamily="Georgia, serif"
-              >
-                M
-              </text>
-            </svg>
-            <span style={styles.logoText}>McGill</span>
+            <img src={logo1} alt="McGill logo" style={styles.logoImg} />
           </div>
 
           <div style={styles.profileIcon}>
@@ -59,26 +45,24 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      <section style={styles.hero}>
-        <img
-          src="https://www.mcgill.ca/about/files/about/mcgill_campus.jpg"
-          alt="McGill Campus"
-          style={styles.heroImg}
-          onError={(e) => {
-            const img = e.currentTarget;
-            img.style.display = "none";
-            if (img.parentElement) {
-              img.parentElement.style.background = "#2c3e50";
-            }
-          }}
-        />
-        <div style={styles.heroOverlay} />
-        <div style={styles.heroBody}>
-          <h1 style={styles.heroTitle}>Some Headline phrase. Make it catchy!</h1>
-          <button style={styles.heroBtn}>Find availabilities</button>
-        </div>
-      </section>
+        <div style={styles.hero}>
+  <img src={header} alt="Header background" style={styles.heroImg} />
 
+  <div style={styles.heroOverlay}></div>
+
+  <div style={styles.heroBody}>
+    <h1 style={styles.heroTitle}>
+      Some Headline phrase. Make it catchy!
+    </h1>
+    <button style={styles.heroBtn}>
+      Find availabilities
+    </button>
+  </div>
+</div>
+
+      
+
+    
       <section style={styles.intro}>
         <p style={styles.introText}>
           Lorem ipsum dolor sit amet consectetur adipiscing elit. Amet
@@ -203,20 +187,17 @@ const styles = {
     alignItems: "center",
     justifyContent: "space-between",
     padding: "10px 20px",
-    maxWidth: 960,
+    maxWidth: 1100,
     margin: "0 auto",
   },
   logoWrap: {
     display: "flex",
     alignItems: "center",
-    gap: 8,
   },
-  logoText: {
-    fontSize: 22,
-    fontWeight: 700,
-    color: "#ED1B2F",
-    fontFamily: "Georgia, serif",
-    letterSpacing: "-0.5px",
+  logoImg: {
+    height: 38,
+    width: "auto",
+    display: "block",
   },
   profileIcon: {
     width: 36,
@@ -227,15 +208,33 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     cursor: "pointer",
+    background: "#fff",
+  },
+
+  headerSection: {
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
+    padding: "0",
+    background: "#fff",
+  },
+  headerImg: {
+    width: "100%",
+    maxWidth: 1100,
+    height: "auto",
+    display: "block",
   },
 
   hero: {
     position: "relative",
     width: "100%",
-    height: 300,
+    maxWidth: 1100,
+    height: 320,
     overflow: "hidden",
     display: "flex",
     alignItems: "center",
+    justifyContent: "center",
+    margin: "0 auto",
   },
   heroImg: {
     position: "absolute",
@@ -243,7 +242,7 @@ const styles = {
     width: "100%",
     height: "100%",
     objectFit: "cover",
-    objectPosition: "center 60%",
+    objectPosition: "center center",
   },
   heroOverlay: {
     position: "absolute",
@@ -270,12 +269,12 @@ const styles = {
     letterSpacing: "-0.5px",
   },
   heroBtn: {
-    background: "transparent",
-    color: "#fff",
-    border: "1.5px solid #fff",
+    background: "#fff",
+    color: "#111",
+    border: "1px solid #ddd",
     borderRadius: 2,
-    padding: "8px 24px",
-    fontSize: 14,
+    padding: "8px 18px",
+    fontSize: 12,
     cursor: "pointer",
     letterSpacing: "0.2px",
   },
@@ -337,19 +336,19 @@ const styles = {
     justifyContent: "center",
   },
   mapPin: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     borderRadius: "50%",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
     zIndex: 2,
-    boxShadow: "0 2px 6px rgba(0,0,0,0.3)",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
   },
   mapPinLetter: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: 700,
   },
 
@@ -362,7 +361,9 @@ const styles = {
 
   footer: {
     width: "100%",
+    maxWidth: 1100,
     height: 180,
     background: "#111",
+    margin: "0 auto",
   },
 };
