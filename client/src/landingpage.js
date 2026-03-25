@@ -11,21 +11,44 @@ export default function LandingPage() {
 
   return (
     <div style={styles.root}>
-
-      {/* ── NAVBAR ── */}
-      <nav style={{ ...styles.nav, boxShadow: scrolled ? "0 1px 4px rgba(0,0,0,0.1)" : "0 1px 0 #e8e8e8" }}>
+      <nav
+        style={{
+          ...styles.nav,
+          boxShadow: scrolled
+            ? "0 1px 4px rgba(0,0,0,0.1)"
+            : "0 1px 0 #e8e8e8",
+        }}
+      >
         <div style={styles.navInner}>
-          {/* McGill Logo */}
           <div style={styles.logoWrap}>
             <svg width="32" height="32" viewBox="0 0 100 100" fill="none">
               <rect width="100" height="100" rx="4" fill="#ED1B2F" />
-              <text x="50" y="68" textAnchor="middle" fill="white" fontSize="52" fontWeight="700" fontFamily="Georgia, serif">M</text>
+              <text
+                x="50"
+                y="68"
+                textAnchor="middle"
+                fill="white"
+                fontSize="52"
+                fontWeight="700"
+                fontFamily="Georgia, serif"
+              >
+                M
+              </text>
             </svg>
             <span style={styles.logoText}>McGill</span>
           </div>
-          {/* Profile icon */}
+
           <div style={styles.profileIcon}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#333"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
@@ -33,16 +56,17 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ── HERO ── */}
       <section style={styles.hero}>
-        {/* Campus background image */}
         <img
           src="https://www.mcgill.ca/about/files/about/mcgill_campus.jpg"
           alt="McGill Campus"
           style={styles.heroImg}
           onError={(e) => {
-            e.target.style.display = "none";
-            e.target.parentElement.style.background = "#2c3e50";
+            const img = e.currentTarget;
+            img.style.display = "none";
+            if (img.parentElement) {
+              img.parentElement.style.background = "#2c3e50";
+            }
           }}
         />
         <div style={styles.heroOverlay} />
@@ -52,24 +76,26 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── INTRO PARAGRAPH ── */}
       <section style={styles.intro}>
         <p style={styles.introText}>
-          Lorem ipsum dolor sit amet consectetur adipiscing elit. Amet consectetur adipiscing elit quisque faucibus ex sapien.
-          Quisque faucibus ex sapien vitae pellentesque sem placerat. Vitae pellentesque sem placerat in id cursus mi.
+          Lorem ipsum dolor sit amet consectetur adipiscing elit. Amet
+          consectetur adipiscing elit quisque faucibus ex sapien. Quisque
+          faucibus ex sapien vitae pellentesque sem placerat. Vitae pellentesque
+          sem placerat in id cursus mi.
         </p>
       </section>
 
-      {/* ── FEATURE 1: Text left, Map right ── */}
       <section style={styles.featureSection}>
         <div style={styles.featureRow}>
           <div style={styles.featureTextCol}>
-            <h2 style={styles.featureHeading}>All your appointments in one place!</h2>
+            <h2 style={styles.featureHeading}>
+              All your appointments in one place!
+            </h2>
             <p style={styles.featureDesc}>
               Lorem ipsum dolor sit amet consectetur adipiscing elit. Amet
-              consectetur adipiscing elit quisque faucibus ex sapien.
-              Quisque faucibus ex sapien vitae pellentesque sem placerat.
-              Vitae pellentesque sem placerat in id cursus mi.
+              consectetur adipiscing elit quisque faucibus ex sapien. Quisque
+              faucibus ex sapien vitae pellentesque sem placerat. Vitae
+              pellentesque sem placerat in id cursus mi.
             </p>
           </div>
           <div style={styles.featureMediaCol}>
@@ -78,7 +104,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── FEATURE 2: Image left, Text right ── */}
       <section style={styles.featureSection}>
         <div style={styles.featureRow}>
           <div style={styles.featureMediaCol}>
@@ -88,43 +113,64 @@ export default function LandingPage() {
             <h2 style={styles.featureHeading}>Other feature!</h2>
             <p style={styles.featureDesc}>
               Lorem ipsum dolor sit amet consectetur adipiscing elit. Amet
-              consectetur adipiscing elit quisque faucibus ex sapien.
-              Quisque faucibus ex sapien vitae pellentesque sem placerat.
-              Vitae pellentesque sem placerat in id cursus mi.
+              consectetur adipiscing elit quisque faucibus ex sapien. Quisque
+              faucibus ex sapien vitae pellentesque sem placerat. Vitae
+              pellentesque sem placerat in id cursus mi.
             </p>
           </div>
         </div>
       </section>
 
-      {/* ── SPACER ── */}
       <div style={{ height: 60 }} />
 
-      {/* ── FOOTER MAP ── */}
       <footer style={styles.footer}>
         <MapPlaceholder dark />
       </footer>
-
     </div>
   );
 }
 
-/* ── Map placeholder component ── */
 function MapPlaceholder({ dark }) {
   return (
-    <div style={{
-      ...styles.mapBox,
-      background: dark ? "#111" : "#e8eaed",
-    }}>
-      {/* Simple grid lines to mimic a map */}
-      <svg width="100%" height="100%" style={{ position: "absolute", inset: 0, opacity: dark ? 0.15 : 0.3 }}>
-        {[20, 40, 60, 80].map(p => (
-          <line key={"h" + p} x1="0" y1={`${p}%`} x2="100%" y2={`${p}%`} stroke={dark ? "#fff" : "#aaa"} strokeWidth="1" />
+    <div
+      style={{
+        ...styles.mapBox,
+        background: dark ? "#111" : "#e8eaed",
+      }}
+    >
+      <svg
+        width="100%"
+        height="100%"
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: dark ? 0.15 : 0.3,
+        }}
+      >
+        {[20, 40, 60, 80].map((p) => (
+          <line
+            key={"h" + p}
+            x1="0"
+            y1={`${p}%`}
+            x2="100%"
+            y2={`${p}%`}
+            stroke={dark ? "#fff" : "#aaa"}
+            strokeWidth="1"
+          />
         ))}
-        {[20, 40, 60, 80].map(p => (
-          <line key={"v" + p} x1={`${p}%`} y1="0" x2={`${p}%`} y2="100%" stroke={dark ? "#fff" : "#aaa"} strokeWidth="1" />
+        {[20, 40, 60, 80].map((p) => (
+          <line
+            key={"v" + p}
+            x1={`${p}%`}
+            y1="0"
+            x2={`${p}%`}
+            y2="100%"
+            stroke={dark ? "#fff" : "#aaa"}
+            strokeWidth="1"
+          />
         ))}
       </svg>
-      {/* Location pin */}
+
       <div style={{ ...styles.mapPin, background: dark ? "#555" : "#666" }}>
         <span style={styles.mapPinLetter}>R</span>
       </div>
@@ -142,7 +188,6 @@ const styles = {
     overflowX: "hidden",
   },
 
-  /* NAV */
   nav: {
     position: "sticky",
     top: 0,
@@ -181,7 +226,6 @@ const styles = {
     cursor: "pointer",
   },
 
-  /* HERO */
   hero: {
     position: "relative",
     width: "100%",
@@ -233,7 +277,6 @@ const styles = {
     letterSpacing: "0.2px",
   },
 
-  /* INTRO */
   intro: {
     padding: "40px 20px",
     maxWidth: 700,
@@ -247,13 +290,10 @@ const styles = {
     margin: 0,
   },
 
-  /* FEATURES */
   featureSection: {
-    padding: "20px 0 40px",
+    padding: "20px 20px 40px",
     maxWidth: 900,
     margin: "0 auto",
-    paddingLeft: 20,
-    paddingRight: 20,
   },
   featureRow: {
     display: "flex",
@@ -283,7 +323,6 @@ const styles = {
     margin: 0,
   },
 
-  /* MAP */
   mapBox: {
     width: "100%",
     height: 200,
@@ -311,7 +350,6 @@ const styles = {
     fontWeight: 700,
   },
 
-  /* IMAGE PLACEHOLDER */
   imgPlaceholder: {
     width: "100%",
     height: 200,
@@ -319,7 +357,6 @@ const styles = {
     borderRadius: 4,
   },
 
-  /* FOOTER */
   footer: {
     width: "100%",
     height: 180,
