@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import logo1 from "./assets/logo1.png";
-import logo2 from "./assets/logo2.png";
 import header from "./assets/header.png";
 
 export default function LandingPage() {
@@ -158,9 +157,7 @@ function MapPlaceholder({ dark }) {
         ))}
       </svg>
 
-      <div style={{ ...styles.mapPin, background: dark ? "#555" : "#666" }}>
-        <span style={styles.mapPinLetter}>R</span>
-      </div>
+    
     </div>
   );
 }
@@ -335,22 +332,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
   },
-  mapPin: {
-    width: 44,
-    height: 44,
-    borderRadius: "50%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    zIndex: 2,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.35)",
-  },
-  mapPinLetter: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: 700,
-  },
+ 
 
   imgPlaceholder: {
     width: "100%",
