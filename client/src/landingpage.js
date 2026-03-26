@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import logo1 from "./assets/logo1.png";
 import header from "./assets/header.png";
+import { useNavigate } from "react-router-dom";
 
 export default function LandingPage() {
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -44,24 +46,24 @@ export default function LandingPage() {
         </div>
       </nav>
 
-        <div style={styles.hero}>
-  <img src={header} alt="Header background" style={styles.heroImg} />
+      <div style={styles.hero}>
+        <img src={header} alt="Header background" style={styles.heroImg} />
+        <div style={styles.heroOverlay}></div>
 
-  <div style={styles.heroOverlay}></div>
+        <div style={styles.heroBody}>
+          <h1 style={styles.heroTitle}>
+            Some Headline phrase. Make it catchy!
+          </h1>
 
-  <div style={styles.heroBody}>
-    <h1 style={styles.heroTitle}>
-      Some Headline phrase. Make it catchy!
-    </h1>
-    <button style={styles.heroBtn}>
-      Find availabilities
-    </button>
-  </div>
-</div>
+          <button
+            style={styles.heroBtn}
+            onClick={() => navigate("/home")}
+          >
+            Find availabilities
+          </button>
+        </div>
+      </div>
 
-      
-
-    
       <section style={styles.intro}>
         <p style={styles.introText}>
           Lorem ipsum dolor sit amet consectetur adipiscing elit. Amet
@@ -156,8 +158,6 @@ function MapPlaceholder({ dark }) {
           />
         ))}
       </svg>
-
-    
     </div>
   );
 }
@@ -171,7 +171,6 @@ const styles = {
     padding: 0,
     overflowX: "hidden",
   },
-
   nav: {
     position: "sticky",
     top: 0,
@@ -207,21 +206,6 @@ const styles = {
     cursor: "pointer",
     background: "#fff",
   },
-
-  headerSection: {
-    width: "100%",
-    display: "flex",
-    justifyContent: "center",
-    padding: "0",
-    background: "#fff",
-  },
-  headerImg: {
-    width: "100%",
-    maxWidth: 1100,
-    height: "auto",
-    display: "block",
-  },
-
   hero: {
     position: "relative",
     width: "100%",
@@ -275,7 +259,6 @@ const styles = {
     cursor: "pointer",
     letterSpacing: "0.2px",
   },
-
   intro: {
     padding: "40px 20px",
     maxWidth: 700,
@@ -288,7 +271,6 @@ const styles = {
     textAlign: "left",
     margin: 0,
   },
-
   featureSection: {
     padding: "20px 20px 40px",
     maxWidth: 900,
@@ -321,7 +303,6 @@ const styles = {
     lineHeight: 1.75,
     margin: 0,
   },
-
   mapBox: {
     width: "100%",
     height: 200,
@@ -332,15 +313,12 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
   },
- 
-
   imgPlaceholder: {
     width: "100%",
     height: 200,
     background: "#d0d0d0",
     borderRadius: 4,
   },
-
   footer: {
     width: "100%",
     maxWidth: 1100,
