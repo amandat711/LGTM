@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import logo1 from "./assets/logo1.png";
+import logo1 from "../assets/logo1.png";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const MONTHS = [
@@ -117,8 +117,8 @@ export default function HomePage() {
             <div style={s.divider} />
 
             <p style={s.infoDesc}>
-              Schedule a one-on-one consultation with a McGill health professional.
-              Bring any relevant documents or test results to your appointment.
+              Schedule OH with the TA or the Instructor.
+              
             </p>
 
             {selectedDay && selectedTime && !confirmed && (
@@ -259,7 +259,7 @@ export default function HomePage() {
 
       {/* ── FOOTER ── */}
       <footer style={s.footer}>
-        <span style={s.footerText}>© 2026 LGTM Health · McGill University</span>
+        <span style={s.footerText}>© 2026 Booking Page · McGill University</span>
       </footer>
     </div>
   );
@@ -507,7 +507,7 @@ const s = {
   monthLabel: {
     fontSize: 15,
     fontWeight: 600,
-    color: "#fff",
+    color: "#000000ff",
     letterSpacing: "-0.2px",
   },
   weekRow: {

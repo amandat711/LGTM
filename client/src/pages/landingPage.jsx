@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import logo1 from "./assets/logo1.png";
-import header from "./assets/header.png";
+import logo1 from "../assets/logo1.png";
+import header from "../assets/header.png";
 import { useNavigate } from "react-router-dom";
 
 export default function LandingPage() {
