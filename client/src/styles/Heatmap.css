@@ -25,7 +25,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'DM Sans', sans-serif;
+  font-family: 'Arial', sans-serif;
   color: var(--text);
   background: #fff;
   -webkit-font-smoothing: antialiased;
@@ -62,7 +62,7 @@ body {
   align-items: center;
   justify-content: center;
   color: white;
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Arial', serif;
   font-size: 14px;
   font-weight: 400;
   flex-shrink: 0;
@@ -154,7 +154,7 @@ body {
 }
 
 .page-title {
-  font-family: 'Instrument Serif', serif;
+  font-family: 'Arial', serif;
   font-size: 32px;
   font-weight: 400;
   color: var(--text);

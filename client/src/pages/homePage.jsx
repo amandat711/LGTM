@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import logo1 from "../assets/logo1.png";
+import logo1 from "../assets/logo1.jpg";
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const MONTHS = [
@@ -105,8 +105,8 @@ export default function HomePage() {
 
           {/* LEFT PANEL — info */}
           <div style={s.infoPanel}>
-            <div style={s.infoBadge}>LGTM Health</div>
-            <h2 style={s.infoName}>Booking Page </h2>
+            <div style={s.infoBadge}>Calendar Place HOLDER (NOT AMANDA's JOB Anymore ) !!!!!</div>
+            <h2 style={s.infoName}> - </h2>
 
             <div style={s.infoMeta}>
               <MetaRow icon={clockIcon} label="30 minutes" />

@@ -3,14 +3,18 @@ import { heatColor } from '../utils/heatColor';
 import { useDragSelect } from '../hooks/useDragSelect';
 
 // ─────────────────────────────────────────────────────────────
-// PersonalGrid — drag to mark YOUR availability
-// Used by: professor setting their slots, student (unrestricted)
-//
-// Props:
-//   days        – [{ short, date, iso }]
-//   times       – string[]
-//   selected    – Set<number>
-//   setSelected – setter
+// KEY FORMAT
+//   Every cell is identified by a string: "YYYY-MM-DD:ti"
+//   e.g. "2026-04-07:3" = Apr 7, 4th time slot
+//   This means slots are date-specific — never bleed across weeks.
+//   Recurring slots are expanded in Heatmap.jsx before being passed down.
+// ─────────────────────────────────────────────────────────────
+export function makeKey(iso, ti) {
+  return `${iso}:${ti}`;
+}
+
+// ─────────────────────────────────────────────────────────────
+// PersonalGrid — professor marks their own availability
 // ─────────────────────────────────────────────────────────────
 export function PersonalGrid({ days, times, selected, setSelected }) {
   const { onMouseDown, onMouseEnter } = useDragSelect(selected, setSelected);
@@ -19,11 +23,11 @@ export function PersonalGrid({ days, times, selected, setSelected }) {
     <div className="grid-wrap">
       <TimeLabels times={times} />
       <div className="days-grid">
-        {days.map((day, di) => (
-          <div key={di} className="day-col">
+        {days.map((day) => (
+          <div key={day.iso} className="day-col">
             <DayHeader day={day} />
             {times.map((_, ti) => {
-              const key = di * times.length + ti;
+              const key = makeKey(day.iso, ti);
               return (
                 <div
                   key={ti}
@@ -41,38 +45,20 @@ export function PersonalGrid({ days, times, selected, setSelected }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// ProfAvailGrid — student view: sees professor's available slots
-// highlighted in light red. Student can only SELECT those cells.
-//
-// Props:
-//   days          – [{ short, date, iso }]
-//   times         – string[]
-//   profSlots     – Set<number>  (keys the professor marked)
-//   selected      – Set<number>  (student's selection)
-//   setSelected   – setter
+// ProfAvailGrid — student view, only professor's slots are clickable
 // ─────────────────────────────────────────────────────────────
 export function ProfAvailGrid({ days, times, profSlots, selected, setSelected }) {
   const { onMouseDown, onMouseEnter } = useDragSelect(selected, setSelected);
-
-  function handleMouseDown(key, isAvail) {
-    if (!isAvail) return () => {}; // can't select unavailable slots
-    return onMouseDown(key);
-  }
-
-  function handleMouseEnter(key, isAvail) {
-    if (!isAvail) return () => {};
-    return onMouseEnter(key);
-  }
 
   return (
     <div className="grid-wrap">
       <TimeLabels times={times} />
       <div className="days-grid">
-        {days.map((day, di) => (
-          <div key={di} className="day-col">
+        {days.map((day) => (
+          <div key={day.iso} className="day-col">
             <DayHeader day={day} />
             {times.map((timeLabel, ti) => {
-              const key     = di * times.length + ti;
+              const key     = makeKey(day.iso, ti);
               const isAvail = profSlots.has(key);
               const isSel   = selected.has(key);
 
@@ -85,9 +71,8 @@ export function ProfAvailGrid({ days, times, profSlots, selected, setSelected })
                   key={ti}
                   className={cls}
                   style={{ cursor: isAvail ? 'pointer' : 'default' }}
-                  onMouseDown={handleMouseDown(key, isAvail)}
-                  onMouseEnter={handleMouseEnter(key, isAvail)}
-                  title={!isAvail ? 'Not available' : ''}
+                  onMouseDown={isAvail ? onMouseDown(key) : undefined}
+                  onMouseEnter={isAvail ? onMouseEnter(key) : undefined}
                 >
                   {isAvail && (
                     <div className="cell-tooltip">
@@ -105,15 +90,8 @@ export function ProfAvailGrid({ days, times, profSlots, selected, setSelected })
 }
 
 // ─────────────────────────────────────────────────────────────
-// GroupGrid — read-only heatmap of all participants' availability
-//
-// Props:
-//   days          – [{ short, date, iso }]
-//   times         – string[]
-//   participants  – [{ name, color, slots: number[] }]
-//   activeNames   – Set<string>
-//   selectedKey   – number | null
-//   onSelectKey   – (key, meta) => void
+// GroupGrid — read-only heatmap of all participants
+// participants[].slots is string[] of "iso:ti" keys
 // ─────────────────────────────────────────────────────────────
 export function GroupGrid({ days, times, participants, activeNames, selectedKey, onSelectKey }) {
   const active = participants.filter(p => activeNames.has(p.name));
@@ -123,12 +101,12 @@ export function GroupGrid({ days, times, participants, activeNames, selectedKey,
     <div className="grid-wrap">
       <TimeLabels times={times} />
       <div className="days-grid">
-        {days.map((day, di) => (
-          <div key={di} className="day-col">
+        {days.map((day) => (
+          <div key={day.iso} className="day-col">
             <DayHeader day={day} />
             {times.map((timeLabel, ti) => {
-              const key   = di * times.length + ti;
-              const who   = active.filter(p => p.slots.includes(ti));
+              const key   = makeKey(day.iso, ti);
+              const who   = active.filter(p => p.slots.includes(key));
               const count = who.length;
 
               return (
@@ -170,7 +148,6 @@ export function HeatmapLegend({ max }) {
   );
 }
 
-// ─── Internal helpers ─────────────────────────────────────────
 function TimeLabels({ times }) {
   return (
     <div className="time-col">

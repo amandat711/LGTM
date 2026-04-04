@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-
+import logo1 from '../assets/logo1.jpg';
 /**
  * Navbar
  * Props:
@@ -13,10 +13,12 @@ export default function Navbar({ user }) {
 
   return (
     <nav className="navbar">
-      {/* Brand */}
+      {/* LOGO Button */}
       <button className="navbar-brand" onClick={() => navigate('/home')} style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}>
-        <div className="navbar-favicon">M</div>
-        <span className="navbar-name">LGTM<span>.</span></span>
+       
+          <img src={logo1} alt="LGTM" style={{ height: '55px', width: '80px', objectFit: 'contain' }} />
+      
+        <span className="navbar-name">Heatmap Booking</span>
       </button>
 
       {/* Right side */}

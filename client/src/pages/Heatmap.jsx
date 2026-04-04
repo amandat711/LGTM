@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import '../styles/Heatmap.css';
 import Navbar from '../components/Navbar';
-import { PersonalGrid, ProfAvailGrid, GroupGrid, HeatmapLegend } from '../components/HeatmapGrid';
+import { PersonalGrid, ProfAvailGrid, GroupGrid, HeatmapLegend, makeKey } from '../components/HeatmapGrid';
 import {
   ConfirmSlotModal,
   SlotDetailModal,
@@ -13,83 +13,114 @@ import { generateDays, generateTimes } from '../utils/generateDays';
 
 // ─── Sample data ──────────────────────────────────────────────
 const SAMPLE_PARTICIPANTS = [
-  { name: 'Alice Martin',  color: '#E31429', slots: [0,1,4,5,8,9,10,11,14,15] },
-  { name: 'Bob Tremblay',  color: '#c0842a', slots: [0,1,2,3,8,9,10,14,15,16] },
-  { name: 'Cleo Nguyen',   color: '#2a8c5f', slots: [2,3,4,5,8,9,10,11,12,16] },
-  { name: 'Dan Bouchard',  color: '#5a4ab0', slots: [0,1,2,8,9,14,15,16,17,18] },
+  { name: 'Jocelyn',  color: '#E31429', slots: [] },
+  { name: 'Rita',  color: '#c0842a', slots: [] },
+  { name: 'Shirley',   color: '#2a8c5f', slots: [] },
+  { name: 'Amanda',  color: '#5a4ab0', slots: [] },
 ];
 
 const SAMPLE_SUBMISSIONS = [
-  { id: 1, studentName: 'Alice Martin',  studentEmail: 'alice.martin@mail.mcgill.ca',  slotCount: 6,  submittedAt: 'Today, 9:14 AM',  status: 'pending' },
-  { id: 2, studentName: 'Bob Tremblay',  studentEmail: 'bob.tremblay@mail.mcgill.ca',  slotCount: 4,  submittedAt: 'Today, 10:32 AM', status: 'pending' },
-  { id: 3, studentName: 'Cleo Nguyen',   studentEmail: 'cleo.nguyen@mail.mcgill.ca',   slotCount: 8,  submittedAt: 'Yesterday',       status: 'approved' },
+  { id: 1, studentName: 'Jocelyn',  studentEmail: 'jocelyn@mail.mcgill.ca',  slotCount: 6,  submittedAt: 'Today, 9:14 AM',  status: 'pending' },
+  { id: 2, studentName: 'Rita',  studentEmail: 'rita@mail.mcgill.ca',  slotCount: 4,  submittedAt: 'Today, 10:32 AM', status: 'pending' },
+  { id: 3, studentName: 'Shirley',   studentEmail: 'shirley@mail.mcgill.ca',   slotCount: 8,  submittedAt: 'Yesterday',       status: 'approved' },
 ];
 
-// ─── Users (demo toggle) ──────────────────────────────────────
 const PROFESSOR = { name: 'Prof. Vybihal', email: 'joseph.vybihal@mcgill.ca', role: 'professor' };
-const STUDENT   = { name: 'Alice Martin',  email: 'alice.martin@mail.mcgill.ca', role: 'student' };
+const STUDENT   = { name: 'Amanda',  email: 'amanda@mail.mcgill.ca', role: 'student' };
+
+// ─────────────────────────────────────────────────────────────
+// expandRecurring
+//   Takes a Set of "iso:ti" keys selected on a specific week,
+//   plus the number of weeks to repeat, and returns a new Set
+//   that includes the original week + all future occurrences.
+//
+//   e.g. "2026-04-07:3" recurring for 4 weeks also generates
+//        "2026-04-14:3", "2026-04-21:3", "2026-04-28:3"
+// ─────────────────────────────────────────────────────────────
+function expandRecurring(selectedKeys, recurringWeeks) {
+  const expanded = new Set(selectedKeys);
+  selectedKeys.forEach(key => {
+    const [iso, ti] = key.split(':');
+    for (let w = 1; w <= recurringWeeks; w++) {
+      const d = new Date(iso);
+      d.setDate(d.getDate() + w * 7);
+      expanded.add(makeKey(d.toISOString().slice(0, 10), ti));
+    }
+  });
+  return expanded;
+}
 
 // ─────────────────────────────────────────────────────────────
 export default function Heatmap() {
-  // ── Role toggle (demo) ─────────────────────────────────────
-  const [user, setUser] = useState(PROFESSOR);
-  const isProfessor     = user.role === 'professor';
+  const [user, setUser]       = useState(PROFESSOR);
+  const isProfessor           = user.role === 'professor';
 
-  // ── Date range setup ───────────────────────────────────────
+  // ── Date range ─────────────────────────────────────────────
   const [startDate,  setStartDate]  = useState('2026-04-07');
   const [startHour,  setStartHour]  = useState(8);
   const [endHour,    setEndHour]    = useState(17);
   const [numDays,    setNumDays]    = useState(5);
   const [setupDone,  setSetupDone]  = useState(false);
 
-  const days  = useMemo(() => generateDays(startDate, numDays),    [startDate, numDays]);
-  const times = useMemo(() => generateTimes(startHour, endHour),   [startHour, endHour]);
+  const days  = useMemo(() => generateDays(startDate, numDays),  [startDate, numDays]);
+  const times = useMemo(() => generateTimes(startHour, endHour), [startHour, endHour]);
 
-  // ── Professor: their availability ─────────────────────────
-  const [profSelected,  setProfSelected]  = useState(new Set());
-  const [profSaved,     setProfSaved]     = useState(new Set()); // saved = visible to students
+  // ── Professor availability ─────────────────────────────────
+  // profSelected: what's drawn on the grid right now (this week)
+  // profSaved: the full expanded set shown to students (may include recurring weeks)
+  const [profSelected,   setProfSelected]   = useState(new Set());
+  const [profSaved,      setProfSaved]      = useState(new Set());
 
-  // ── Student: their selection ───────────────────────────────
-  const [studSelected,  setStudSelected]  = useState(new Set());
+  // ── Recurring settings ─────────────────────────────────────
+  const [isRecurring,    setIsRecurring]    = useState(false);
+  const [recurringWeeks, setRecurringWeeks] = useState(4);
 
-  // ── Group view ─────────────────────────────────────────────
-  const [tab,           setTab]           = useState('personal');
-  const [activeNames,   setActive]        = useState(new Set(SAMPLE_PARTICIPANTS.map(p => p.name)));
-  const [groupKey,      setGroupKey]      = useState(null);
-  const [groupMeta,     setGroupMeta]     = useState(null);
+  // ── Student ────────────────────────────────────────────────
+  const [studSelected,   setStudSelected]   = useState(new Set());
 
-  // ── Submissions (professor review) ────────────────────────
-  const [submissions,   setSubmissions]   = useState(SAMPLE_SUBMISSIONS);
+  // ── Tabs / group view ──────────────────────────────────────
+  const [tab,            setTab]            = useState('personal');
+  const [activeNames,    setActive]         = useState(new Set(SAMPLE_PARTICIPANTS.map(p => p.name)));
+  const [groupKey,       setGroupKey]       = useState(null);
+  const [groupMeta,      setGroupMeta]      = useState(null);
+
+  // ── Submissions ────────────────────────────────────────────
+  const [submissions,    setSubmissions]    = useState(SAMPLE_SUBMISSIONS);
   const [notifDismissed, setNotifDismissed] = useState(false);
   const pendingCount = submissions.filter(s => s.status === 'pending').length;
 
   // ── Modals ─────────────────────────────────────────────────
-  const [modal,         setModal]         = useState(null);
-  const [activeAppt,    setActiveAppt]    = useState(null);
-  const [activeSub,     setActiveSub]     = useState(null);
+  const [modal,          setModal]          = useState(null);
+  const [activeAppt,     setActiveAppt]     = useState(null);
+  const [activeSub,      setActiveSub]      = useState(null);
 
   // ── Handlers ───────────────────────────────────────────────
   function saveProfAvailability() {
-    setProfSaved(new Set(profSelected));
-    // TODO: POST /api/heatmap/availability { slots: [...profSelected], dates: days }
-    alert(`${profSelected.size} slots saved and made visible to students.`);
+    const saved = isRecurring
+      ? expandRecurring(profSelected, recurringWeeks)
+      : new Set(profSelected);
+
+    setProfSaved(saved);
+    // TODO: POST /api/heatmap/availability { slots: [...saved], recurring: isRecurring, recurringWeeks }
+    const msg = isRecurring
+      ? `${profSelected.size} slots saved and repeated for ${recurringWeeks} week(s).`
+      : `${profSelected.size} slots saved for this week only.`;
+    alert(msg);
   }
 
   function submitStudentAvailability() {
     // TODO: POST /api/heatmap/submission { slots: [...studSelected], heatmapId }
-    // After submit: notify professor via dashboard banner + mailto
     const subject = encodeURIComponent('New availability submission');
     const body    = encodeURIComponent(
-      `${user.name} has submitted their availability for your heatmap.\n\nLog in to review and approve.`
+      `${user.name} has submitted their availability.\n\nLog in to review and approve.`
     );
     window.open(`mailto:${PROFESSOR.email}?subject=${subject}&body=${body}`);
-    alert(`Availability submitted! Prof. Vybihal has been notified.`);
+    alert('Availability submitted! Prof. Vybihal has been notified.');
   }
 
   function approveSubmission(sub) {
     setSubmissions(prev => prev.map(s => s.id === sub.id ? { ...s, status: 'approved' } : s));
     // TODO: PUT /api/heatmap/submission/:id/approve
-    // + POST /api/appointments to create the appointment
   }
 
   function declineSubmission(sub) {
@@ -146,12 +177,12 @@ export default function Heatmap() {
           </h1>
           <p className="page-subtitle">
             {isProfessor
-              ? 'Mark when you\'re free. Students will only see your saved slots.'
-              : `Select times that work for you from Prof. Vybihal's available slots.`}
+              ? "Mark when you're free. Choose whether slots repeat weekly."
+              : "Select times that work for you from Prof. Vybihal's available slots."}
           </p>
         </div>
 
-        {/* ── Pending submissions banner (professor only) ── */}
+        {/* ── Pending submissions banner ─────────────────── */}
         {isProfessor && pendingCount > 0 && !notifDismissed && (
           <div className="notif-banner">
             <span>📬</span>
@@ -159,10 +190,7 @@ export default function Heatmap() {
               <strong>{pendingCount} new submission{pendingCount > 1 ? 's' : ''}</strong> waiting for your review.
             </span>
             <div className="notif-banner-actions">
-              <button
-                className="btn btn-outline btn-sm"
-                onClick={() => setTab('submissions')}
-              >
+              <button className="btn btn-outline btn-sm" onClick={() => setTab('submissions')}>
                 Review now
               </button>
               <button className="btn btn-ghost" onClick={() => setNotifDismissed(true)}>✕</button>
@@ -182,8 +210,8 @@ export default function Heatmap() {
             <h4>{isProfessor ? 'My availability' : 'Select your slots'}</h4>
             <p>
               {isProfessor
-                ? 'Click and drag to mark the times you\'re free this week.'
-                : 'Pink cells are times the professor is available. Select yours.'}
+                ? "Click and drag to mark times you're free. Set recurring or one-time."
+                : "Pink cells are the professor's available times. Select yours."}
             </p>
           </div>
 
@@ -225,18 +253,14 @@ export default function Heatmap() {
             <div className="setup-controls">
               <div className="setup-field">
                 <label>Start date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={e => setStartDate(e.target.value)}
-                />
+                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
               </div>
               <div className="setup-field">
                 <label>Days shown</label>
                 <select value={numDays} onChange={e => setNumDays(Number(e.target.value))}>
+                  <option value={3}>3 days</option>
                   <option value={5}>5 days</option>
                   <option value={7}>7 days</option>
-                  <option value={3}>3 days</option>
                 </select>
               </div>
               <div className="setup-field">
@@ -269,7 +293,13 @@ export default function Heatmap() {
         {setupDone && (
           <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-              Showing <strong style={{ color: 'var(--text)' }}>{days[0]?.date} – {days[days.length-1]?.date}</strong>, {startHour <= 12 ? startHour : startHour-12}:00 {startHour < 12 ? 'AM' : 'PM'} – {endHour <= 12 ? endHour : endHour-12}:00 {endHour < 12 ? 'AM' : 'PM'}
+              Showing{' '}
+              <strong style={{ color: 'var(--text)' }}>
+                {days[0]?.date} – {days[days.length - 1]?.date}
+              </strong>
+              , {startHour <= 12 ? startHour : startHour - 12}:00 {startHour < 12 ? 'AM' : 'PM'}
+              {' – '}
+              {endHour <= 12 ? endHour : endHour - 12}:00 {endHour < 12 ? 'AM' : 'PM'}
             </span>
             <button className="btn btn-ghost btn-sm" onClick={() => setSetupDone(false)}>
               Change
@@ -278,7 +308,7 @@ export default function Heatmap() {
         )}
 
         {/* ═══════════════════════════════════════════════════
-            PROFESSOR VIEW
+            PROFESSOR — MY AVAILABILITY
         ═══════════════════════════════════════════════════ */}
         {isProfessor && tab === 'personal' && (
           <>
@@ -291,9 +321,89 @@ export default function Heatmap() {
                 setSelected={setProfSelected}
               />
             </div>
+
+            {/* ── Recurring toggle ──────────────────────── */}
+            <div style={{
+              marginTop: '1.25rem',
+              padding: '1rem 1.25rem',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1.5rem',
+              flexWrap: 'wrap',
+            }}>
+              {/* One-time option */}
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
+                <input
+                  type="radio"
+                  name="recurrence"
+                  checked={!isRecurring}
+                  onChange={() => setIsRecurring(false)}
+                  style={{ accentColor: 'var(--red)', width: 16, height: 16 }}
+                />
+                <span>
+                  <strong>One-time only</strong>
+                  <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>
+                    — only visible for {days[0]?.date}
+                    {numDays > 1 ? ` – ${days[days.length - 1]?.date}` : ''}
+                  </span>
+                </span>
+              </label>
+
+              {/* Recurring option */}
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
+                <input
+                  type="radio"
+                  name="recurrence"
+                  checked={isRecurring}
+                  onChange={() => setIsRecurring(true)}
+                  style={{ accentColor: 'var(--red)', width: 16, height: 16 }}
+                />
+                <span>
+                  <strong>Recurring</strong>
+                  <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>— repeat for</span>
+                </span>
+              </label>
+
+              {/* Weeks selector — only active when recurring */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <select
+                  value={recurringWeeks}
+                  onChange={e => setRecurringWeeks(Number(e.target.value))}
+                  disabled={!isRecurring}
+                  style={{
+                    padding: '5px 10px',
+                    borderRadius: 6,
+                    border: '1.5px solid var(--border-med)',
+                    background: isRecurring ? '#fff' : 'var(--surface2)',
+                    color: isRecurring ? 'var(--text)' : 'var(--text-faint)',
+                    fontSize: 13,
+                    cursor: isRecurring ? 'pointer' : 'default',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {[2,3,4,5,6,8,10,12].map(w => (
+                    <option key={w} value={w}>{w} weeks</option>
+                  ))}
+                </select>
+                {isRecurring && (
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    until{' '}
+                    {(() => {
+                      const d = new Date(startDate);
+                      d.setDate(d.getDate() + recurringWeeks * 7);
+                      return d.toLocaleDateString('en-CA', { month: 'short', day: 'numeric' });
+                    })()}
+                  </span>
+                )}
+              </div>
+            </div>
+
             <div className="confirm-bar">
               <button className="btn btn-primary" onClick={saveProfAvailability}>
-                Save &amp; publish slots
+                {isRecurring ? `Save & repeat for ${recurringWeeks} weeks` : 'Save for this week'}
               </button>
               <button className="btn btn-outline" onClick={() => setProfSelected(new Set())}>
                 Clear all
@@ -308,6 +418,9 @@ export default function Heatmap() {
           </>
         )}
 
+        {/* ═══════════════════════════════════════════════════
+            PROFESSOR — SUBMISSIONS
+        ═══════════════════════════════════════════════════ */}
         {isProfessor && tab === 'submissions' && (
           <>
             <p className="section-label">Student submissions</p>
@@ -326,7 +439,7 @@ export default function Heatmap() {
                     <div className="progress-bar-wrap" style={{ width: 160 }}>
                       <div
                         className="progress-bar-fill"
-                        style={{ width: `${(sub.slotCount / times.length) * 100}%` }}
+                        style={{ width: `${Math.min((sub.slotCount / times.length) * 100, 100)}%` }}
                       />
                     </div>
                   </div>
@@ -360,7 +473,7 @@ export default function Heatmap() {
         )}
 
         {/* ═══════════════════════════════════════════════════
-            STUDENT VIEW
+            STUDENT — SELECT SLOTS
         ═══════════════════════════════════════════════════ */}
         {!isProfessor && tab === 'personal' && (
           <>
@@ -372,7 +485,7 @@ export default function Heatmap() {
               <div className="swatch" style={{ background: 'var(--cell-empty)', borderRadius: 3, marginLeft: 12 }} />
               <span className="legend-label">Not available</span>
             </div>
-            <p className="section-label">Click or drag to select from available slots</p>
+            <p className="section-label">Select from the professor's available slots</p>
             <div className="grid-outer">
               <ProfAvailGrid
                 days={days}
@@ -405,6 +518,9 @@ export default function Heatmap() {
           </>
         )}
 
+        {/* ═══════════════════════════════════════════════════
+            STUDENT — GROUP VIEW
+        ═══════════════════════════════════════════════════ */}
         {!isProfessor && tab === 'group' && (
           <>
             <p className="section-label">Participants</p>
@@ -426,10 +542,8 @@ export default function Heatmap() {
                 </div>
               ))}
             </div>
-
             <HeatmapLegend max={SAMPLE_PARTICIPANTS.filter(p => activeNames.has(p.name)).length} />
             <p className="section-label">Hover cells to see who's free</p>
-
             <div className="grid-outer">
               <GroupGrid
                 days={days}
@@ -440,7 +554,6 @@ export default function Heatmap() {
                 onSelectKey={handleGroupSelect}
               />
             </div>
-
             <div className="confirm-bar">
               <button
                 className="btn btn-primary"
@@ -452,8 +565,7 @@ export default function Heatmap() {
               <span className="selected-info">
                 {groupMeta
                   ? <><strong>{groupMeta.timeLabel}</strong> on {groupMeta.day?.short} {groupMeta.day?.date} — {groupMeta.count}/{groupMeta.max} free</>
-                  : 'Click a cell to select it'
-                }
+                  : 'Click a cell to select it'}
               </span>
             </div>
           </>
