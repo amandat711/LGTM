@@ -2,49 +2,28 @@ import React from 'react';
 import { heatColor } from '../utils/heatColor';
 import { useDragSelect } from '../hooks/useDragSelect';
 
-// Time slots: 8:00 AM → 9:30 PM in 30-min increments
-export const TIMES = (() => {
-  const slots = [];
-  for (let h = 8; h <= 21; h++) {
-    const label = (h <= 12 ? h : h - 12) + ':00 ' + (h < 12 ? 'AM' : 'PM');
-    slots.push(label);
-    if (h < 21) slots.push((h <= 12 ? h : h - 12) + ':30 ' + (h < 12 ? 'AM' : 'PM'));
-  }
-  return slots;
-})();
-
 // ─────────────────────────────────────────────────────────────
-// PersonalGrid — user marks their own availability
+// PersonalGrid — drag to mark YOUR availability
+// Used by: professor setting their slots, student (unrestricted)
 //
 // Props:
-//   days        – [{ short: 'Mon', date: 'Apr 7' }]
-//   selected    – Set<number> of cell keys
-//   setSelected – state setter
+//   days        – [{ short, date, iso }]
+//   times       – string[]
+//   selected    – Set<number>
+//   setSelected – setter
 // ─────────────────────────────────────────────────────────────
-export function PersonalGrid({ days, selected, setSelected }) {
+export function PersonalGrid({ days, times, selected, setSelected }) {
   const { onMouseDown, onMouseEnter } = useDragSelect(selected, setSelected);
 
   return (
     <div className="grid-wrap">
-      {/* Time labels */}
-      <div className="time-col">
-        {TIMES.map((t, i) => (
-          <div key={i} className="time-label">
-            {i % 2 === 0 ? t : ''}
-          </div>
-        ))}
-      </div>
-
-      {/* Day columns */}
+      <TimeLabels times={times} />
       <div className="days-grid">
         {days.map((day, di) => (
           <div key={di} className="day-col">
-            <div className="day-header">
-              <span>{day.short}</span>
-              {day.date}
-            </div>
-            {TIMES.map((_, ti) => {
-              const key = di * TIMES.length + ti;
+            <DayHeader day={day} />
+            {times.map((_, ti) => {
+              const key = di * times.length + ti;
               return (
                 <div
                   key={ti}
@@ -62,41 +41,94 @@ export function PersonalGrid({ days, selected, setSelected }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// GroupGrid — heatmap aggregating all participants
+// ProfAvailGrid — student view: sees professor's available slots
+// highlighted in light red. Student can only SELECT those cells.
 //
 // Props:
-//   days            – [{ short: string, date: string }]
-//   participants    – [{ name: string, color: string, slots: number[] }]
-//   activeNames     – Set<string>  (which participants to include)
-//   selectedKey     – number | null  (currently selected cell)
-//   onSelectKey     – (key: number, meta: { timeLabel, dayShort, count, max, who }) => void
+//   days          – [{ short, date, iso }]
+//   times         – string[]
+//   profSlots     – Set<number>  (keys the professor marked)
+//   selected      – Set<number>  (student's selection)
+//   setSelected   – setter
 // ─────────────────────────────────────────────────────────────
-export function GroupGrid({ days, participants, activeNames, selectedKey, onSelectKey }) {
-  const active = participants.filter((p) => activeNames.has(p.name));
+export function ProfAvailGrid({ days, times, profSlots, selected, setSelected }) {
+  const { onMouseDown, onMouseEnter } = useDragSelect(selected, setSelected);
+
+  function handleMouseDown(key, isAvail) {
+    if (!isAvail) return () => {}; // can't select unavailable slots
+    return onMouseDown(key);
+  }
+
+  function handleMouseEnter(key, isAvail) {
+    if (!isAvail) return () => {};
+    return onMouseEnter(key);
+  }
+
+  return (
+    <div className="grid-wrap">
+      <TimeLabels times={times} />
+      <div className="days-grid">
+        {days.map((day, di) => (
+          <div key={di} className="day-col">
+            <DayHeader day={day} />
+            {times.map((timeLabel, ti) => {
+              const key     = di * times.length + ti;
+              const isAvail = profSlots.has(key);
+              const isSel   = selected.has(key);
+
+              let cls = 'cell';
+              if (isAvail && isSel) cls += ' selected';
+              else if (isAvail)     cls += ' prof-available';
+
+              return (
+                <div
+                  key={ti}
+                  className={cls}
+                  style={{ cursor: isAvail ? 'pointer' : 'default' }}
+                  onMouseDown={handleMouseDown(key, isAvail)}
+                  onMouseEnter={handleMouseEnter(key, isAvail)}
+                  title={!isAvail ? 'Not available' : ''}
+                >
+                  {isAvail && (
+                    <div className="cell-tooltip">
+                      {isSel ? `${timeLabel} — selected` : `${timeLabel} — click to select`}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// GroupGrid — read-only heatmap of all participants' availability
+//
+// Props:
+//   days          – [{ short, date, iso }]
+//   times         – string[]
+//   participants  – [{ name, color, slots: number[] }]
+//   activeNames   – Set<string>
+//   selectedKey   – number | null
+//   onSelectKey   – (key, meta) => void
+// ─────────────────────────────────────────────────────────────
+export function GroupGrid({ days, times, participants, activeNames, selectedKey, onSelectKey }) {
+  const active = participants.filter(p => activeNames.has(p.name));
   const max    = active.length || 1;
 
   return (
     <div className="grid-wrap">
-      {/* Time labels */}
-      <div className="time-col">
-        {TIMES.map((t, i) => (
-          <div key={i} className="time-label">
-            {i % 2 === 0 ? t : ''}
-          </div>
-        ))}
-      </div>
-
-      {/* Day columns */}
+      <TimeLabels times={times} />
       <div className="days-grid">
         {days.map((day, di) => (
           <div key={di} className="day-col">
-            <div className="day-header">
-              <span>{day.short}</span>
-              {day.date}
-            </div>
-            {TIMES.map((timeLabel, ti) => {
-              const key   = di * TIMES.length + ti;
-              const who   = active.filter((p) => p.slots.includes(ti));
+            <DayHeader day={day} />
+            {times.map((timeLabel, ti) => {
+              const key   = di * times.length + ti;
+              const who   = active.filter(p => p.slots.includes(ti));
               const count = who.length;
 
               return (
@@ -104,21 +136,12 @@ export function GroupGrid({ days, participants, activeNames, selectedKey, onSele
                   key={ti}
                   className={`gcell${selectedKey === key ? ' g-selected' : ''}`}
                   style={{ background: heatColor(count, max) }}
-                  onClick={() =>
-                    onSelectKey(key, {
-                      timeLabel,
-                      dayShort: day.short,
-                      fullDate: day.date,
-                      count,
-                      max,
-                      who,
-                    })
-                  }
+                  onClick={() => onSelectKey(key, { timeLabel, day, count, max, who })}
                 >
                   <div className="cell-tooltip">
                     {count === 0
                       ? 'Nobody free'
-                      : `${count}/${max}: ${who.map((p) => p.name).join(', ')}`}
+                      : `${count}/${max}: ${who.map(p => p.name).join(', ')}`}
                   </div>
                 </div>
               );
@@ -143,6 +166,28 @@ export function HeatmapLegend({ max }) {
         ))}
       </div>
       <span className="legend-label">All available</span>
+    </div>
+  );
+}
+
+// ─── Internal helpers ─────────────────────────────────────────
+function TimeLabels({ times }) {
+  return (
+    <div className="time-col">
+      {times.map((t, i) => (
+        <div key={i} className="time-label">
+          {i % 2 === 0 ? t : ''}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DayHeader({ day }) {
+  return (
+    <div className="day-header">
+      <div className="day-header-name">{day.short}</div>
+      <div className="day-header-date">{day.date}</div>
     </div>
   );
 }

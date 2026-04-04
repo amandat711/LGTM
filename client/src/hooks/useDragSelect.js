@@ -1,15 +1,8 @@
 import { useRef, useEffect, useCallback } from 'react';
 
-/**
- * Enables click-and-drag multi-cell selection on a heatmap grid.
- *
- * Usage:
- *   const { onMouseDown, onMouseEnter } = useDragSelect(selected, setSelected);
- *   <div onMouseDown={onMouseDown(key)} onMouseEnter={onMouseEnter(key)} />
- */
 export function useDragSelect(selected, setSelected) {
   const isDragging = useRef(false);
-  const dragValue  = useRef(null); // true = selecting, false = deselecting
+  const dragValue  = useRef(null);
 
   useEffect(() => {
     const stop = () => { isDragging.current = false; };
