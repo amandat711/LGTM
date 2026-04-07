@@ -23,12 +23,11 @@ export default function LandingPage() {
             <img src={logo1} alt="McGill logo" className="lp-logo-img" style={{ height: '100px', width: '100px', objectFit: 'contain' }} />
           </div>
           <div className="lp-nav-right">
-            <button className="lp-nav-link" onClick={() => navigate("/student")}>
+            <button className="lp-nav-link" onClick={() => navigate("/login")}>
               Login
             </button>
             <button className="lp-profile-icon" aria-label="Profile">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-              //the profile icon on the right of the nav bar
                 stroke="#333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
@@ -120,4 +119,3 @@ export default function LandingPage() {
     </div>
   );
 }
-
