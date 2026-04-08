@@ -1,47 +1,56 @@
 # Calendar & Events Implementation Checklist
 
 ## Goal
+
 Implement the appointment/calendar flow in small phases so the booking system works early, then add recurring events and calendar export after.
 
 ## Important scope note
+
 - Core booking/appointment functionality is required for the project.
 - Exporting appointments to Google/Outlook calendars is a bonus feature for the regular project, but required for the competition version.
 
 ---
 
 ## Phase 0 - Before coding
-- [x] Confirm what your team means by "calendar"
-  - [x] Internal calendar view of appointments/slots in your app
-  - [x] Recurring office hours
-  - [x] Group meeting scheduling
-  - [x] Export to Google/Outlook (`.ics`) later
-- [x] Freeze the database schema for calendar-related tables
-- [x] Decide naming conventions for statuses and scheduling modes
-- [x] Make sure `app.db` can be initialized locally with `npm run init-db`
+
+- [X] Confirm what your team means by "calendar"
+  - [X] Internal calendar view of appointments/slots in your app
+  - [X] Recurring office hours
+  - [X] Group meeting scheduling
+  - [X] Export to Google/Outlook (`.ics`) later
+- [X] Freeze the database schema for calendar-related tables
+- [X] Decide naming conventions for statuses and scheduling modes
+- [X] Make sure `app.db` can be initialized locally with `npm run init-db`
 
 ---
 
 ## Phase 1 - Database foundation
+
 ### Tables to have ready for scheduling core
-- [x] `users`
-- [x] `availabilities`
-- [x] `appointments`
-- [x] `appointment_participants`
-- [x] `appointment_history`
-- [x] `invitations` 
+
+- [X] `users`
+- [X] `availabilities`
+- [X] `appointments`
+- [X] `appointment_participants`
+- [X] `appointment_history`
+- [X] `invitations`
+
 ---
 
 ## Phase 2 - Backend DB connection
-- [ ] Create `server/config/db.js` or equivalent
-- [ ] Connect to `database/app.db`
-- [ ] Enable foreign keys with `PRAGMA foreign_keys = ON`
-- [ ] Test DB connection with a simple query
+
+- [X] Create `server/config/db.js` or equivalent
+- [X] Connect to `database/app.db`
+- [X] Enable foreign keys with `PRAGMA foreign_keys = ON`
+- [X] Test DB connection with a simple query
 - [ ] Add a small script or route to verify tables exist
 
 ---
 
 ## Phase 3 - Core calendar logic first
+
 ### A. Owner creates available time slots
+
 - [ ] Create route to add one availability slot
 - [ ] Validate: end time is after start time
 - [ ] Validate: only allowed users can create slots
@@ -49,12 +58,14 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 - [ ] Return created availability
 
 ### B. Users view available slots
+
 - [ ] Create route to list public/active availabilities
 - [ ] Filter out past slots
 - [ ] Filter out full slots if capacity reached
 - [ ] Optional: filter by owner/course/date
 
 ### C. User books a slot
+
 - [ ] Create booking route
 - [ ] Check slot exists
 - [ ] Check slot is visible/public if required
@@ -65,6 +76,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 - [ ] Add history record
 
 ### D. Dashboard events
+
 - [ ] Route for "my appointments"
 - [ ] Route for "appointments I host"
 - [ ] Route for "appointments I attend"
@@ -72,6 +84,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 - [ ] Include status, time, location, participants
 
 ### E. Cancel appointment
+
 - [ ] Create cancel route
 - [ ] Update appointment status to `cancelled`
 - [ ] Add history entry
@@ -80,6 +93,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 ---
 
 ## Phase 4 - Internal calendar view in the app
+
 - [ ] Decide frontend calendar style
   - [ ] simple list grouped by date
   - [ ] week view
@@ -98,6 +112,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 ---
 
 ## Phase 5 - Recurring office hours
+
 - [ ] Decide recurrence format
   - [ ] simple custom fields
   - [ ] store recurrence rule string
@@ -114,6 +129,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 ---
 
 ## Phase 6 - Request-a-meeting flow
+
 - [ ] Route for user to request a meeting with message
 - [ ] Save as invitation/request or pending appointment
 - [ ] Owner dashboard shows pending requests
@@ -124,6 +140,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 ---
 
 ## Phase 7 - Group meetings (calendar method)
+
 - [ ] Owner creates candidate times
 - [ ] Owner invites users
 - [ ] Invitees select one or more available times
@@ -135,6 +152,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 ---
 
 ## Phase 8 - Calendar export (`.ics`)
+
 - [ ] Leave this until core booking works
 - [ ] Decide export scope
   - [ ] one appointment
@@ -147,6 +165,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 ---
 
 ## Phase 9 - Validation and edge cases
+
 - [ ] Prevent end time before start time
 - [ ] Prevent booking past events
 - [ ] Prevent double booking if not allowed
@@ -158,7 +177,9 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 ---
 
 ## Phase 10 - Testing checklist
+
 ### DB / backend
+
 - [ ] Create availability works
 - [ ] List availabilities works
 - [ ] Book appointment works
@@ -168,6 +189,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 - [ ] History rows are created when changes happen
 
 ### Frontend
+
 - [ ] Calendar/list displays events correctly
 - [ ] Booking updates UI immediately
 - [ ] Cancelling updates UI immediately
@@ -176,22 +198,25 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 ---
 
 ## Suggested order of implementation
-- [ ] 1. DB connection
-- [ ] 2. Create availability
-- [ ] 3. List availabilities
-- [ ] 4. Book appointment
-- [ ] 5. Dashboard/my appointments
-- [ ] 6. Cancel appointment
-- [ ] 7. Internal calendar view
-- [ ] 8. Recurring office hours
-- [ ] 9. Request-a-meeting
-- [ ] 10. Group meetings
-- [ ] 11. `.ics` export
+
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
+- [ ] 
 
 ---
 
 ## Minimum viable version
+
 If time gets tight, finish these first:
+
 - [ ] create slot
 - [ ] list slot
 - [ ] book slot
@@ -200,4 +225,3 @@ If time gets tight, finish these first:
 - [ ] basic calendar/list UI
 
 Then do recurring and export after.
-
