@@ -28,7 +28,7 @@ npm --version
 ```
 
 
-## Frontend Setup
+## 🖥️🎨 Frontend Setup
 
 ```
 cd client
@@ -47,7 +47,7 @@ or:
 npm run dev
 ```
 
-## Backend Setup
+## 🚀 Backend Setup
 
 ```
 cd server
@@ -64,7 +64,7 @@ Default port: 5000
 
 
 
-## Database
+## 📊 Database
 
 - SQLite3 is used (no external database server required)
 - Database is stored locally as a file
