@@ -14,7 +14,6 @@ LGTM/
   server/   # Node/Express backend
 ```
 
-
 ## Prerequisites
 
 - Node.js
@@ -26,7 +25,6 @@ Check versions:
 node --version
 npm --version
 ```
-
 
 ## 🖥️🎨 Frontend Setup
 
@@ -62,15 +60,13 @@ node index.js
 
 Default port: 5000
 
-
-
 ## 📊 Database
 
 - SQLite3 is used (no external database server required)
 - Database is stored locally as a file
 - Schema is defined in `server/database/booking_schema.sql`
 
-### Initial Setup (first time only)
+### Initial Setup (first time only -- fresh setup)
 
 From the `server` folder:
 
@@ -80,7 +76,13 @@ npm run init-db
 
 This will create the database and initialize all tables.
 
-Location: `server/database/app.db`
+### Opening SQLite
+
+From the `server` folder:
+
+```
+sqlite3 database/app.db
+```
 
 Inside SQLite:
 
@@ -100,7 +102,9 @@ SELECT * FROM t LIMIT 10;
 .dump                   -- backup DB
 .quit                   -- exit
 ```
+
 ### Notes (Schema change)
+
 Do not commit `app.db` to Git (file already in `.gitignore`)
 *If schema changes*, delete app.db and run `npm run init-db` again.
 
