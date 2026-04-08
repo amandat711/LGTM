@@ -10,64 +10,25 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 ---
 
 ## Phase 0 - Before coding
-- [ ] Confirm what your team means by "calendar"
-  - [ ] Internal calendar view of appointments/slots in your app
-  - [ ] Recurring office hours
-  - [ ] Group meeting scheduling
-  - [ ] Export to Google/Outlook (`.ics`) later
-- [ ] Freeze the database schema for calendar-related tables
-- [ ] Decide naming conventions for statuses and scheduling modes
-- [ ] Make sure `app.db` can be initialized locally with `npm run init-db`
+- [x] Confirm what your team means by "calendar"
+  - [x] Internal calendar view of appointments/slots in your app
+  - [x] Recurring office hours
+  - [x] Group meeting scheduling
+  - [x] Export to Google/Outlook (`.ics`) later
+- [x] Freeze the database schema for calendar-related tables
+- [x] Decide naming conventions for statuses and scheduling modes
+- [x] Make sure `app.db` can be initialized locally with `npm run init-db`
 
 ---
 
 ## Phase 1 - Database foundation
-### Tables to have ready
-- [ ] `users`
-- [ ] `availabilities`
-- [ ] `appointments`
-- [ ] `appointment_participants`
-- [ ] `appointment_history`
-- [ ] `invitations` if request/group flow is included now
-
-### Verify fields you need
-#### `availabilities`
-- [ ] `availability_id`
-- [ ] `created_by`
-- [ ] `start_time`
-- [ ] `end_time`
-- [ ] `location`
-- [ ] `capacity`
-- [ ] `visibility`
-- [ ] `recurrence_rule` (nullable)
-- [ ] `status` if you want active/inactive handling
-
-#### `appointments`
-- [ ] `appointment_id`
-- [ ] `availability_id` (nullable if created without a slot)
-- [ ] `start_time`
-- [ ] `end_time`
-- [ ] `location`
-- [ ] `capacity`
-- [ ] `ap_title`
-- [ ] `ap_description`
-- [ ] `scheduling_mode` (`calendar` / `heatmap`)
-- [ ] `status` (`pending`, `waiting_confirmation`, `confirmed`, `cancelled`, `rescheduled`)
-- [ ] `created_from_availability`
-
-#### `appointment_participants`
-- [ ] `appointment_id`
-- [ ] `user_id`
-- [ ] `participant_role` (`host`, `attendee`)
-- [ ] `response_status`
-
-#### `appointment_history`
-- [ ] old/new start and end time
-- [ ] old/new status
-- [ ] changed_by
-- [ ] changed_at
-- [ ] note
-
+### Tables to have ready for scheduling core
+- [x] `users`
+- [x] `availabilities`
+- [x] `appointments`
+- [x] `appointment_participants`
+- [x] `appointment_history`
+- [x] `invitations` 
 ---
 
 ## Phase 2 - Backend DB connection
