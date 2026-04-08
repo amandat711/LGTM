@@ -17,6 +17,7 @@ yarn-error.log*
 *.sqlite
 *.sqlite3
 server/database/*.sqlite
+app.db
 
 # Build folders
 build/
