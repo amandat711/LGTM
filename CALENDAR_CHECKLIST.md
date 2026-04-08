@@ -43,7 +43,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 - [X] Connect to `database/app.db`
 - [X] Enable foreign keys with `PRAGMA foreign_keys = ON`
 - [X] Test DB connection with a simple query
-- [ ] Add a small script or route to verify tables exist
+- [X] Add a small script or route to verify tables exist
 
 ---
 
@@ -194,22 +194,6 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 - [ ] Booking updates UI immediately
 - [ ] Cancelling updates UI immediately
 - [ ] Upcoming vs past appointments are separated
-
----
-
-## Suggested order of implementation
-
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
-- [ ] 
 
 ---
 
