@@ -8,9 +8,11 @@
 
 ## Project Structure
 
+```
 LGTM/
   client/   # React frontend
   server/   # Node/Express backend
+```
 
 ---
 
@@ -21,35 +23,46 @@ LGTM/
 
 Check versions:
 
+```
 node --version
 npm --version
+```
 
 ---
 
 ## Frontend Setup
 
+```
 cd client
 npm install
+```
 
 Run:
 
+```
 npm start
+```
 
 or:
 
+```
 npm run dev
+```
 
 ---
 
 ## Backend Setup
 
+```
 cd server
 npm install
-npm install sqlite3
+```
 
 Run:
 
+```
 node index.js
+```
 
 Default port: 5000
 
@@ -63,7 +76,9 @@ Default port: 5000
 
 Location:
 
+```
 server/database/lgtm.sqlite
+```
 
 Tables are initialized by backend code.
 
@@ -75,35 +90,52 @@ Run frontend and backend in separate terminals.
 
 Frontend:
 
+```
 cd client
 npm install
 npm start
+```
 
 Backend:
 
+```
 cd server
 npm install
 node index.js
+```
+
 
 ---
 
-## Notes
+## Git Workflow (Rebase)
 
-- Do not commit the SQLite database file
-- Coordinate schema changes with the team
-- Align user/auth structure before implementing features
-- Keep API responses consistent with frontend expectations
+Before starting work:
 
----
+```
+git checkout main
+git pull origin main
+git checkout your-branch
+git rebase main
+```
 
-## Git
+After making changes:
 
-Pull latest changes:
-
-git pull
-
-Commit changes:
-
+```
 git add .
 git commit -m "message"
-git push
+git push origin your-branch
+```
+
+If rebase conflicts occur:
+
+```
+# fix conflicts manually
+git add .
+git rebase --continue
+```
+
+If needed to cancel rebase:
+
+```
+git rebase --abort
+```
