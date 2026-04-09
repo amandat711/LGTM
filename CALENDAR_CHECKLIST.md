@@ -58,7 +58,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 - [X] Save location / visibility / capacity
 - [X] Return created availability
 
-### B. Users view available slots
+### B. Users view available slots (GET /availabilities)
 
 - [X] Create route to list public/active availabilities
 - [X] Filter out past slots
@@ -76,13 +76,13 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 - [X] Mark/update availability if needed
 - [X] Add history record
 
-### D. Dashboard events
+### D. Dashboard events (GET /appointments)
 
-- [ ] Route for "my appointments"
-- [ ] Route for "appointments I host"
-- [ ] Route for "appointments I attend"
-- [ ] Sort by upcoming first
-- [ ] Include status, time, location, participants
+- [X] Route for "my appointments" -> `GET http://localhost:5000/appointments/my?user_id=2`
+- [X] Route for "appointments I host"-> `GET http://localhost:5000/appointments/hosting?user_id=1`
+- [X] Route for "appointments I attend"-> `GET http://localhost:5000/appointments/attending?user_id=2`
+- [X] Sort by upcoming first
+- [X] Include status, time, location, participants
 
 ### E. Cancel appointment
 

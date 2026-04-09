@@ -208,4 +208,148 @@ router.post('/', (req, res) => {
   );
 });
 
+router.get('/my', (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  const query = `
+    SELECT DISTINCT a.*
+    FROM appointments a
+    JOIN appointment_participants ap
+      ON a.appointment_id = ap.appointment_id
+    WHERE ap.user_id = ?
+    ORDER BY datetime(a.start_time) ASC
+  `;
+
+  db.all(query, [user_id], (err, appointments) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    if (appointments.length === 0) {
+      return res.json([]);
+    }
+
+    const appointmentIds = appointments.map(a => a.appointment_id);
+    const placeholders = appointmentIds.map(() => '?').join(',');
+
+    const participantsQuery = `
+      SELECT appointment_id, user_id, participant_role, response_status
+      FROM appointment_participants
+      WHERE appointment_id IN (${placeholders})
+    `;
+
+    db.all(participantsQuery, appointmentIds, (err, participants) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      const result = appointments.map(appt => ({
+        ...appt,
+        participants: participants.filter(
+          p => p.appointment_id === appt.appointment_id
+        )
+      }));
+
+      res.json(result);
+    });
+  });
+});
+
+router.get('/hosting', (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  const query = `
+    SELECT DISTINCT a.*
+    FROM appointments a
+    JOIN appointment_participants ap
+      ON a.appointment_id = ap.appointment_id
+    WHERE ap.user_id = ?
+      AND ap.participant_role = 'host'
+    ORDER BY datetime(a.start_time) ASC
+  `;
+
+  db.all(query, [user_id], (err, appointments) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    if (appointments.length === 0) {
+      return res.json([]);
+    }
+
+    const appointmentIds = appointments.map(a => a.appointment_id);
+    const placeholders = appointmentIds.map(() => '?').join(',');
+
+    const participantsQuery = `
+      SELECT appointment_id, user_id, participant_role, response_status
+      FROM appointment_participants
+      WHERE appointment_id IN (${placeholders})
+    `;
+
+    db.all(participantsQuery, appointmentIds, (err, participants) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      const result = appointments.map(appt => ({
+        ...appt,
+        participants: participants.filter(
+          p => p.appointment_id === appt.appointment_id
+        )
+      }));
+
+      res.json(result);
+    });
+  });
+});
+
+router.get('/attending', (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  const query = `
+    SELECT DISTINCT a.*
+    FROM appointments a
+    JOIN appointment_participants ap
+      ON a.appointment_id = ap.appointment_id
+    WHERE ap.user_id = ?
+      AND ap.participant_role = 'attendee'
+    ORDER BY datetime(a.start_time) ASC
+  `;
+
+  db.all(query, [user_id], (err, appointments) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    if (appointments.length === 0) {
+      return res.json([]);
+    }
+
+    const appointmentIds = appointments.map(a => a.appointment_id);
+    const placeholders = appointmentIds.map(() => '?').join(',');
+
+    const participantsQuery = `
+      SELECT appointment_id, user_id, participant_role, response_status
+      FROM appointment_participants
+      WHERE appointment_id IN (${placeholders})
+    `;
+
+    db.all(participantsQuery, appointmentIds, (err, participants) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      const result = appointments.map(appt => ({
+        ...appt,
+        participants: participants.filter(
+          p => p.appointment_id === appt.appointment_id
+        )
+      }));
+
+      res.json(result);
+    });
+  });
+});
 module.exports = router;
+
+// TODO: join users table, so dashboard shows names and email
