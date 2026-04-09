@@ -50,13 +50,13 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 
 ## Phase 3 - Core calendar logic first
 
-### A. Owner creates available time slots
+### A. Owner creates available time slots (POST /availabilities)
 
-- [ ] Create route to add one availability slot
-- [ ] Validate: end time is after start time
-- [ ] Validate: only allowed users can create slots
-- [ ] Save location / visibility / capacity
-- [ ] Return created availability
+- [X] Create route to add one availability slot
+- [X] Validate: end time is after start time
+- [X] Validate: only allowed users can create slots
+- [X] Save location / visibility / capacity
+- [X] Return created availability
 
 ### B. Users view available slots
 
