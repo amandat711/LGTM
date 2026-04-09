@@ -104,11 +104,17 @@ router.post('/', (req, res) => {
 
 router.get('/', (req, res) => {
   const query = `
-    SELECT *
-    FROM availabilities
-    WHERE visibility = 'public'
-      AND datetime(end_time) > datetime('now')
-    ORDER BY start_time ASC
+    SELECT a.*
+    FROM availabilities a
+    WHERE a.visibility = 'public'
+      AND datetime(a.end_time) > datetime('now')
+      AND (
+        SELECT COUNT(*)
+        FROM appointments ap
+        WHERE ap.created_from_availability = a.availability_id
+          AND ap.status != 'cancelled'
+      ) < a.capacity
+    ORDER BY a.start_time ASC
   `;
 
   db.all(query, [], (err, rows) => {
