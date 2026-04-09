@@ -65,16 +65,16 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 - [X] Filter out full slots if capacity reached
 - [X] Optional: filter by owner/course/date
 
-### C. User books a slot
+### C. User books a slot (POST /appointments)
 
-- [ ] Create booking route
-- [ ] Check slot exists
-- [ ] Check slot is visible/public if required
-- [ ] Check slot is not already full
-- [ ] Create appointment from selected availability
-- [ ] Insert participants (`host`, `attendee`)
-- [ ] Mark/update availability if needed
-- [ ] Add history record
+- [X] Create booking route
+- [X] Check slot exists
+- [X] Check slot is visible/public if required
+- [X] Check slot is not already full
+- [X] Create appointment from selected availability
+- [X] Insert participants (`host`, `attendee`)
+- [X] Mark/update availability if needed
+- [X] Add history record
 
 ### D. Dashboard events
 
