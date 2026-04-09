@@ -8,6 +8,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 
 - Core booking/appointment functionality is required for the project.
 - Exporting appointments to Google/Outlook calendars is a bonus feature for the regular project, but required for the competition version.
+- The heatmap is not part of this checklist.
 
 ---
 
