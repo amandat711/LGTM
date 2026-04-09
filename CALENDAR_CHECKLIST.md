@@ -84,7 +84,7 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 - [X] Sort by upcoming first
 - [X] Include status, time, location, participants
 
-### E. Cancel appointment
+### E. Cancel appointment (PATCH /appointments/:id/cancel)
 
 - [ ] Create cancel route
 - [ ] Update appointment status to `cancelled`

@@ -350,6 +350,92 @@ router.get('/attending', (req, res) => {
     });
   });
 });
+
+router.patch('/:id/cancel', (req, res) => {
+  const appointmentId = req.params.id;
+  const { changed_by, note } = req.body;
+
+  if (!changed_by) {
+    return res.status(400).json({
+      error: 'changed_by is required'
+    });
+  }
+
+  // 1. Check appointment exists
+  db.get(
+    `SELECT * FROM appointments WHERE appointment_id = ?`,
+    [appointmentId],
+    (err, appointment) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      if (!appointment) {
+        return res.status(404).json({ error: 'Appointment not found' });
+      }
+
+      if (appointment.status === 'cancelled') {
+        return res.status(400).json({
+          error: 'Appointment is already cancelled'
+        });
+      }
+
+      const oldStatus = appointment.status;
+
+      // 2. Update status
+      db.run(
+        `
+        UPDATE appointments
+        SET status = 'cancelled'
+        WHERE appointment_id = ?
+        `,
+        [appointmentId],
+        function (err) {
+          if (err) return res.status(500).json({ error: err.message });
+
+          // 3. Add history entry
+          db.run(
+            `
+            INSERT INTO appointment_history
+            (
+              appointment_id,
+              changed_by,
+              old_status,
+              new_status,
+              changed_at,
+              note
+            )
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+            `,
+            [
+              appointmentId,
+              changed_by,
+              oldStatus,
+              'cancelled',
+              note || 'Appointment cancelled'
+            ],
+            (err) => {
+              if (err) return res.status(500).json({ error: err.message });
+
+              // 4. Return updated appointment
+              db.get(
+                `SELECT * FROM appointments WHERE appointment_id = ?`,
+                [appointmentId],
+                (err, updatedAppointment) => {
+                  if (err) return res.status(500).json({ error: err.message });
+
+                  res.json({
+                    message: 'Appointment cancelled successfully',
+                    appointment: updatedAppointment
+                  });
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
 module.exports = router;
 
 // TODO: join users table, so dashboard shows names and email
