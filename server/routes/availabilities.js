@@ -51,7 +51,7 @@ router.post('/', (req, res) => {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      // Optional: restrict who can create slots
+      // Restrict who can create slots
       const allowed = ['course_admin', 'general_admin'];
       if (!allowed.includes(user.user_type)) {
         return res.status(403).json({
@@ -102,4 +102,30 @@ router.post('/', (req, res) => {
   );
 });
 
+router.get('/', (req, res) => {
+  const query = `
+    SELECT *
+    FROM availabilities
+    WHERE visibility = 'public'
+      AND datetime(end_time) > datetime('now')
+    ORDER BY start_time ASC
+  `;
+
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    res.json(rows);
+  });
+});
+
 module.exports = router;
+
+
+/*TODO: filters 
+such as the following:
+
+GET /availabilities?created_by=1
+GET /availabilities?date=2026-04-10
+*/

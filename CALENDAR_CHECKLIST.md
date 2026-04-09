@@ -60,10 +60,10 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 
 ### B. Users view available slots
 
-- [ ] Create route to list public/active availabilities
-- [ ] Filter out past slots
-- [ ] Filter out full slots if capacity reached
-- [ ] Optional: filter by owner/course/date
+- [X] Create route to list public/active availabilities
+- [X] Filter out past slots
+- [X] Filter out full slots if capacity reached
+- [X] Optional: filter by owner/course/date
 
 ### C. User books a slot
 
