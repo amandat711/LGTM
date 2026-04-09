@@ -86,10 +86,10 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 
 ### E. Cancel appointment (PATCH /appointments/:id/cancel)
 
-- [ ] Create cancel route
-- [ ] Update appointment status to `cancelled`
-- [ ] Add history entry
-- [ ] Decide whether slot becomes available again
+- [X] Create cancel route
+- [X] Update appointment status to `cancelled`
+- [X] Add history entry
+- [X] Decide whether slot becomes available again
 
 ---
 
