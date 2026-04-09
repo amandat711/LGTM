@@ -91,6 +91,15 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 - [X] Add history entry
 - [X] Decide whether slot becomes available again
 
+### F. Owner deletes an availability slot (DELETE /availabilities/:id)
+
+* [X] Create delete availability route
+* [X] Check availability exists
+* [X] Check requesting user is allowed to delete it
+* [X] Prevent deletion if slot has active booking(s) -- even if not appearing in (GET /availabilities)
+* [X] Delete availability if safe
+* [X] Return success response
+
 ---
 
 ## Phase 4 - Internal calendar view in the app
