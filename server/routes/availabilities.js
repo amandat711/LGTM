@@ -51,7 +51,7 @@ router.post('/', (req, res) => {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      // Optional: restrict who can create slots
+      // Restrict who can create slots
       const allowed = ['course_admin', 'general_admin'];
       if (!allowed.includes(user.user_type)) {
         return res.status(403).json({
@@ -102,4 +102,120 @@ router.post('/', (req, res) => {
   );
 });
 
+router.get('/', (req, res) => {
+  const query = `
+    SELECT a.*
+    FROM availabilities a
+    WHERE a.visibility = 'public'
+      AND datetime(a.end_time) > datetime('now')
+      AND (
+        SELECT COUNT(*)
+        FROM appointments ap
+        WHERE ap.created_from_availability = a.availability_id
+          AND ap.status != 'cancelled'
+      ) < a.capacity
+    ORDER BY a.start_time ASC
+  `;
+
+  db.all(query, [], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    res.json(rows);
+  });
+});
+
+router.delete('/:id', (req, res) => {
+  const availabilityId = req.params.id;
+  const { deleted_by } = req.body;
+
+  if (!deleted_by) {
+    return res.status(400).json({
+      error: 'deleted_by is required'
+    });
+  }
+
+  // Check availability exists
+  db.get(
+    `SELECT * FROM availabilities WHERE availability_id = ?`,
+    [availabilityId],
+    (err, availability) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      if (!availability) {
+        return res.status(404).json({ error: 'Availability not found' });
+      }
+
+      // Check deleting user exists
+      db.get(
+        `SELECT user_id, user_type FROM users WHERE user_id = ?`,
+        [deleted_by],
+        (err, user) => {
+          if (err) return res.status(500).json({ error: err.message });
+
+          if (!user) {
+            return res.status(404).json({ error: 'Deleting user not found' });
+          }
+
+          // Check permission
+          // Allow:
+          // - the creator of the availability
+          // - course_admin / general_admin
+          const isOwner = Number(availability.created_by) === Number(deleted_by);
+          const isAdmin = ['course_admin', 'general_admin'].includes(user.user_type);
+
+          if (!isOwner && !isAdmin) {
+            return res.status(403).json({
+              error: 'Not allowed to delete this availability'
+            });
+          }
+
+          // Prevent deletion if active appointments exist
+          db.get(
+            `
+            SELECT COUNT(*) AS active_booking_count
+            FROM appointments
+            WHERE created_from_availability = ?
+              AND status != 'cancelled'
+            `,
+            [availabilityId],
+            (err, countRow) => {
+              if (err) return res.status(500).json({ error: err.message });
+
+              if (countRow.active_booking_count > 0) {
+                return res.status(400).json({
+                  error: 'Cannot delete availability with active booking(s)'
+                });
+              }
+
+              // Safe to delete
+              db.run(
+                `DELETE FROM availabilities WHERE availability_id = ?`,
+                [availabilityId],
+                function (err) {
+                  if (err) return res.status(500).json({ error: err.message });
+
+                  res.json({
+                    message: 'Availability deleted successfully',
+                    deleted_availability_id: Number(availabilityId)
+                  });
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
 module.exports = router;
+
+
+/*TODO: filters 
+such as the following:
+
+GET /availabilities?created_by=1
+GET /availabilities?date=2026-04-10
+*/

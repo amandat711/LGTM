@@ -58,38 +58,47 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 - [X] Save location / visibility / capacity
 - [X] Return created availability
 
-### B. Users view available slots
+### B. Users view available slots (GET /availabilities)
 
-- [ ] Create route to list public/active availabilities
-- [ ] Filter out past slots
-- [ ] Filter out full slots if capacity reached
-- [ ] Optional: filter by owner/course/date
+- [X] Create route to list public/active availabilities
+- [X] Filter out past slots
+- [X] Filter out full slots if capacity reached
+- [X] Optional: filter by owner/course/date
 
-### C. User books a slot
+### C. User books a slot (POST /appointments)
 
-- [ ] Create booking route
-- [ ] Check slot exists
-- [ ] Check slot is visible/public if required
-- [ ] Check slot is not already full
-- [ ] Create appointment from selected availability
-- [ ] Insert participants (`host`, `attendee`)
-- [ ] Mark/update availability if needed
-- [ ] Add history record
+- [X] Create booking route
+- [X] Check slot exists
+- [X] Check slot is visible/public if required
+- [X] Check slot is not already full
+- [X] Create appointment from selected availability
+- [X] Insert participants (`host`, `attendee`)
+- [X] Mark/update availability if needed
+- [X] Add history record
 
-### D. Dashboard events
+### D. Dashboard events (GET /appointments)
 
-- [ ] Route for "my appointments"
-- [ ] Route for "appointments I host"
-- [ ] Route for "appointments I attend"
-- [ ] Sort by upcoming first
-- [ ] Include status, time, location, participants
+- [X] Route for "my appointments" -> `GET http://localhost:5000/appointments/my?user_id=2`
+- [X] Route for "appointments I host"-> `GET http://localhost:5000/appointments/hosting?user_id=1`
+- [X] Route for "appointments I attend"-> `GET http://localhost:5000/appointments/attending?user_id=2`
+- [X] Sort by upcoming first
+- [X] Include status, time, location, participants
 
-### E. Cancel appointment
+### E. Cancel appointment (PATCH /appointments/:id/cancel)
 
-- [ ] Create cancel route
-- [ ] Update appointment status to `cancelled`
-- [ ] Add history entry
-- [ ] Decide whether slot becomes available again
+- [X] Create cancel route
+- [X] Update appointment status to `cancelled`
+- [X] Add history entry
+- [X] Decide whether slot becomes available again
+
+### F. Owner deletes an availability slot (DELETE /availabilities/:id)
+
+* [X] Create delete availability route
+* [X] Check availability exists
+* [X] Check requesting user is allowed to delete it
+* [X] Prevent deletion if slot has active booking(s) -- even if not appearing in (GET /availabilities)
+* [X] Delete availability if safe
+* [X] Return success response
 
 ---
 
