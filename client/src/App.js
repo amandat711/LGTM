@@ -10,8 +10,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/student" element={<StudentDashboard />} />
-        <Route path="/professor" element={<ProfessorDashboard />} />
+        <Route path="/dashboard/student/:userId" element={<StudentDashboard />} />
+        <Route path="/dashboard/professor/:userId" element={<ProfessorDashboard />} />
         <Route path="/heatmap/:eventId" element={<Heatmap />} />
       </Routes>
     </BrowserRouter>
