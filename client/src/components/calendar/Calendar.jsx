@@ -1,5 +1,6 @@
 import React from 'react';
 import WeekView from './WeekView';
+import '../../styles/Calendar.css';
 
 export default function Calendar({ view = 'week', appointments, onEventClick }) {
   if (view === 'week') {

@@ -54,7 +54,7 @@ export function getEventStyle(appt, slotHeight = 64) {
   const durationMinutes = (end - start) / 60000;
 
   const top = (minutesFromTop / 60) * slotHeight;
-  const height = Math.max((durationMinutes / 60) * slotHeight, 24);
+  const height = Math.max((durationMinutes / 60) * slotHeight, 30);
 
   return { top, height };
 }

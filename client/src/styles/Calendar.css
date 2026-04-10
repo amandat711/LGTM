@@ -1,0 +1,249 @@
+/* ─── Calendar panel ─────────────────────────────────────── */
+.dash-calendar-panel {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border-right: 1px solid #e4e4e4;
+}
+
+.dash-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e4e4e4;
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.dash-cal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f0f0f;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+
+.dash-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dash-cal-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #e4e4e4;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #555;
+  transition: border-color 0.15s;
+}
+
+.dash-cal-nav-btn:hover {
+  border-color: #999;
+}
+
+.dash-cal-today-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #e4e4e4;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.dash-cal-today-btn:hover {
+  border-color: #E31429;
+  color: #E31429;
+}
+
+.dash-cal-range {
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+  min-width: 190px;
+  text-align: center;
+}
+
+/* ─── Week grid ──────────────────────────────────────────── */
+.dash-week-grid {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: #fff;
+}
+
+.dash-week-days {
+  display: grid;
+  grid-template-columns: 64px repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid #e4e4e4;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 3;
+}
+
+.dash-week-day-header {
+  padding: 10px 4px;
+  text-align: center;
+  border-right: 1px solid #f0f0f0;
+}
+
+.dash-week-day-header:first-child {
+  border-right: 1px solid #e4e4e4;
+}
+
+.dash-day-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.dash-day-num {
+  font-size: 18px;
+  font-weight: 500;
+  color: #0f0f0f;
+  line-height: 1.5;
+}
+
+.dash-day-num.today {
+  background: #E31429;
+  color: #fff;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px auto 0;
+  font-size: 14px;
+}
+
+/* ─── Time grid ──────────────────────────────────────────── */
+.dash-time-rows {
+  display: grid;
+  grid-template-columns: 64px repeat(7, minmax(0, 1fr));
+  align-items: start;
+  min-width: 0;
+  position: relative;
+}
+
+.dash-day-column {
+  position: relative;
+}
+
+.dash-time-label {
+  height: var(--slot-height, 64px);
+  font-size: 11px;
+  color: #9aa0a6;
+  text-align: right;
+  padding: 2px 8px 0 0;
+  border-right: 1px solid #e4e4e4;
+  box-sizing: border-box;
+}
+
+.dash-time-cell {
+  height: var(--slot-height, 64px);
+  border-right: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f3f3f3;
+  box-sizing: border-box;
+}
+
+.dash-day-column:last-child .dash-time-cell {
+  border-right: none;
+}
+
+/* ─── Events ─────────────────────────────────────────────── */
+.dash-event {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  min-height: 32px;
+  border-radius: 10px;
+  padding: 6px 8px 6px 9px;
+  font-size: 12px;
+  font-weight: 500;
+  overflow: hidden;
+  cursor: pointer;
+  z-index: 2;
+  transition: opacity 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+  text-align: left;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  outline: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2px;
+  white-space: normal;
+  background-clip: padding-box;
+}
+
+.dash-event:hover {
+  opacity: 0.96;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.10);
+}
+
+.dash-event:focus-visible {
+  box-shadow: 0 0 0 2px rgba(227, 20, 41, 0.18);
+}
+
+.dash-event-title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-event-time {
+  font-size: 11px;
+  line-height: 1.1;
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-event-location {
+  font-size: 11px;
+  line-height: 1.15;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dash-event.compact {
+  padding: 4px 7px 4px 8px;
+  min-height: 24px;
+  gap: 1px;
+}
+
+.dash-event.compact .dash-event-title {
+  font-size: 13px;
+}
+
+.dash-event.compact .dash-event-time {
+  font-size: 10px;
+}
