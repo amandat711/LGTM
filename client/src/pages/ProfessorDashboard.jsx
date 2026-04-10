@@ -37,6 +37,7 @@ export default function ProfessorDashboard() {
   const [activeAppt, setActiveAppt] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
   // ─────────────────────────────────────────────────────────────
   // Load professor-hosted appointments from backend
@@ -218,6 +219,14 @@ useEffect(() => {
               + New heatmap
             </button>
 
+            <button
+              className="dash-logout"
+              style={{ marginRight: 8 }}
+              onClick={() => setRightPanelOpen((open) => !open)}
+            >
+              {rightPanelOpen ? 'Hide panel' : 'Show panel'}
+            </button>
+
             <button className="dash-logout" onClick={() => navigate('/')}>
               Back to home
             </button>
@@ -302,8 +311,9 @@ useEffect(() => {
             {/* ─────────────────────────────────────────────── */}
             {/* Right panel */}
             {/* ─────────────────────────────────────────────── */}
-            <aside className="dash-right-panel">
-              {/* Upcoming appointments */}
+            {rightPanelOpen && (
+              <aside className="dash-right-panel">
+                {/* Upcoming appointments */}
               <div>
                 <div className="dash-panel-section-title">Upcoming appointments</div>
                 {upcomingAppts.length === 0 ? (
@@ -360,6 +370,7 @@ useEffect(() => {
                 </p>
               </div>
             </aside>
+          )}
           </div>
         </div>
       </div>

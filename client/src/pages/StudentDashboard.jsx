@@ -52,6 +52,7 @@ export default function StudentDashboard() {
   const [activeAppt, setActiveAppt] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
   // ─────────────────────────────────────────────────────────────
   // Load student appointments from backend
@@ -171,7 +172,14 @@ export default function StudentDashboard() {
             </span>
             <span className="dash-nav-role student">Student</span>
             <div className="dash-nav-avatar">{initials}</div>
-            <button className="dash-logout" onClick={() => navigate('/')}>
+            <button
+              className="dash-logout"
+              style={{ marginRight: 8 }}
+              onClick={() => setRightPanelOpen((open) => !open)}
+            >
+              {rightPanelOpen ? 'Hide panel' : 'Show panel'}
+            </button>
+            <button className="dash-logout" onClick={() => navigate('/') }>
               Back to home
             </button>
           </div>
@@ -240,8 +248,9 @@ export default function StudentDashboard() {
             {/* ─────────────────────────────────────────────── */}
             {/* Right panel */}
             {/* ─────────────────────────────────────────────── */}
-            <aside className="dash-right-panel">
-              {/* Upcoming appointments */}
+            {rightPanelOpen && (
+              <aside className="dash-right-panel">
+                {/* Upcoming appointments */}
               <div>
                 <div className="dash-panel-section-title">Upcoming appointments</div>
                 {upcomingAppts.length === 0 ? (
@@ -305,6 +314,7 @@ export default function StudentDashboard() {
                 ))}
               </div>
             </aside>
+          )}
           </div>
         </div>
       </div>
