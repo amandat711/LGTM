@@ -242,7 +242,8 @@ export default function ProfessorDashboard() {
                       >
                         <div className="dash-appt-dot" style={{ background: appt.color }} />
                         <div className="dash-appt-info">
-                          <h4>{appt.ownerName}</h4>
+                          <h4>{appt.title || 'Untitled appointment'}</h4>
+                          <h6>{appt.ownerName}</h6>
                           <p>{formatDate(appt.startTime)}</p>
                           <p>{appt.location}</p>
                         </div>
