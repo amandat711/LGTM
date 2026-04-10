@@ -67,7 +67,24 @@ Default port: 5000
 - Database is stored locally as a file
 - Schema is defined in `server/database/booking_schema.sql`
 
-### Initial Setup (first time only -- fresh setup)
+### Quick Start: Seed Sample Data
+
+To quickly populate the database with sample users, availabilities, and appointments:
+
+```
+./data-starter.sh
+```
+
+This will:
+- Recreate the database schema
+- Seed one professor and one student
+- Create sample availabilities and appointments
+
+**Note:** If the backend server is already running, restart it after running this script.
+
+### Manual Setup
+
+If you prefer to set up the database manually:
 
 From the `server` folder:
 
@@ -75,7 +92,7 @@ From the `server` folder:
 npm run init-db
 ```
 
-This will create the database and initialize all tables.
+This will create the database and initialize all tables (without sample data).
 
 ### Opening SQLite
 
@@ -107,7 +124,7 @@ SELECT * FROM t LIMIT 10;
 ### Notes (Schema change)
 
 Do not commit `app.db` to Git (file already in `.gitignore`)
-*If schema changes*, delete app.db and run `npm run init-db` again.
+*If schema changes*, run `./data-starter.sh` again to rebuild, or manually delete `app.db` and run `npm run init-db`.
 
 ## Git Workflow (Rebase)
 
