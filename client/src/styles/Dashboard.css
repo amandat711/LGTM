@@ -153,6 +153,7 @@
 /* ─── Calendar panel ─────────────────────────────────────── */
 .dash-calendar-panel {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -167,6 +168,7 @@
   padding: 14px 20px;
   border-bottom: 1px solid #e4e4e4;
   flex-shrink: 0;
+  gap: 16px;
 }
 
 .dash-cal-title {
@@ -174,17 +176,19 @@
   font-weight: 600;
   color: #0f0f0f;
   letter-spacing: -0.3px;
+  white-space: nowrap;
 }
 
 .dash-cal-nav {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .dash-cal-nav-btn {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 6px;
   border: 1px solid #e4e4e4;
   background: #fff;
@@ -196,10 +200,11 @@
   color: #555;
   transition: border-color 0.15s;
 }
+
 .dash-cal-nav-btn:hover { border-color: #999; }
 
 .dash-cal-today-btn {
-  padding: 5px 12px;
+  padding: 6px 12px;
   border-radius: 6px;
   border: 1px solid #e4e4e4;
   background: #fff;
@@ -210,40 +215,44 @@
   font-family: inherit;
   transition: border-color 0.15s;
 }
+
 .dash-cal-today-btn:hover { border-color: #E31429; color: #E31429; }
 
 .dash-cal-range {
   font-size: 13px;
   color: #555;
   font-weight: 500;
-  min-width: 160px;
+  min-width: 190px;
   text-align: center;
 }
 
 /* ─── Week grid ──────────────────────────────────────────── */
 .dash-week-grid {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  min-height: 0;
+  overflow: auto;
+  background: #fff;
 }
 
 .dash-week-days {
   display: grid;
-  grid-template-columns: 52px repeat(7, 1fr);
+  grid-template-columns: 64px repeat(7, minmax(0, 1fr));
   border-bottom: 1px solid #e4e4e4;
   position: sticky;
   top: 0;
   background: #fff;
-  z-index: 2;
+  z-index: 3;
 }
 
 .dash-week-day-header {
-  padding: 8px 4px;
+  padding: 10px 4px;
   text-align: center;
   border-right: 1px solid #f0f0f0;
 }
 
-.dash-week-day-header:first-child { border-right: 1px solid #e4e4e4; }
+.dash-week-day-header:first-child {
+  border-right: 1px solid #e4e4e4;
+}
 
 .dash-day-name {
   font-size: 10px;
@@ -254,70 +263,112 @@
 }
 
 .dash-day-num {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 500;
   color: #0f0f0f;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
 .dash-day-num.today {
   background: #E31429;
   color: #fff;
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto;
+  margin: 2px auto 0;
   font-size: 14px;
 }
 
-/* ─── Time slots ─────────────────────────────────────────── */
+/* ─── Time grid ──────────────────────────────────────────── */
 .dash-time-rows {
   display: grid;
-  grid-template-columns: 52px repeat(7, 1fr);
+  grid-template-columns: 64px repeat(7, minmax(0, 1fr));
+  align-items: start;
+  min-width: 0;
+}
+
+.dash-day-column {
   position: relative;
 }
 
 .dash-time-label {
-  font-size: 10px;
-  color: #aaa;
+  height: var(--slot-height, 64px);
+  font-size: 11px;
+  color: #9aa0a6;
   text-align: right;
-  padding: 0 6px;
-  height: 48px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  padding-top: 2px;
+  padding: 2px 8px 0 0;
   border-right: 1px solid #e4e4e4;
+  box-sizing: border-box;
 }
 
 .dash-time-cell {
-  height: 48px;
+  height: var(--slot-height, 64px);
   border-right: 1px solid #f0f0f0;
-  border-bottom: 1px solid #f5f5f5;
-  position: relative;
+  border-bottom: 1px solid #f3f3f3;
+  box-sizing: border-box;
 }
 
-.dash-time-cell:last-child { border-right: none; }
+.dash-day-column:last-child .dash-time-cell {
+  border-right: none;
+}
 
 /* ─── Events ─────────────────────────────────────────────── */
 .dash-event {
   position: absolute;
-  left: 2px;
-  right: 2px;
-  border-radius: 4px;
-  padding: 2px 5px;
+  left: 4px;
+  right: 4px;
+  border-radius: 8px;
+  padding: 6px 8px;
   font-size: 11px;
   font-weight: 500;
   overflow: hidden;
   cursor: pointer;
-  z-index: 1;
-  transition: opacity 0.15s;
+  z-index: 2;
+  transition: opacity 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
 }
 
-.dash-event:hover { opacity: 0.85; }
+.dash-event:hover {
+  opacity: 0.92;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.dash-event-title {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 2px;
+}
+
+.dash-event-time {
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+/* Better shrinking inside main area */
+.dash-main {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  gap: 0;
+}
+
+.dash-right-panel {
+  width: 300px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: #fff;
+  padding: 16px;
+  gap: 20px;
+  min-height: 0;
+}
 
 /* ─── Right panel ────────────────────────────────────────── */
 .dash-right-panel {
