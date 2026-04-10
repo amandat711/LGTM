@@ -4,6 +4,8 @@ import LandingPage from './pages/landingPage';
 import Heatmap from './pages/Heatmap';
 import StudentDashboard   from './pages/StudentDashboard';
 import ProfessorDashboard from './pages/ProfessorDashboard';
+import BookingDiscovery from './pages/BookingDiscovery';
+import BookingProfessor from './pages/BookingProfessor';
 
 function App() {
   return (
@@ -12,6 +14,8 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/dashboard/student/:userId" element={<StudentDashboard />} />
         <Route path="/dashboard/professor/:userId" element={<ProfessorDashboard />} />
+        <Route path="/booking/search/:userId" element={<BookingDiscovery />} />
+        <Route path="/booking/professor/:professorId" element={<BookingProfessor />} />
         <Route path="/heatmap/:eventId" element={<Heatmap />} />
       </Routes>
     </BrowserRouter>

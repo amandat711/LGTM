@@ -34,3 +34,14 @@ export async function getProfessorAvailabilities(createdBy) {
   const res = await fetch(`${API_BASE}/availabilities/owner/${createdBy}`);
   return handleResponse(res);
 }
+
+export async function getAvailableProfessors(search = '') {
+  const query = search ? `?search=${encodeURIComponent(search)}` : '';
+  const res = await fetch(`${API_BASE}/availabilities/owners${query}`);
+  return handleResponse(res);
+}
+
+export async function getProfessorPublicAvailabilities(createdBy) {
+  const res = await fetch(`${API_BASE}/availabilities?created_by=${encodeURIComponent(createdBy)}&visibility=public&include_full=false&include_past=false`);
+  return handleResponse(res);
+}

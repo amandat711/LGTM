@@ -9,7 +9,7 @@ import {
 } from './calendarUtils';
 
 export default function WeekView({ appointments, onEventClick }) {
-  const today = new Date();
+  const today = useMemo(() => new Date(), []);
   const [weekOffset, setWeekOffset] = useState(0);
   const scrollRef = useRef(null);
 
@@ -112,6 +112,14 @@ export default function WeekView({ appointments, onEventClick }) {
                 .map((appt) => {
                   const { top, height } = getEventStyle(appt, slotHeight);
                   const compact = height < 44;
+                  const startTimeString = new Date(appt.startTime).toLocaleTimeString([], {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                  });
+                  const durationMinutes = (new Date(appt.endTime) - new Date(appt.startTime)) / 60000;
+                  const shortEvent = durationMinutes <= 30;
+                  const eventTop = top + 2;
+                  const eventHeight = Math.max(height - 4, 24);
 
                   return (
                     <button
@@ -119,25 +127,26 @@ export default function WeekView({ appointments, onEventClick }) {
                       type="button"
                       className={`dash-event${compact ? ' compact' : ''}`}
                       style={{
-                        top,
-                        height,
-                        background: `${appt.color}18`,
-                        borderLeft: `3px solid ${appt.color}`,
+                        top: eventTop,
+                        height: eventHeight,
+                        background: `${appt.color}33`,
+                        border: `1px solid ${appt.color}33`,
+                        borderLeft: `4px solid ${appt.color}`,
                         color: appt.color,
+                        boxShadow: '0 1px 2px rgba(15, 23, 42, 0.08)',
                       }}
                       onClick={() => onEventClick(appt)}
-                      title={`${appt.title} • ${new Date(appt.startTime).toLocaleTimeString([], {
-                        hour: 'numeric',
-                        minute: '2-digit',
-                      })}`}
+                      title={`${appt.title} • ${startTimeString}`}
                     >
-                      <div className="dash-event-title">{appt.title}</div>
-                      <div className="dash-event-time">
-                        {new Date(appt.startTime).toLocaleTimeString([], {
-                          hour: 'numeric',
-                          minute: '2-digit',
-                        })}
+                      <div className={`dash-event-title-row${shortEvent ? ' short' : ''}`}>
+                        <span className="dash-event-title">{appt.title}</span>
+                        {shortEvent && (
+                          <span className="dash-event-time-inline">{startTimeString}</span>
+                        )}
                       </div>
+                      {!shortEvent && (
+                        <div className="dash-event-time">{startTimeString}</div>
+                      )}
                       {!compact && appt.location && (
                         <div className="dash-event-location">{appt.location}</div>
                       )}

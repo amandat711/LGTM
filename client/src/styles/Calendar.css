@@ -173,11 +173,11 @@
 /* ─── Events ─────────────────────────────────────────────── */
 .dash-event {
   position: absolute;
-  left: 4px;
+  left: 0;
   right: 4px;
   min-height: 32px;
   border-radius: 10px;
-  padding: 6px 8px 6px 9px;
+  padding: 8px 10px 8px 10px;
   font-size: 12px;
   font-weight: 500;
   overflow: hidden;
@@ -207,6 +207,18 @@
   box-shadow: 0 0 0 2px rgba(227, 20, 41, 0.18);
 }
 
+.dash-event-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  width: 100%;
+}
+
+.dash-event-title-row.short {
+  justify-content: space-between;
+  flex-wrap: nowrap;
+}
+
 .dash-event-title {
   font-size: 14px;
   font-weight: 600;
@@ -214,6 +226,16 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.dash-event-time-inline {
+  font-size: 12px;
+  line-height: 1.15;
+  opacity: 0.78;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 .dash-event-time {

@@ -37,6 +37,7 @@ export default function ProfessorDashboard() {
   const [activeAppt, setActiveAppt] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
   // ─────────────────────────────────────────────────────────────
   // Load professor-hosted appointments from backend
@@ -90,9 +91,22 @@ useEffect(() => {
   // ─────────────────────────────────────────────────────────────
   const calendarEvents = useMemo(() => {
     const myName = `${currentUser.firstName} ${currentUser.lastName}`;
-    const availabilityEvents = availabilities.map((slot) =>
-      mapAvailabilityToCalendarEvent(slot, myName)
-    );
+
+    const appointmentRanges = appointments.map((appt) => ({
+      start: new Date(appt.startTime).getTime(),
+      end: new Date(appt.endTime).getTime(),
+    }));
+
+    const availabilityEvents = availabilities
+      .filter((slot) => {
+        const availabilityStart = new Date(slot.start_time).getTime();
+        const availabilityEnd = new Date(slot.end_time).getTime();
+
+        return !appointmentRanges.some(
+          ({ start, end }) => availabilityStart < end && availabilityEnd > start
+        );
+      })
+      .map((slot) => mapAvailabilityToCalendarEvent(slot, myName));
 
     return [...appointments, ...availabilityEvents];
   }, [appointments, availabilities, currentUser]);
@@ -205,6 +219,14 @@ useEffect(() => {
               + New heatmap
             </button>
 
+            <button
+              className="dash-logout"
+              style={{ marginRight: 8 }}
+              onClick={() => setRightPanelOpen((open) => !open)}
+            >
+              {rightPanelOpen ? 'Hide panel' : 'Show panel'}
+            </button>
+
             <button className="dash-logout" onClick={() => navigate('/')}>
               Back to home
             </button>
@@ -289,8 +311,9 @@ useEffect(() => {
             {/* ─────────────────────────────────────────────── */}
             {/* Right panel */}
             {/* ─────────────────────────────────────────────── */}
-            <aside className="dash-right-panel">
-              {/* Upcoming appointments */}
+            {rightPanelOpen && (
+              <aside className="dash-right-panel">
+                {/* Upcoming appointments */}
               <div>
                 <div className="dash-panel-section-title">Upcoming appointments</div>
                 {upcomingAppts.length === 0 ? (
@@ -347,6 +370,7 @@ useEffect(() => {
                 </p>
               </div>
             </aside>
+          )}
           </div>
         </div>
       </div>

@@ -33,3 +33,18 @@ export async function cancelAppointment(appointmentId, changedBy) {
 
   return parseJson(res);
 }
+
+export async function createAppointment(availabilityId, bookedBy) {
+  const res = await fetch(`${API_BASE}/appointments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      availability_id: Number(availabilityId),
+      booked_by: Number(bookedBy),
+    }),
+  });
+
+  return parseJson(res);
+}
