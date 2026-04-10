@@ -37,9 +37,9 @@ export function isSameDay(d1, d2) {
 }
 
 export function statusLabel(status) {
-  if (status === 'confirmed') return { label: 'Confirmed', cls: 'status-confirmed' };
+  if (status === 'confirmed') return { label: 'Approved', cls: 'status-confirmed' };
   if (status === 'pending') return { label: 'Pending', cls: 'status-pending' };
-  if (status === 'waiting_approval') return { label: 'Waiting', cls: 'status-waiting' };
+  if (status === 'waiting_approval') return { label: 'Waiting for approval', cls: 'status-waiting' };
   if (status === 'cancelled') return { label: 'Cancelled', cls: 'status-cancelled' };
   return { label: status || 'Unknown', cls: '' };
 }
@@ -65,8 +65,9 @@ export function mapAppointmentToCalendarEvent(appt) {
 
   let color = '#1565a8';
   if (appt.status === 'confirmed') color = '#2a8c5f';
-  else if (appt.status === 'pending') color = '#c0842a';
-  else if (appt.status === 'cancelled') color = '#777777';
+  else if (appt.status === 'pending') color = '#f59e0b';
+  else if (appt.status === 'waiting_approval') color = '#3b82f6';
+  else if (appt.status === 'cancelled') color = '#dc2626';
 
   return {
     id: appt.appointment_id,
@@ -105,7 +106,7 @@ export function mapAvailabilityToCalendarEvent(slot, currentUserName = 'You') {
     visibility: slot.visibility,
     capacity,
     bookedCount,
-    color: slot.visibility === 'private' ? '#9CA3AF' : '#4F46E5',
+    color: '#6B7280',
   };
 }
 

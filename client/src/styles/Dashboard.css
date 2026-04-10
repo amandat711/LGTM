@@ -245,30 +245,35 @@
 .dash-appt-status {
   margin-left: auto;
   flex-shrink: 0;
-  padding: 2px 7px;
-  border-radius: 4px;
+  padding: 4px 10px;
+  border-radius: 9999px;
   font-size: 10px;
   font-weight: 500;
+  border: 1px solid transparent;
 }
 
 .status-confirmed {
   background: #d4edda;
   color: #1a5c2a;
+  border-color: #2a8c5f;
 }
 
 .status-pending {
   background: #fff8e1;
   color: #7a5800;
+  border-color: #f59e0b;
 }
 
 .status-waiting {
   background: #e8f4fd;
   color: #1565a8;
+  border-color: #3b82f6;
 }
 
 .status-cancelled {
   background: #fff0f1;
   color: #b01020;
+  border-color: #dc2626;
 }
 
 /* ─── Heatmap invite cards ───────────────────────────────── */

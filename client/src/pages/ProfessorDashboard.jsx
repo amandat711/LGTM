@@ -90,9 +90,22 @@ useEffect(() => {
   // ─────────────────────────────────────────────────────────────
   const calendarEvents = useMemo(() => {
     const myName = `${currentUser.firstName} ${currentUser.lastName}`;
-    const availabilityEvents = availabilities.map((slot) =>
-      mapAvailabilityToCalendarEvent(slot, myName)
-    );
+
+    const appointmentRanges = appointments.map((appt) => ({
+      start: new Date(appt.startTime).getTime(),
+      end: new Date(appt.endTime).getTime(),
+    }));
+
+    const availabilityEvents = availabilities
+      .filter((slot) => {
+        const availabilityStart = new Date(slot.start_time).getTime();
+        const availabilityEnd = new Date(slot.end_time).getTime();
+
+        return !appointmentRanges.some(
+          ({ start, end }) => availabilityStart < end && availabilityEnd > start
+        );
+      })
+      .map((slot) => mapAvailabilityToCalendarEvent(slot, myName));
 
     return [...appointments, ...availabilityEvents];
   }, [appointments, availabilities, currentUser]);
