@@ -54,7 +54,7 @@ export function getEventStyle(appt, slotHeight = 64) {
   const durationMinutes = (end - start) / 60000;
 
   const top = (minutesFromTop / 60) * slotHeight;
-  const height = Math.max((durationMinutes / 60) * slotHeight, 24);
+  const height = Math.max((durationMinutes / 60) * slotHeight, 28);
 
   return { top, height };
 }
@@ -81,6 +81,31 @@ export function mapAppointmentToCalendarEvent(appt) {
     status: appt.status,
     color,
     participants: appt.participants || [],
+  };
+}
+
+export function mapAvailabilityToCalendarEvent(slot, currentUserName = 'You') {
+  const bookedCount = Number(slot.booked_count || 0);
+  const capacity = Number(slot.capacity || 1);
+  const isFull = bookedCount >= capacity;
+
+  return {
+    id: `availability-${slot.availability_id}`,
+    rawId: slot.availability_id,
+    type: 'availability',
+    title: slot.av_title || 'Availability',
+    description: slot.av_description || '',
+    startTime: slot.start_time,
+    endTime: slot.end_time,
+    location: slot.location || 'No location',
+    status: isFull ? 'booked' : 'available',
+    ownerName: currentUserName,
+    ownerEmail: '',
+    attendeeName: bookedCount > 0 ? `${bookedCount}/${capacity} booked` : 'Open slot',
+    visibility: slot.visibility,
+    capacity,
+    bookedCount,
+    color: slot.visibility === 'private' ? '#9CA3AF' : '#4F46E5',
   };
 }
 

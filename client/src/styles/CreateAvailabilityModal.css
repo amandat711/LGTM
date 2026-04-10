@@ -1,0 +1,111 @@
+/* Overlay */
+.availability-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000; /* VERY IMPORTANT */
+}
+
+/* Modal card */
+.availability-modal {
+  width: min(720px, 95%);
+  max-height: 90vh;
+  overflow-y: auto;
+
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.2);
+
+  padding: 24px;
+}
+
+/* Header */
+.availability-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.availability-modal-header h2 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.availability-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* Grid layout */
+.availability-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* Full width rows */
+.form-group-full {
+  grid-column: 1 / -1;
+}
+
+/* Inputs */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #444;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+/* Footer */
+.availability-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Buttons */
+.modal-btn {
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  border: none;
+  font-weight: 500;
+}
+
+.modal-btn.primary {
+  background: #E33244;
+  color: white;
+}
+
+.modal-btn.secondary {
+  background: #eee;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .availability-form-grid {
+    grid-template-columns: 1fr;
+  }
+}

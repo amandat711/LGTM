@@ -111,11 +111,13 @@ export default function WeekView({ appointments, onEventClick }) {
                 .filter((a) => isSameDay(new Date(a.startTime), day))
                 .map((appt) => {
                   const { top, height } = getEventStyle(appt, slotHeight);
+                  const compact = height < 44;
 
                   return (
-                    <div
+                    <button
                       key={appt.id}
-                      className="dash-event"
+                      type="button"
+                      className={`dash-event${compact ? ' compact' : ''}`}
                       style={{
                         top,
                         height,
@@ -124,6 +126,10 @@ export default function WeekView({ appointments, onEventClick }) {
                         color: appt.color,
                       }}
                       onClick={() => onEventClick(appt)}
+                      title={`${appt.title} • ${new Date(appt.startTime).toLocaleTimeString([], {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}`}
                     >
                       <div className="dash-event-title">{appt.title}</div>
                       <div className="dash-event-time">
@@ -132,7 +138,10 @@ export default function WeekView({ appointments, onEventClick }) {
                           minute: '2-digit',
                         })}
                       </div>
-                    </div>
+                      {!compact && appt.location && (
+                        <div className="dash-event-location">{appt.location}</div>
+                      )}
+                    </button>
                   );
                 })}
             </div>
