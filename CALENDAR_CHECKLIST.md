@@ -104,20 +104,18 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 
 ## Phase 4 - Internal calendar view in the app
 
-- [ ] Decide frontend calendar style
-  - [ ] simple list grouped by date
-  - [ ] week view
-  - [ ] month view
-- [ ] Create endpoint returning events in frontend-friendly format
-- [ ] Map each appointment to:
-  - [ ] `id`
-  - [ ] `title`
-  - [ ] `start`
-  - [ ] `end`
-  - [ ] `status`
-  - [ ] `location`
-- [ ] Show different labels/styles for host vs attendee
-- [ ] Show cancelled vs confirmed clearly
+- [X] Decide frontend calendar style
+  - chose Day, Week, and Month View
+- [X] Create endpoint returning events in frontend-friendly format
+- [X] Map each appointment to:
+  - [X] `id`
+  - [X] `title`
+  - [X] `start`
+  - [X] `end`
+  - [X] `status`
+  - [X] `location`
+- [X] Show different labels/styles for host vs attendee
+- [X] Show cancelled vs confirmed clearly
 
 ---
 

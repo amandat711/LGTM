@@ -235,9 +235,19 @@ router.get('/my', (req, res) => {
     const placeholders = appointmentIds.map(() => '?').join(',');
 
     const participantsQuery = `
-      SELECT appointment_id, user_id, participant_role, response_status
-      FROM appointment_participants
-      WHERE appointment_id IN (${placeholders})
+      SELECT
+        ap.appointment_id,
+        ap.user_id,
+        ap.participant_role,
+        ap.response_status,
+        u.first_name,
+        u.last_name,
+        u.mcgill_email,
+        u.user_type
+      FROM appointment_participants ap
+      JOIN users u
+        ON ap.user_id = u.user_id
+      WHERE ap.appointment_id IN (${placeholders})
     `;
 
     db.all(participantsQuery, appointmentIds, (err, participants) => {
@@ -283,9 +293,19 @@ router.get('/hosting', (req, res) => {
     const placeholders = appointmentIds.map(() => '?').join(',');
 
     const participantsQuery = `
-      SELECT appointment_id, user_id, participant_role, response_status
-      FROM appointment_participants
-      WHERE appointment_id IN (${placeholders})
+      SELECT
+        ap.appointment_id,
+        ap.user_id,
+        ap.participant_role,
+        ap.response_status,
+        u.first_name,
+        u.last_name,
+        u.mcgill_email,
+        u.user_type
+      FROM appointment_participants ap
+      JOIN users u
+        ON ap.user_id = u.user_id
+      WHERE ap.appointment_id IN (${placeholders})
     `;
 
     db.all(participantsQuery, appointmentIds, (err, participants) => {
@@ -331,9 +351,19 @@ router.get('/attending', (req, res) => {
     const placeholders = appointmentIds.map(() => '?').join(',');
 
     const participantsQuery = `
-      SELECT appointment_id, user_id, participant_role, response_status
-      FROM appointment_participants
-      WHERE appointment_id IN (${placeholders})
+      SELECT
+        ap.appointment_id,
+        ap.user_id,
+        ap.participant_role,
+        ap.response_status,
+        u.first_name,
+        u.last_name,
+        u.mcgill_email,
+        u.user_type
+      FROM appointment_participants ap
+      JOIN users u
+        ON ap.user_id = u.user_id
+      WHERE ap.appointment_id IN (${placeholders})
     `;
 
     db.all(participantsQuery, appointmentIds, (err, participants) => {
