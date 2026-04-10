@@ -16,6 +16,7 @@ LGTM/
 
 ## Prerequisites
 
+- McGill VPN (if not on the network)
 - Node.js
 - npm
 
