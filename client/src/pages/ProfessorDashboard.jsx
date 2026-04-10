@@ -147,7 +147,7 @@ useEffect(() => {
         ...payload,
       });
 
-      setAvailabilities((prev) => [result.availability, ...prev]);
+      setAvailabilities((prev) => [...(result.availabilities || []), ...prev]);
       setModal(null);
       setError('');
     } catch (err) {
