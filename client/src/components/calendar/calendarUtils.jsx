@@ -37,7 +37,7 @@ export function isSameDay(d1, d2) {
 }
 
 export function statusLabel(status) {
-  if (status === 'confirmed') return { label: 'Approved', cls: 'status-confirmed' };
+  if (status === 'confirmed') return { label: 'Confirmed', cls: 'status-confirmed' };
   if (status === 'pending') return { label: 'Pending', cls: 'status-pending' };
   if (status === 'waiting_approval') return { label: 'Waiting for approval', cls: 'status-waiting' };
   if (status === 'cancelled') return { label: 'Cancelled', cls: 'status-cancelled' };
