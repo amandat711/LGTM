@@ -1,0 +1,282 @@
+import React, { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { getAvailableProfessors, getProfessorPublicAvailabilities } from '../api/availabilities';
+import { createAppointment } from '../api/appointments';
+
+
+function formatSlotTime(value) {
+  return new Intl.DateTimeFormat('en-CA', {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(value));
+}
+
+function formatSlotDate(value) {
+  return new Intl.DateTimeFormat('en-CA', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  }).format(new Date(value));
+}
+
+function getSlotTitle(slot, professorName) {
+  return slot?.av_title || `Meeting with ${professorName}`;
+}
+
+function groupSlotsByDate(slots) {
+  return slots.reduce((groups, slot) => {
+    const dateKey = new Date(slot.start_time).toISOString().slice(0, 10);
+    if (!groups[dateKey]) groups[dateKey] = [];
+    groups[dateKey].push(slot);
+    return groups;
+  }, {});
+}
+
+function mapOwnerToProfessor(owner) {
+  return {
+    id: owner.user_id?.toString() ?? `${owner.first_name?.toLowerCase()}.${owner.last_name?.toLowerCase()}`,
+    name: owner.first_name && owner.last_name ? `Prof. ${owner.first_name} ${owner.last_name}` : owner.staff_title || 'Professor',
+    department: owner.department || owner.staff_title || 'Faculty',
+    email: owner.mcgill_email || 'noreply@mail.mcgill.ca',
+    bio: owner.staff_title
+      ? `Available for meetings in ${owner.department || 'your area of study'}.`
+      : 'Available for appointments.',
+  };
+}
+
+export default function BookingProfessor() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { professorId } = useParams();
+  const studentId = new URLSearchParams(location.search).get('student') || '1';
+
+  const [professor, setProfessor] = useState(null);
+  const [slots, setSlots] = useState([]);
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [status, setStatus] = useState('idle');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProfessor() {
+      setLoading(true);
+      setError('');
+      setMessage('');
+
+      try {
+        const owners = await getAvailableProfessors('');
+        const mapped = Array.isArray(owners) ? owners.map(mapOwnerToProfessor) : [];
+        const found = mapped.find((prof) => prof.id === professorId);
+
+        setProfessor(found || null);
+        if (!found) {
+          setError('Professor not found.');
+        }
+      } catch (err) {
+        setProfessor(null);
+        setError('Unable to load professor information from backend.');
+      }
+    }
+
+    loadProfessor();
+    return () => {
+      active = false;
+    };
+  }, [professorId]);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSlots() {
+      setLoading(true);
+      setError('');
+      setMessage('');
+
+      try {
+        const data = await getProfessorPublicAvailabilities(professorId);
+        if (!active) return;
+
+        const upcoming = Array.isArray(data)
+          ? data.filter((slot) => new Date(slot.end_time) > new Date())
+          : [];
+
+        setSlots(upcoming);
+      } catch (err) {
+        if (!active) return;
+        setSlots([]);
+        setError('Unable to load availability slots from backend.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+
+    loadSlots();
+    return () => {
+      active = false;
+    };
+  }, [professorId]);
+
+  const groupedSlots = useMemo(() => groupSlotsByDate(slots), [slots]);
+
+  const handleConfirm = async () => {
+    if (!selectedSlot) return;
+    setStatus('submitting');
+    setMessage('');
+    setError('');
+
+
+    try {
+      await createAppointment(selectedSlot.availability_id, studentId);
+      setStatus('success');
+      setMessage('Your booking is confirmed! It will appear on your dashboard shortly.');
+    } catch (err) {
+      setStatus('error');
+      setError(err.message || 'Unable to confirm booking.');
+    }
+  };
+
+  if (!professor) {
+    return (
+      <div className="dash-root">
+        <nav className="dash-nav">
+          <div className="dash-nav-left">
+            <button
+              onClick={() => navigate(-1)}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+              }}
+            >
+              Back
+            </button>
+          </div>
+        </nav>
+        <div className="booking-page-content">
+          <p>Professor not found.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="dash-root">
+      <nav className="dash-nav">
+        <div className="dash-nav-left">
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+            }}
+          >
+            Back to search
+          </button>
+        </div>
+
+        <div className="dash-nav-right">
+          <span className="dash-nav-name">{professor.name}</span>
+          <span className="dash-nav-role student">Student booking</span>
+        </div>
+      </nav>
+
+      <div className="booking-page-content">
+        <section className="booking-confirm-panel">
+          <div className="booking-header">
+            <div>
+              <h1>{professor.name}</h1>
+              <p className="booking-card-subtitle">{professor.department}</p>
+              <p className="booking-card-bio">{professor.bio}</p>
+              <p className="booking-card-email" style={{ marginTop: 4 }}>{professor.email}</p>
+            </div>
+            <div className="booking-meta-pill">Student ID {studentId}</div>
+          </div>
+
+          {message && <div className="booking-status-banner success">{message}</div>}
+          {error && <div className="booking-status-banner error">{error}</div>}
+
+          <div className="booking-grid">
+            <div className="booking-slot-list">
+              <div className="booking-section-title">Available slots</div>
+              {loading ? (
+                <p className="booking-empty-state">Loading available times...</p>
+              ) : slots.length === 0 ? (
+                <p className="booking-empty-state">No slots are currently available.</p>
+              ) : (
+                Object.entries(groupedSlots).map(([dateKey, daySlots]) => (
+                  <div key={dateKey} className="booking-day-group">
+                    <div className="booking-day-label">{formatSlotDate(daySlots[0].start_time)}</div>
+                    {daySlots.map((slot) => {
+                      const isFull = slot.booked_count >= slot.capacity;
+                      const isSelected = selectedSlot?.availability_id === slot.availability_id;
+
+                      return (
+                        <button
+                          key={slot.availability_id}
+                          className={`booking-slot-card${isSelected ? ' selected' : ''}${isFull ? ' disabled' : ''}`}
+                          disabled={isFull}
+                          onClick={() => setSelectedSlot(slot)}
+                        >
+                          <div>
+                            <strong>{formatSlotTime(slot.start_time)} – {formatSlotTime(slot.end_time)}</strong>
+                            <p className="booking-slot-title">{getSlotTitle(slot, professor.name)}</p>
+                            <p className="booking-slot-location">{slot.location || 'Online'}</p>
+                          </div>
+                          <span className={`booking-slot-status${isFull ? ' full' : ''}`}>
+                            {isFull ? 'Full' : 'Open'}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))
+              )}
+            </div>
+
+            <aside className="booking-details-panel">
+              <h2>Selected slot</h2>
+              {selectedSlot ? (
+                <div className="booking-selected-card">
+                  <p className="booking-selected-title">{getSlotTitle(selectedSlot, professor.name)}</p>
+                  <p className="booking-selected-date">{formatSlotDate(selectedSlot.start_time)}</p>
+                  <h3>{formatSlotTime(selectedSlot.start_time)} – {formatSlotTime(selectedSlot.end_time)}</h3>
+                  <p className="booking-slot-location">{selectedSlot.location || 'Online meeting'}</p>
+                  <div className="booking-detail-row">
+                    <span>Capacity</span>
+                    <span>{selectedSlot.capacity}</span>
+                  </div>
+                  <div className="booking-detail-row">
+                    <span>Booked</span>
+                    <span>{selectedSlot.booked_count}/{selectedSlot.capacity}</span>
+                  </div>
+                </div>
+              ) : (
+                <p className="booking-empty-state">Select a slot to see details and confirm your booking.</p>
+              )}
+
+              <button
+                className="booking-card-button"
+                disabled={!selectedSlot || status === 'submitting'}
+                onClick={handleConfirm}
+              >
+                Confirm booking
+              </button>
+              <button
+                className="booking-card-button booking-card-button-secondary"
+                onClick={() => navigate(`/dashboard/student/${studentId}`)}
+              >
+                Back to dashboard
+              </button>
+            </aside>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

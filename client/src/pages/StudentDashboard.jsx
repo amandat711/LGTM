@@ -190,7 +190,13 @@ export default function StudentDashboard() {
               <button
                 key={item.id}
                 className={`dash-sidebar-btn${sideTab === item.id ? ' active' : ''}`}
-                onClick={() => setSideTab(item.id)}
+                onClick={() => {
+                  if (item.id === 'search') {
+                    navigate(`/booking/search/${userId}`);
+                  } else {
+                    setSideTab(item.id);
+                  }
+                }}
               >
                 <img
                   src={item.icon}
