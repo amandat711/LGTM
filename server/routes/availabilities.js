@@ -398,6 +398,31 @@ router.get('/owners', (req, res) => {
   });
 });
 
+router.get('/owner/:createdBy', (req, res) => {
+  const { createdBy } = req.params;
+
+  const query = `
+    SELECT a.*,
+           (
+             SELECT COUNT(*)
+             FROM appointments ap
+             WHERE ap.created_from_availability = a.availability_id
+               AND ap.status != 'cancelled'
+           ) AS booked_count
+    FROM availabilities a
+    WHERE a.created_by = ?
+    ORDER BY a.start_time ASC
+  `;
+
+  db.all(query, [createdBy], (err, rows) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+
+    res.json(rows);
+  });
+});
+
 router.delete('/:id', (req, res) => {
   const availabilityId = req.params.id;
   const { deleted_by } = req.body;

@@ -12,8 +12,15 @@ import {
   formatTime,
   statusLabel,
   mapAppointmentToCalendarEvent,
+  mapAvailabilityToCalendarEvent,
 } from '../components/calendar/calendarUtils';
 import { getHostingAppointments, cancelAppointment } from '../api/appointments';
+import {
+  createAvailability,
+  deleteAvailability,
+  getProfessorAvailabilities,
+} from '../api/availabilities';
+import CreateAvailabilityModal from '../components/CreateAvailabilityModal';
 import '../styles/Dashboard.css';
 
 export default function ProfessorDashboard() {
@@ -24,6 +31,7 @@ export default function ProfessorDashboard() {
   // State
   // ─────────────────────────────────────────────────────────────
   const [appointments, setAppointments] = useState([]);
+  const [availabilities, setAvailabilities] = useState([]);
   const [sideTab, setSideTab] = useState('calendar');
   const [modal, setModal] = useState(null);
   const [activeAppt, setActiveAppt] = useState(null);
@@ -33,22 +41,28 @@ export default function ProfessorDashboard() {
   // ─────────────────────────────────────────────────────────────
   // Load professor-hosted appointments from backend
   // ─────────────────────────────────────────────────────────────
-  useEffect(() => {
-    async function loadAppointments() {
-      try {
-        setLoading(true);
-        const data = await getHostingAppointments(userId);
-        setAppointments(data.map(mapAppointmentToCalendarEvent));
-        setError('');
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
+useEffect(() => {
+  async function loadDashboardData() {
+    try {
+      setLoading(true);
 
-    loadAppointments();
-  }, [userId]);
+      const [appointmentData, availabilityData] = await Promise.all([
+        getHostingAppointments(userId),
+        getProfessorAvailabilities(userId),
+      ]);
+
+      setAppointments(appointmentData.map(mapAppointmentToCalendarEvent));
+      setAvailabilities(availabilityData);
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  loadDashboardData();
+}, [userId]);
 
   // ─────────────────────────────────────────────────────────────
   // Derive current user display info from loaded appointment data
@@ -74,6 +88,15 @@ export default function ProfessorDashboard() {
   // ─────────────────────────────────────────────────────────────
   // Get up to 5 upcoming non-cancelled appointments
   // ─────────────────────────────────────────────────────────────
+  const calendarEvents = useMemo(() => {
+    const myName = `${currentUser.firstName} ${currentUser.lastName}`;
+    const availabilityEvents = availabilities.map((slot) =>
+      mapAvailabilityToCalendarEvent(slot, myName)
+    );
+
+    return [...appointments, ...availabilityEvents];
+  }, [appointments, availabilities, currentUser]);
+
   const upcomingAppts = useMemo(() => {
     const now = new Date();
     return appointments
@@ -83,24 +106,48 @@ export default function ProfessorDashboard() {
   }, [appointments]);
 
   // ─────────────────────────────────────────────────────────────
-  // Cancel appointment
-  // This updates backend first, then reflects cancellation in UI
+  // Cancel appointment, create + delete availabilities
   // ─────────────────────────────────────────────────────────────
   async function handleDelete() {
     if (!activeAppt) return;
 
     try {
-      await cancelAppointment(activeAppt.id, userId);
+      if (activeAppt.type === 'availability') {
+        await deleteAvailability(activeAppt.rawId, userId);
 
-      setAppointments((prev) =>
-        prev.map((a) =>
-          a.id === activeAppt.id
-            ? { ...a, status: 'cancelled', color: '#777777' }
-            : a
-        )
-      );
+        setAvailabilities((prev) =>
+          prev.filter(
+            (slot) => Number(slot.availability_id) !== Number(activeAppt.rawId)
+          )
+        );
+      } else {
+        await cancelAppointment(activeAppt.id, userId);
+
+        setAppointments((prev) =>
+          prev.map((a) =>
+            a.id === activeAppt.id
+              ? { ...a, status: 'cancelled', color: '#777777' }
+              : a
+          )
+        );
+      }
 
       setActiveAppt(null);
+      setModal(null);
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleCreateAvailability(payload) {
+    try {
+      const result = await createAvailability({
+        created_by: Number(userId),
+        ...payload,
+      });
+
+      setAvailabilities((prev) => [result.availability, ...prev]);
       setModal(null);
       setError('');
     } catch (err) {
@@ -188,6 +235,27 @@ export default function ProfessorDashboard() {
               </button>
             ))}
 
+            <button
+              className="dash-sidebar-btn"
+              onClick={() => setModal('createAvailability')}
+            >
+              <span
+                style={{
+                  width: 40,
+                  height: 40,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 28,
+                  fontWeight: 500,
+                  lineHeight: 1,
+                }}
+              >
+                +
+              </span>
+              <span className="dash-sidebar-label">Create availability</span>
+            </button>
+
             <div className="dash-sidebar-spacer" />
 
             <button className="dash-sidebar-btn">
@@ -210,7 +278,7 @@ export default function ProfessorDashboard() {
             {!loading && (
               <Calendar
                 view="week"
-                appointments={appointments}
+                appointments={calendarEvents}
                 onEventClick={(appt) => {
                   setActiveAppt(appt);
                   setModal('detail');
@@ -284,8 +352,15 @@ export default function ProfessorDashboard() {
       </div>
 
       {/* ───────────────────────────────────────────────────── */}
-      {/* Appointment detail modal */}
+      {/* Create availability modal and appointment detail modal */}
       {/* ───────────────────────────────────────────────────── */}
+      {modal === 'createAvailability' && (
+        <CreateAvailabilityModal
+          onClose={() => setModal(null)}
+          onSubmit={handleCreateAvailability}
+        />
+      )}
+
       {modal === 'detail' && activeAppt && (
         <SlotDetailModal
           appointment={{
