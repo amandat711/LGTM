@@ -5,7 +5,15 @@ export const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-export const HOURS = Array.from({ length: 15 }, (_, i) => i + 7);
+// Change these if you want a different visible range
+export const CALENDAR_START_HOUR = 0;
+export const CALENDAR_END_HOUR = 23;
+
+// 6am -> 11pm inclusive
+export const HOURS = Array.from(
+  { length: CALENDAR_END_HOUR - CALENDAR_START_HOUR + 1 },
+  (_, i) => i + CALENDAR_START_HOUR
+);
 
 export function formatTime(iso) {
   const d = new Date(iso);
@@ -36,12 +44,17 @@ export function statusLabel(status) {
   return { label: status || 'Unknown', cls: '' };
 }
 
-export function getEventStyle(appt) {
+export function getEventStyle(appt, slotHeight = 64) {
   const start = new Date(appt.startTime);
   const end = new Date(appt.endTime);
 
-  const top = ((start.getHours() - 7) * 60 + start.getMinutes()) * (48 / 60);
-  const height = Math.max(((end - start) / 60000) * (48 / 60), 20);
+  const minutesFromTop =
+    (start.getHours() - CALENDAR_START_HOUR) * 60 + start.getMinutes();
+
+  const durationMinutes = (end - start) / 60000;
+
+  const top = (minutesFromTop / 60) * slotHeight;
+  const height = Math.max((durationMinutes / 60) * slotHeight, 24);
 
   return { top, height };
 }
@@ -50,10 +63,10 @@ export function mapAppointmentToCalendarEvent(appt) {
   const host = appt.participants?.find((p) => p.participant_role === 'host');
   const attendee = appt.participants?.find((p) => p.participant_role === 'attendee');
 
-  let color = '#21498A';
-  if (appt.status === 'confirmed') color = '#22946E';
-  else if (appt.status === 'pending') color = '#A87A2A';
-  else if (appt.status === 'cancelled') color = '#9C2121';
+  let color = '#1565a8';
+  if (appt.status === 'confirmed') color = '#2a8c5f';
+  else if (appt.status === 'pending') color = '#c0842a';
+  else if (appt.status === 'cancelled') color = '#777777';
 
   return {
     id: appt.appointment_id,
