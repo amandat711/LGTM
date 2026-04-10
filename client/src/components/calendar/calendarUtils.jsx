@@ -50,10 +50,10 @@ export function mapAppointmentToCalendarEvent(appt) {
   const host = appt.participants?.find((p) => p.participant_role === 'host');
   const attendee = appt.participants?.find((p) => p.participant_role === 'attendee');
 
-  let color = '#1565a8';
-  if (appt.status === 'confirmed') color = '#2a8c5f';
-  else if (appt.status === 'pending') color = '#c0842a';
-  else if (appt.status === 'cancelled') color = '#777777';
+  let color = '#21498A';
+  if (appt.status === 'confirmed') color = '#22946E';
+  else if (appt.status === 'pending') color = '#A87A2A';
+  else if (appt.status === 'cancelled') color = '#9C2121';
 
   return {
     id: appt.appointment_id,

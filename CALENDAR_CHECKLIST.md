@@ -114,8 +114,8 @@ Implement the appointment/calendar flow in small phases so the booking system wo
   - [X] `end`
   - [X] `status`
   - [X] `location`
-- [ ] Show different labels/styles for host vs attendee
-- [ ] Show cancelled vs confirmed clearly
+- [X] Show different labels/styles for host vs attendee
+- [X] Show cancelled vs confirmed clearly
 
 ---
 
