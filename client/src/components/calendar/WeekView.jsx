@@ -118,6 +118,8 @@ export default function WeekView({ appointments, onEventClick }) {
                   });
                   const durationMinutes = (new Date(appt.endTime) - new Date(appt.startTime)) / 60000;
                   const shortEvent = durationMinutes <= 30;
+                  const eventTop = top + 2;
+                  const eventHeight = Math.max(height - 4, 24);
 
                   return (
                     <button
@@ -125,8 +127,8 @@ export default function WeekView({ appointments, onEventClick }) {
                       type="button"
                       className={`dash-event${compact ? ' compact' : ''}`}
                       style={{
-                        top,
-                        height,
+                        top: eventTop,
+                        height: eventHeight,
                         background: `${appt.color}33`,
                         border: `1px solid ${appt.color}33`,
                         borderLeft: `4px solid ${appt.color}`,
