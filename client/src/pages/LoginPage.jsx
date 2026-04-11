@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthShell from '../components/AuthShell';
+import { login } from '../api/auth';
 import {
   authCardClass,
   authInputClass,
@@ -9,13 +10,21 @@ import {
   isAllowedMcGillEmail,
 } from '../auth/authUi';
 
+function dashboardPath(userType, userId) {
+  if (userType === 'student') {
+    return `/dashboard/student/${userId}`;
+  }
+  return `/dashboard/professor/${userId}`;
+}
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError('');
 
@@ -28,8 +37,15 @@ export default function LoginPage() {
       return;
     }
 
-    // Placeholder: replace with POST /api/auth/login
-    navigate('/dashboard/student/${TEST_USERS.student}');
+    setSubmitting(true);
+    try {
+      const { user } = await login(email, password);
+      navigate(dashboardPath(user.user_type, user.user_id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -86,8 +102,8 @@ export default function LoginPage() {
               className={authInputClass}
             />
           </div>
-          <button type="submit" className={authPrimaryBtnClass}>
-            Continue
+          <button type="submit" className={authPrimaryBtnClass} disabled={submitting}>
+            {submitting ? 'Signing in…' : 'Continue'}
           </button>
         </form>
 

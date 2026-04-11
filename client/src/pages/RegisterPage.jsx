@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthShell from '../components/AuthShell';
+import { register } from '../api/auth';
 import {
   authCardClass,
   authInputClass,
@@ -18,8 +19,9 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError('');
 
@@ -40,8 +42,15 @@ export default function RegisterPage() {
       return;
     }
 
-    // Placeholder: replace with POST /api/auth/register
-    navigate('/login');
+    setSubmitting(true);
+    try {
+      await register(name, email, password);
+      navigate('/login');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Registration failed.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -120,8 +129,8 @@ export default function RegisterPage() {
               className={authInputClass}
             />
           </div>
-          <button type="submit" className={authPrimaryBtnClass}>
-            Register
+          <button type="submit" className={authPrimaryBtnClass} disabled={submitting}>
+            {submitting ? 'Creating account…' : 'Register'}
           </button>
         </form>
 
