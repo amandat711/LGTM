@@ -1,5 +1,17 @@
-/* ─── Dashboard layout ───────────────────────────────────── */
-.dash-root {
+/**
+ * Dashboard.css - Styles for the main dashboard interface
+ *
+ * Naming Convention: semantic, intuitive names
+ * - dashboard-* → Main container and layout
+ * - navbar-* → Top navigation
+ * - sidebar-* → Left navigation
+ * - panel-* → Right info panel
+ * - appointment-* → Appointment cards
+ * - invite-* → Invitations
+ * - booking-* → Booking pages
+ */
+
+.dashboard-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -8,8 +20,8 @@
   overflow: hidden;
 }
 
-/* ─── Navbar ─────────────────────────────────────────────── */
-.dash-nav {
+/* ─── TOP NAVIGATION BAR ────────────────────────────────── */
+.navbar-top {
   height: 54px;
   background: #fff;
   border-bottom: 1px solid #e4e4e4;
@@ -21,35 +33,44 @@
   z-index: 10;
 }
 
-.dash-nav-left {
+.navbar-left {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.dash-nav-logo {
+.navbar-logo-button {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.navbar-logo {
   height: 32px;
   width: auto;
 }
 
-.dash-nav-title {
+.navbar-title {
   font-size: 15px;
   font-weight: 600;
   color: #0f0f0f;
 }
 
-.dash-nav-right {
+.navbar-right {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.dash-nav-name {
+.navbar-user-name {
   font-size: 13px;
   color: #555;
 }
 
-.dash-nav-avatar {
+.navbar-user-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -64,26 +85,26 @@
   flex-shrink: 0;
 }
 
-.dash-nav-role {
+.navbar-user-role {
   padding: 2px 8px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 500;
 }
 
-.dash-nav-role.professor {
+.navbar-user-role.professor-badge {
   background: #fff3e0;
   color: #b85c00;
   border: 1px solid #f5c07a;
 }
 
-.dash-nav-role.student {
+.navbar-user-role.student-badge {
   background: #e8f4fd;
   color: #1565a8;
   border: 1px solid #90c8f0;
 }
 
-.dash-logout {
+.navbar-button {
   background: none;
   border: 1px solid #e4e4e4;
   border-radius: 5px;
@@ -96,20 +117,20 @@
   transition: border-color 0.15s, color 0.15s;
 }
 
-.dash-logout:hover {
+.navbar-button:hover {
   border-color: #E31429;
   color: #E31429;
 }
 
-/* ─── Body ───────────────────────────────────────────────── */
-.dash-body {
+.dashboard-content {
   display: flex;
   flex: 1;
   overflow: hidden;
 }
 
-/* ─── Sidebar ────────────────────────────────────────────── */
-.dash-sidebar {
+/* ─── LEFT SIDEBAR NAVIGATION ──────────────────────────── */
+
+.sidebar-main {
   width: 72px;
   background: #fff;
   border-right: 1px solid #e4e4e4;
@@ -121,7 +142,7 @@
   flex-shrink: 0;
 }
 
-.dash-sidebar-btn {
+.sidebar-button {
   width: 55px;
   height: 55px;
   border-radius: 10px;
@@ -134,45 +155,49 @@
   gap: 3px;
   cursor: pointer;
   font-family: Arial;
+  transition: background 0.15s;
 }
 
-.dash-sidebar-btn:hover {
+.sidebar-button:hover {
   background: #f5f5f5;
 }
 
-.dash-sidebar-btn.active {
+.sidebar-button.active {
   background: #fff0f1;
 }
 
-.dash-sidebar-btn.active .dash-sidebar-icon {
+.sidebar-button.active .sidebar-icon {
   color: #E31429;
 }
 
-.dash-sidebar-btn.active .dash-sidebar-label {
+.sidebar-button.active .sidebar-label {
   color: #E31429;
 }
 
-.dash-sidebar-icon {
+.sidebar-icon {
   font-size: 20px;
   color: #888;
   line-height: 1;
   padding: 20px;
+  transition: color 0.15s;
 }
 
-.dash-sidebar-label {
+.sidebar-label {
   font-size: 9px;
   font-weight: 500;
   color: #888;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  transition: color 0.15s;
 }
 
-.dash-sidebar-spacer {
+.sidebar-spacer {
   flex: 1;
 }
 
-/* ─── Main content area ──────────────────────────────────── */
-.dash-main {
+/* ─── MAIN CONTENT AREA ────────────────────────────────── */
+
+.main-area {
   display: flex;
   flex: 1;
   min-width: 0;
@@ -181,8 +206,9 @@
   gap: 0;
 }
 
-/* ─── Right panel ────────────────────────────────────────── */
-.dash-right-panel {
+/* ─── RIGHT INFO PANEL ────────────────────────────────────────── */
+
+.panel-right {
   width: 300px;
   flex-shrink: 0;
   display: flex;
@@ -194,7 +220,7 @@
   min-height: 0;
 }
 
-.dash-panel-section-title {
+.panel-section-heading {
   font-size: 15px;
   font-weight: 600;
   color: #0f0f0f;
@@ -202,8 +228,9 @@
   letter-spacing: -0.2px;
 }
 
-/* ─── Appointment cards ──────────────────────────────────── */
-.dash-appt-card {
+/* ─── APPOINTMENT CARDS ────────────────────────────────────── */
+
+.appointment-card {
   border: 1px solid #e4e4e4;
   border-radius: 8px;
   padding: 10px 12px;
@@ -215,12 +242,12 @@
   gap: 10px;
 }
 
-.dash-appt-card:hover {
+.appointment-card:hover {
   border-color: #ccc;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
-.dash-appt-dot {
+.appointment-status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -228,21 +255,21 @@
   margin-top: 4px;
 }
 
-.dash-appt-info h4 {
+.appointment-card h4 {
   font-size: 13px;
   font-weight: 500;
   color: #0f0f0f;
   margin: 0 0 3px;
 }
 
-.dash-appt-info p {
+.appointment-card p {
   font-size: 11px;
   color: #888;
   margin: 0;
   line-height: 1.5;
 }
 
-.dash-appt-status {
+.appointment-status-badge {
   margin-left: auto;
   flex-shrink: 0;
   padding: 4px 10px;
@@ -276,8 +303,9 @@
   border-color: #dc2626;
 }
 
-/* ─── Heatmap invite cards ───────────────────────────────── */
-.dash-invite-card {
+/* ─── HEATMAP INVITE CARDS ────────────────────────────────── */
+
+.invite-card {
   border: 1px solid #e4e4e4;
   border-radius: 8px;
   padding: 10px 12px;
@@ -287,7 +315,7 @@
   gap: 10px;
 }
 
-.dash-invite-dot {
+.invite-status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -296,24 +324,24 @@
   margin-top: 4px;
 }
 
-.dash-invite-dot.responded {
+.invite-status-dot.responded {
   background: #888;
 }
 
-.dash-invite-info h4 {
+.invite-card h4 {
   font-size: 13px;
   font-weight: 500;
   color: #0f0f0f;
   margin: 0 0 3px;
 }
 
-.dash-invite-info p {
+.invite-card p {
   font-size: 11px;
   color: #888;
   margin: 0;
 }
 
-.dash-invite-open {
+.invite-open-button {
   margin-left: auto;
   width: 26px;
   height: 26px;
@@ -330,34 +358,40 @@
   flex-shrink: 0;
 }
 
-.dash-invite-open:hover {
+.invite-open-button:hover {
   border-color: #E31429;
   color: #E31429;
 }
 
-/* ─── Divider ────────────────────────────────────────────── */
-.dash-divider {
+/* ─── PANEL DIVIDER ────────────────────────────────────────── */
+
+.panel-divider {
   height: 1px;
   background: #f0f0f0;
   margin: 4px 0;
 }
 
-/* ─── Responsive ─────────────────────────────────────────── */
+/* ─── RESPONSIVE BREAKPOINTS ──────────────────────────────── */
+
 @media (max-width: 900px) {
-  .dash-right-panel {
+  .panel-right {
     width: 240px;
   }
 }
 
 @media (max-width: 700px) {
-  .dash-right-panel {
+  .panel-right {
     display: none;
   }
 
-  .dash-sidebar {
+  .sidebar-main {
     width: 56px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   BOOKING PAGE STYLES
+   ═══════════════════════════════════════════════════════════════ */
 
 .booking-page-content {
   flex: 1;
@@ -366,8 +400,7 @@
   background: #f5f5f5;
 }
 
-.booking-search-panel,
-.booking-confirm-panel {
+.booking-panel {
   max-width: 920px;
   margin: 0 auto 32px;
   background: #fff;
@@ -376,15 +409,14 @@
   padding: 28px;
 }
 
-.booking-search-panel h1,
-.booking-confirm-panel h1 {
+.booking-panel h1,
+.booking-panel h2 {
   margin: 0 0 10px;
   font-size: 28px;
   color: #111;
 }
 
-.booking-search-hint,
-.booking-card-bio {
+.booking-search-hint {
   margin: 0 0 22px;
   color: #555;
   line-height: 1.6;
@@ -405,6 +437,8 @@
   border-color: #E31429;
   box-shadow: 0 0 0 4px rgba(227, 20, 41, 0.1);
 }
+
+/* ─── PROFESSOR GRID ──────────────────────────────────────── */
 
 .booking-results {
   max-width: 920px;
@@ -430,10 +464,17 @@
 }
 
 .booking-card-subtitle,
-.booking-card-email {
+.booking-card-email,
+.booking-card-bio {
   margin: 0 0 6px;
   color: #666;
   font-size: 13px;
+}
+
+.booking-card-bio {
+  margin: 0 0 22px;
+  color: #555;
+  line-height: 1.6;
 }
 
 .booking-card-button {
@@ -454,19 +495,21 @@
 }
 
 .booking-empty-state,
-.booking-placeholder-box {
+.booking-placeholder {
   max-width: 920px;
   margin: 0 auto;
   color: #666;
   font-size: 15px;
 }
 
-.booking-placeholder-box {
+.booking-placeholder {
   border: 1px dashed #d8d8d8;
   border-radius: 16px;
   padding: 28px;
   background: #fff;
 }
+
+/* ─── BOOKING CONFIRMATION PAGE ───────────────────────────────── */
 
 .booking-header {
   display: flex;
@@ -524,8 +567,12 @@
   color: #111;
 }
 
-.booking-day-group + .booking-day-group {
+.booking-day-group {
   margin-top: 18px;
+}
+
+.booking-day-group:first-child {
+  margin-top: 0;
 }
 
 .booking-day-label {
@@ -594,13 +641,6 @@
   color: #666;
 }
 
-.booking-selected-title {
-  margin: 0 0 10px;
-  font-size: 15px;
-  font-weight: 700;
-  color: #111;
-}
-
 .booking-details-panel {
   display: flex;
   flex-direction: column;
@@ -638,13 +678,19 @@
   font-size: 14px;
 }
 
-.booking-card-button.booking-card-button-secondary {
+.booking-card-button-secondary {
   background: #fff;
   color: #333;
   border: 1px solid #d8d8d8;
+  border-radius: 999px;
+  padding: 12px 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: transform 0.15s, box-shadow 0.15s;
 }
 
-.booking-card-button.booking-card-button-secondary:hover {
+.booking-card-button-secondary:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }

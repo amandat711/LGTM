@@ -41,8 +41,8 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
           <span className="badge-success">✓ Notifications sent!</span>
         ) : (
           <>
-            <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button className="btn btn-primary" onClick={handleConfirm}>
+            <button className="button button-ghost" onClick={onClose}>Cancel</button>
+            <button className="button button-primary" onClick={handleConfirm}>
               Send notifications
             </button>
           </>
@@ -61,7 +61,7 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
         <span className="modal-row-label">Attendees ({attendees?.length})</span>
         <div className="attendee-list">
           {attendees?.map(a => (
-            <span key={a.name} className="attendee-pill">
+            <span key={a.name} className="attendee-tag">
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: a.color, display: 'inline-block' }} />
               {a.name}
             </span>
@@ -89,18 +89,18 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onClose }) {
       footer={
         <>
           {isOwner && (
-            <button className="btn btn-danger btn-sm" onClick={onDelete}>
+            <button className="button button-danger button-small" onClick={onDelete}>
               Cancel booking
             </button>
           )}
           <a
             href={`mailto:${ap.ownerEmail || ''}?subject=Re: ${encodeURIComponent(ap.title || 'Appointment')}`}
-            className="btn btn-outline btn-sm"
+            className="button button-outline button-small"
             style={{ textDecoration: 'none' }}
           >
             Email {isOwner ? 'attendee' : 'owner'}
           </a>
-          <button className="btn btn-ghost" onClick={onClose}>Close</button>
+          <button className="button button-ghost" onClick={onClose}>Close</button>
         </>
       }
     >
@@ -160,8 +160,8 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
       onClose={onClose}
       footer={
         <>
-          <button className="btn btn-ghost" onClick={onClose}>Keep it</button>
-          <button className="btn btn-danger" onClick={handleDelete}>
+          <button className="button button-ghost" onClick={onClose}>Keep it</button>
+          <button className="button button-danger" onClick={handleDelete}>
             Yes, cancel &amp; notify
           </button>
         </>
@@ -209,8 +209,8 @@ export function InviteURLModal({ ownerEmail, eventTitle, onClose }) {
       onClose={onClose}
       footer={
         <>
-          <button className="btn btn-ghost" onClick={onClose}>Done</button>
-          <button className="btn btn-primary" onClick={handleCopy}>
+          <button className="button button-ghost" onClick={onClose}>Done</button>
+          <button className="button button-primary" onClick={handleCopy}>
             {copied ? '✓ Copied!' : 'Copy link'}
           </button>
         </>
@@ -225,7 +225,7 @@ export function InviteURLModal({ ownerEmail, eventTitle, onClose }) {
       <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{eventTitle || ownerEmail}</p>
       <div className="copy-row">
         <input className="copy-input" readOnly value={inviteURL} />
-        <button className="btn btn-outline btn-sm" onClick={handleCopy} style={{ whiteSpace: 'nowrap' }}>
+        <button className="button button-outline button-small" onClick={handleCopy} style={{ whiteSpace: 'nowrap' }}>
           {copied ? '✓ Copied' : 'Copy'}
         </button>
       </div>
@@ -249,15 +249,15 @@ export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClo
       onClose={onClose}
       footer={
         <>
-          <button className="btn btn-ghost" onClick={onClose}>Later</button>
+          <button className="button button-ghost" onClick={onClose}>Later</button>
           <button
-            className="btn btn-outline btn-sm"
+            className="button button-outline button-small"
             style={{ borderColor: '#cc2222', color: '#cc2222' }}
             onClick={() => { onDecline(s); onClose(); }}
           >
             Decline
           </button>
-          <button className="btn btn-primary btn-sm" onClick={() => { onApprove(s); onClose(); }}>
+          <button className="button button-primary button-small" onClick={() => { onApprove(s); onClose(); }}>
             Approve
           </button>
         </>

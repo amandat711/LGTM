@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAvailableProfessors } from '../api/availabilities';
+import Navbar from '../components/Navbar';
 
 function mapOwnerToProfessor(owner) {
   return {
@@ -51,31 +52,15 @@ export default function BookingDiscovery() {
   const filteredProfessors = useMemo(() => professors, [professors]);
 
   return (
-    <div className="dash-root">
-      <nav className="dash-nav">
-        <div className="dash-nav-left">
-          <button
-            onClick={() => navigate(`/dashboard/student/${userId}`)}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <span className="dash-nav-title">Back to dashboard</span>
-          </button>
-        </div>
-
-        <div className="dash-nav-right">
-          <span className="dash-nav-name">Booking discovery</span>
-        </div>
-      </nav>
+    <div className="dashboard-container">
+      <Navbar
+        title="Back to dashboard"
+        onLeftClick={() => navigate(`/dashboard/student/${userId}`)}
+        user={{ displayName: 'Booking discovery' }}
+      />
 
       <div className="booking-page-content">
-        <section className="booking-search-panel">
+        <section className="booking-panel">
           <h1>Find a professor to book with</h1>
           <p className="booking-search-hint">
             Search professors by name, department, or email to view booking availability.

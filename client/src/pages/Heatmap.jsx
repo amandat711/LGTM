@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Heatmap.css';
+import logo from '../assets/logo1.png';
 import Navbar from '../components/Navbar';
 import { PersonalGrid, ProfAvailGrid, GroupGrid, HeatmapLegend, makeKey } from '../components/HeatmapGrid';
 import {
@@ -52,8 +54,10 @@ function expandRecurring(selectedKeys, recurringWeeks) {
 
 // ─────────────────────────────────────────────────────────────
 export default function Heatmap() {
+  const navigate              = useNavigate();
   const [user, setUser]       = useState(PROFESSOR);
   const isProfessor           = user.role === 'professor';
+  const userInitials          = user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
   // ── Date range ─────────────────────────────────────────────
   const [startDate,  setStartDate]  = useState('2026-04-07');
@@ -142,7 +146,12 @@ export default function Heatmap() {
   // ─────────────────────────────────────────────────────────
   return (
     <>
-      <Navbar user={user} />
+      <Navbar
+        logo={logo}
+        title="Heatmap Booking"
+        onLeftClick={() => navigate('/')}
+        user={{ displayName: user.name, role: user.role, initials: userInitials }}
+      />
 
       <div className="heatmap-page">
 
@@ -153,13 +162,13 @@ export default function Heatmap() {
           </span>
           <div className="role-switcher" style={{ display: 'inline-flex' }}>
             <button
-              className={`role-btn${isProfessor ? ' active' : ''}`}
+              className={`role-button${isProfessor ? ' active' : ''}`}
               onClick={() => { setUser(PROFESSOR); setTab('personal'); }}
             >
               Professor
             </button>
             <button
-              className={`role-btn${!isProfessor ? ' active' : ''}`}
+              className={`role-button${!isProfessor ? ' active' : ''}`}
               onClick={() => { setUser(STUDENT); setTab('personal'); }}
             >
               Student
@@ -169,7 +178,7 @@ export default function Heatmap() {
 
         {/* ── Page header ───────────────────────────────── */}
         <div className="page-header">
-          <div className="page-eyebrow">
+          <div className="page-label">
             {isProfessor ? 'Professor Dashboard' : 'Student View'}
           </div>
           <h1 className="page-title">
@@ -184,16 +193,16 @@ export default function Heatmap() {
 
         {/* ── Pending submissions banner ─────────────────── */}
         {isProfessor && pendingCount > 0 && !notifDismissed && (
-          <div className="notif-banner">
+          <div className="notification-banner">
             <span>📬</span>
             <span>
               <strong>{pendingCount} new submission{pendingCount > 1 ? 's' : ''}</strong> waiting for your review.
             </span>
-            <div className="notif-banner-actions">
-              <button className="btn btn-outline btn-sm" onClick={() => setTab('submissions')}>
+            <div className="notification-banner-actions">
+              <button className="button button-outline button-small" onClick={() => setTab('submissions')}>
                 Review now
               </button>
-              <button className="btn btn-ghost" onClick={() => setNotifDismissed(true)}>✕</button>
+              <button className="button button-ghost" onClick={() => setNotifDismissed(true)}>✕</button>
             </div>
           </div>
         )}
@@ -204,7 +213,7 @@ export default function Heatmap() {
             className={`mode-card${tab === 'personal' ? ' active' : ''}`}
             onClick={() => setTab('personal')}
           >
-            <div className={`mode-card-icon ${isProfessor ? 'prof' : 'stud'}`}>
+            <div className={`mode-card-icon ${isProfessor ? 'professor' : 'student'}`}>
               {isProfessor ? '📅' : '✋'}
             </div>
             <h4>{isProfessor ? 'My availability' : 'Select your slots'}</h4>
@@ -220,7 +229,7 @@ export default function Heatmap() {
               className={`mode-card${tab === 'submissions' ? ' active' : ''}`}
               onClick={() => setTab('submissions')}
             >
-              <div className="mode-card-icon prof">📨</div>
+              <div className="mode-card-icon professor">📨</div>
               <h4>
                 Student submissions
                 {pendingCount > 0 && (
@@ -236,7 +245,7 @@ export default function Heatmap() {
               className={`mode-card${tab === 'group' ? ' active' : ''}`}
               onClick={() => setTab('group')}
             >
-              <div className="mode-card-icon stud">👥</div>
+              <div className="mode-card-icon student">👥</div>
               <h4>Group view</h4>
               <p>See combined availability of all participants as a heatmap.</p>
             </div>
@@ -280,7 +289,7 @@ export default function Heatmap() {
                 </select>
               </div>
               <button
-                className="btn btn-primary"
+                className="button button-primary"
                 style={{ alignSelf: 'flex-end' }}
                 onClick={() => setSetupDone(true)}
               >
@@ -301,7 +310,7 @@ export default function Heatmap() {
               {' – '}
               {endHour <= 12 ? endHour : endHour - 12}:00 {endHour < 12 ? 'AM' : 'PM'}
             </span>
-            <button className="btn btn-ghost btn-sm" onClick={() => setSetupDone(false)}>
+            <button className="button button-ghost button-small" onClick={() => setSetupDone(false)}>
               Change
             </button>
           </div>
@@ -402,13 +411,13 @@ export default function Heatmap() {
             </div>
 
             <div className="confirm-bar">
-              <button className="btn btn-primary" onClick={saveProfAvailability}>
+              <button className="button button-primary" onClick={saveProfAvailability}>
                 {isRecurring ? `Save & repeat for ${recurringWeeks} weeks` : 'Save for this week'}
               </button>
-              <button className="btn btn-outline" onClick={() => setProfSelected(new Set())}>
+              <button className="button button-outline" onClick={() => setProfSelected(new Set())}>
                 Clear all
               </button>
-              <button className="btn btn-outline" onClick={() => setModal('invite')}>
+              <button className="button button-outline" onClick={() => setModal('invite')}>
                 Share invite link
               </button>
               <span className="selected-info">
@@ -436,7 +445,7 @@ export default function Heatmap() {
                   <div className="submission-info">
                     <h4>{sub.studentName}</h4>
                     <p>{sub.studentEmail} · {sub.slotCount} slots · {sub.submittedAt}</p>
-                    <div className="progress-bar-wrap" style={{ width: 160 }}>
+                    <div className="progress-bar-container" style={{ width: 160 }}>
                       <div
                         className="progress-bar-fill"
                         style={{ width: `${Math.min((sub.slotCount / times.length) * 100, 100)}%` }}
@@ -451,14 +460,14 @@ export default function Heatmap() {
                     ) : (
                       <>
                         <button
-                          className="btn btn-outline btn-sm"
+                          className="button button-outline button-small"
                           onClick={() => { setActiveSub(sub); setModal('approve'); }}
                         >
                           Review
                         </button>
                         <a
                           href={`mailto:${sub.studentEmail}?subject=Re: Your availability submission`}
-                          className="btn btn-ghost btn-sm"
+                          className="button button-ghost button-small"
                           style={{ textDecoration: 'none' }}
                         >
                           Email
@@ -478,11 +487,11 @@ export default function Heatmap() {
         {!isProfessor && tab === 'personal' && (
           <>
             <div className="legend" style={{ marginBottom: '0.75rem' }}>
-              <div className="swatch" style={{ background: '#ffe0e3', border: '1.5px solid #f5b0b8', borderRadius: 3 }} />
+              <div className="color-swatch" style={{ background: '#ffe0e3', border: '1.5px solid #f5b0b8', borderRadius: 3 }} />
               <span className="legend-label">Professor available</span>
-              <div className="swatch" style={{ background: 'var(--red)', borderRadius: 3, marginLeft: 12 }} />
+              <div className="color-swatch" style={{ background: 'var(--red)', borderRadius: 3, marginLeft: 12 }} />
               <span className="legend-label">Your selection</span>
-              <div className="swatch" style={{ background: 'var(--cell-empty)', borderRadius: 3, marginLeft: 12 }} />
+              <div className="color-swatch" style={{ background: 'var(--cell-empty)', borderRadius: 3, marginLeft: 12 }} />
               <span className="legend-label">Not available</span>
             </div>
             <p className="section-label">Select from the professor's available slots</p>
@@ -497,13 +506,13 @@ export default function Heatmap() {
             </div>
             <div className="confirm-bar">
               <button
-                className="btn btn-primary"
+                className="button button-primary"
                 onClick={submitStudentAvailability}
                 disabled={studSelected.size === 0}
               >
                 Submit availability
               </button>
-              <button className="btn btn-outline" onClick={() => setStudSelected(new Set())}>
+              <button className="button button-outline" onClick={() => setStudSelected(new Set())}>
                 Clear
               </button>
               <span className="selected-info">
@@ -528,7 +537,7 @@ export default function Heatmap() {
               {SAMPLE_PARTICIPANTS.map(p => (
                 <div
                   key={p.name}
-                  className={`chip${activeNames.has(p.name) ? ' active' : ' inactive'}`}
+                  className={`participant-chip${activeNames.has(p.name) ? ' active' : ' inactive'}`}
                   onClick={() => {
                     setActive(prev => {
                       const next = new Set(prev);
@@ -537,7 +546,7 @@ export default function Heatmap() {
                     });
                   }}
                 >
-                  <span className="chip-dot" style={{ background: p.color }} />
+                  <span className="participant-chip-dot" style={{ background: p.color }} />
                   {p.name}
                 </div>
               ))}
@@ -556,7 +565,7 @@ export default function Heatmap() {
             </div>
             <div className="confirm-bar">
               <button
-                className="btn btn-primary"
+                className="button button-primary"
                 onClick={() => setModal('confirm')}
                 disabled={!groupKey}
               >

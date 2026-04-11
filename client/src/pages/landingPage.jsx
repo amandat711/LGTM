@@ -22,9 +22,9 @@ export default function LandingPage() {
   return (
     <div className="lp-root">
       {/* ── Navbar ─────────────────────────────────────── */}
-      <nav className={`lp-nav${scrolled ? " lp-nav--scrolled" : ""}`}>
+      <nav className={`lp-nav${scrolled ? " lp-nav-scrolled" : ""}`}>
         <div className="lp-nav-inner">
-          <div className="lp-logo-wrap">
+          <div className="lp-logo-container">
             <img src={logo1} alt="McGill logo" className="lp-logo-img" style={{ height: '100px', width: '100px', objectFit: 'contain' }} />
           </div>
           <div className="lp-nav-right">
@@ -48,7 +48,7 @@ export default function LandingPage() {
         <img src={header} alt="Header background" className="lp-hero-img" />
         <div className="lp-hero-overlay" />
         <div className="lp-hero-body">
-          <p className="lp-hero-eyebrow">McGill University</p>
+          <p className="lp-hero-label">McGill University</p>
           <h1 className="lp-hero-title">Some Headline phrase<br /></h1>
           <button className="lp-hero-btn" onClick={() => navigate(`/dashboard/student/${TEST_USERS.student}`)}>
             Find availabilities
@@ -85,8 +85,8 @@ export default function LandingPage() {
       </section>
 
       {/* ── Feature 2 ──────────────────────────────────── */}
-      <section className="lp-feature-section lp-feature-section--alt">
-        <div className="lp-feature-row lp-feature-row--reverse">
+      <section className="lp-feature-section lp-feature-section-alt">
+        <div className="lp-feature-row lp-feature-row-reverse">
           <div className="lp-feature-media">
             <div className="lp-img-placeholder" />
           </div>

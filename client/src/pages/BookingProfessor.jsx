@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getAvailableProfessors, getProfessorPublicAvailabilities } from '../api/availabilities';
 import { createAppointment } from '../api/appointments';
+import Navbar from '../components/Navbar';
 
 
 function formatSlotTime(value) {
@@ -140,22 +141,8 @@ export default function BookingProfessor() {
 
   if (!professor) {
     return (
-      <div className="dash-root">
-        <nav className="dash-nav">
-          <div className="dash-nav-left">
-            <button
-              onClick={() => navigate(-1)}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-              }}
-            >
-              Back
-            </button>
-          </div>
-        </nav>
+      <div className="dashboard-container">
+        <Navbar title="Back" onLeftClick={() => navigate(-1)} />
         <div className="booking-page-content">
           <p>Professor not found.</p>
         </div>
@@ -164,30 +151,15 @@ export default function BookingProfessor() {
   }
 
   return (
-    <div className="dash-root">
-      <nav className="dash-nav">
-        <div className="dash-nav-left">
-          <button
-            onClick={() => navigate(-1)}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-            }}
-          >
-            Back to search
-          </button>
-        </div>
-
-        <div className="dash-nav-right">
-          <span className="dash-nav-name">{professor.name}</span>
-          <span className="dash-nav-role student">Student booking</span>
-        </div>
-      </nav>
+    <div className="dashboard-container">
+      <Navbar
+        title="Back to search"
+        onLeftClick={() => navigate(-1)}
+        user={{ displayName: professor.name, role: 'student', badgeText: 'Student booking' }}
+      />
 
       <div className="booking-page-content">
-        <section className="booking-confirm-panel">
+        <section className="booking-panel">
           <div className="booking-header">
             <div>
               <h1>{professor.name}</h1>

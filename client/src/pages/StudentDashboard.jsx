@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import logo from '../assets/logo1.png';
+import Navbar from '../components/Navbar';
 import calendarIcon from '../assets/calendarIcon.png';
 import coursesIcon from '../assets/courseIcon.png';
 import searchIcon from '../assets/searchIcon.png';
@@ -139,57 +140,30 @@ export default function StudentDashboard() {
 
   return (
     <>
-      <div className="dash-root">
+      <div className="dashboard-container">
         {/* ───────────────────────────────────────────────────── */}
         {/* Top Navbar */}
         {/* ───────────────────────────────────────────────────── */}
-        <nav className="dash-nav">
-          <div className="dash-nav-left">
-            <button
-              onClick={() => navigate('/')}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <img
-                src={logo}
-                alt="LGTM"
-                className="dash-nav-logo"
-                style={{ height: '100px', width: '100px', objectFit: 'contain' }}
-              />
-            </button>
-            <span className="dash-nav-title">Dashboard</span>
-          </div>
+        <Navbar
+          logo={logo}
+          title="Dashboard"
+          onLeftClick={() => navigate('/')}
+          user={{
+            displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
+            role: 'student',
+            initials,
+          }}
+          actions={[
+            { label: rightPanelOpen ? 'Hide panel' : 'Show panel', onClick: () => setRightPanelOpen((open) => !open) },
+            { label: 'Back to home', onClick: () => navigate('/') },
+          ]}
+        />
 
-          <div className="dash-nav-right">
-            <span className="dash-nav-name">
-              {currentUser.lastName}, {currentUser.firstName}
-            </span>
-            <span className="dash-nav-role student">Student</span>
-            <div className="dash-nav-avatar">{initials}</div>
-            <button
-              className="dash-logout"
-              style={{ marginRight: 8 }}
-              onClick={() => setRightPanelOpen((open) => !open)}
-            >
-              {rightPanelOpen ? 'Hide panel' : 'Show panel'}
-            </button>
-            <button className="dash-logout" onClick={() => navigate('/') }>
-              Back to home
-            </button>
-          </div>
-        </nav>
-
-        <div className="dash-body">
+        <div className="dashboard-content">
           {/* ─────────────────────────────────────────────────── */}
           {/* Sidebar */}
           {/* ─────────────────────────────────────────────────── */}
-          <aside className="dash-sidebar">
+          <aside className="sidebar-main">
             {[
               { id: 'calendar', icon: calendarIcon, label: 'Calendar' },
               { id: 'courses', icon: coursesIcon, label: 'Courses' },
@@ -197,7 +171,7 @@ export default function StudentDashboard() {
             ].map((item) => (
               <button
                 key={item.id}
-                className={`dash-sidebar-btn${sideTab === item.id ? ' active' : ''}`}
+                className={`sidebar-button${sideTab === item.id ? ' active' : ''}`}
                 onClick={() => {
                   if (item.id === 'search') {
                     navigate(`/booking/search/${userId}`);
@@ -211,13 +185,13 @@ export default function StudentDashboard() {
                   alt={item.label}
                   style={{ width: 40, height: 40, objectFit: 'contain' }}
                 />
-                <span className="dash-sidebar-label">{item.label}</span>
+                <span className="sidebar-label">{item.label}</span>
               </button>
             ))}
 
-            <div className="dash-sidebar-spacer" />
+            <div className="sidebar-spacer" />
 
-            <button className="dash-sidebar-btn">
+            <button className="sidebar-button">
               <img
                 src={InfoIcon}
                 alt="Help"
@@ -229,7 +203,7 @@ export default function StudentDashboard() {
           {/* ─────────────────────────────────────────────────── */}
           {/* Main dashboard content */}
           {/* ─────────────────────────────────────────────────── */}
-          <div className="dash-main">
+          <div className="main-area">
             {/* Calendar area */}
             {loading && <p style={{ padding: 16 }}>Loading appointments...</p>}
             {error && <p style={{ padding: 16, color: 'red' }}>{error}</p>}
@@ -249,10 +223,10 @@ export default function StudentDashboard() {
             {/* Right panel */}
             {/* ─────────────────────────────────────────────── */}
             {rightPanelOpen && (
-              <aside className="dash-right-panel">
+              <aside className="panel-right">
                 {/* Upcoming appointments */}
               <div>
-                <div className="dash-panel-section-title">Upcoming appointments</div>
+                <div className="panel-section-heading">Upcoming appointments</div>
                 {upcomingAppts.length === 0 ? (
                   <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
                 ) : (
@@ -262,35 +236,35 @@ export default function StudentDashboard() {
                     return (
                       <div
                         key={appt.id}
-                        className="dash-appt-card"
+                        className="appointment-card"
                         onClick={() => {
                           setActiveAppt(appt);
                           setModal('detail');
                         }}
                       >
-                        <div className="dash-appt-dot" style={{ background: appt.color }} />
-                        <div className="dash-appt-info">
+                        <div className="appointment-status-dot" style={{ background: appt.color }} />
+                        <div className="">
                           <h4>{appt.title || 'Untitled appointment'}</h4>
                           <h6>{appt.ownerName}</h6>
                           <p>{formatDate(appt.startTime)}</p>
                           <p>{appt.location}</p>
                         </div>
-                        <span className={`dash-appt-status ${cls}`}>{label}</span>
+                        <span className={`appointment-status-badge ${cls}`}>{label}</span>
                       </div>
                     );
                   })
                 )}
               </div>
 
-              <div className="dash-divider" />
+              <div className="panel-divider" />
 
               {/* Heatmap invitations - restored intact with dummy data */}
               <div>
-                <div className="dash-panel-section-title">Heatmap invitations</div>
+                <div className="panel-section-heading">Heatmap invitations</div>
                 {SAMPLE_INVITES.map((inv) => (
-                  <div key={inv.id} className="dash-invite-card">
-                    <div className={`dash-invite-dot${inv.responded ? ' responded' : ''}`} />
-                    <div className="dash-invite-info">
+                  <div key={inv.id} className="invite-card">
+                    <div className={`invite-status-dot${inv.responded ? ' responded' : ''}`} />
+                    <div className="">
                       <h4>{inv.profName}</h4>
                       <p>{inv.title}</p>
                       <p style={{ color: inv.responded ? '#888' : '#E31429' }}>
@@ -304,7 +278,7 @@ export default function StudentDashboard() {
                     </div>
                     {!inv.responded && (
                       <button
-                        className="dash-invite-open"
+                        className="invite-open-button"
                         onClick={() => navigate(`/heatmap/${inv.token}`)}
                       >
                         +
