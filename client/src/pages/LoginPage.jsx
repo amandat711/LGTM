@@ -29,7 +29,7 @@ export default function LoginPage() {
     }
 
     // Placeholder: replace with POST /api/auth/login
-    navigate('/student');
+    navigate('/dashboard/student/${TEST_USERS.student}');
   }
 
   return (

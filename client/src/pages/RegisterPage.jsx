@@ -41,7 +41,7 @@ export default function RegisterPage() {
     }
 
     // Placeholder: replace with POST /api/auth/register
-    navigate('/student');
+    navigate('/login');
   }
 
   return (
