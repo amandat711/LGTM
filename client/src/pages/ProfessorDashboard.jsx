@@ -191,7 +191,7 @@ useEffect(() => {
             initials,
           }}
           actions={[
-            { label: '+ New heatmap', onClick: () => navigate('/heatmap/1') },
+            { label: '+ New heatmap', onClick: () => navigate(`/heatmap/professor/1/${userId}`) },
             { label: rightPanelOpen ? 'Hide panel' : 'Show panel', onClick: () => setRightPanelOpen((open) => !open) },
             { label: 'Back to home', onClick: () => navigate('/') },
           ]}
@@ -324,7 +324,7 @@ useEffect(() => {
                     marginBottom: 8,
                     textAlign: 'center',
                   }}
-                  onClick={() => navigate('/heatmap/1')}
+                  onClick={() => navigate(`/heatmap/professor/1/${userId}`)}
                 >
                   + Create new heatmap
                 </button>

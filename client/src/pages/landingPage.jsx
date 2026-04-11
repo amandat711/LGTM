@@ -2,16 +2,13 @@ import { useState, useEffect } from "react";
 import logo1 from "../assets/logo1.png";
 import header from "../assets/header.png";
 import { useNavigate } from "react-router-dom";
+import { getUsers } from "../api/users";
 import "../styles/LandingPage.css";
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
-
-  const TEST_USERS = {
-    student: 2,
-    professor: 1
-  };
+  const [demoUsers, setDemoUsers] = useState({ student: null, professor: null });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -19,16 +16,50 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadDemoUsers() {
+      try {
+        const [students, professors] = await Promise.all([
+          getUsers("student"),
+          getUsers("professor"),
+        ]);
+
+        if (!active) return;
+
+        setDemoUsers({
+          student: students[0] || null,
+          professor: professors[0] || null,
+        });
+      } catch (err) {
+        if (!active) return;
+        setDemoUsers({ student: null, professor: null });
+      }
+    }
+
+    loadDemoUsers();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const studentDashboardPath = demoUsers.student ? `/dashboard/student/${demoUsers.student.id}` : "/";
+  const professorDashboardPath = demoUsers.professor ? `/dashboard/professor/${demoUsers.professor.id}` : "/";
+  const heatmapPath = demoUsers.student
+    ? `/heatmap/student/1/${demoUsers.student.id}`
+    : "/heatmap/1";
+
   return (
     <div className="landing-page">
       {/* ── Navbar ─────────────────────────────────────── */}
       <nav className={`landing-top-bar${scrolled ? " landing-top-bar-scrolled" : ""}`}>
         <div className="landing-top-bar-content">
           <div className="brand-area">
-            <img src={logo1} alt="McGill logo" className="brand-logo" style={{ height: '100px', width: '100px', objectFit: 'contain' }} />
+            <img src={logo1} alt="McGill logo" className="brand-logo" />
           </div>
           <div className="landing-top-bar-actions">
-            <button className="login-button" onClick={() => navigate(`/dashboard/student/${TEST_USERS.student}`)}>
+            <button className="login-button" onClick={() => navigate(studentDashboardPath)}>
               Login
             </button>
             <button className="profile-button" aria-label="Profile">
@@ -50,7 +81,7 @@ export default function LandingPage() {
         <div className="hero-content">
           <p className="hero-subtitle">McGill University</p>
           <h1 className="hero-title">Some Headline phrase<br /></h1>
-          <button className="hero-button" onClick={() => navigate(`/dashboard/student/${TEST_USERS.student}`)}>
+          <button className="hero-button" onClick={() => navigate(studentDashboardPath)}>
             Find availabilities
           </button>
         </div>
@@ -77,7 +108,7 @@ export default function LandingPage() {
               faucibus ex sapien vitae pellentesque sem placerat. Vitae
               pellentesque sem placerat in id cursus mi.
             </p>
-            <button className="feature-button" onClick={() => navigate(`/dashboard/professor/${TEST_USERS.professor}`)}>
+            <button className="feature-button" onClick={() => navigate(professorDashboardPath)}>
               Get started
             </button>
           </div>
@@ -98,7 +129,7 @@ export default function LandingPage() {
               faucibus ex sapien vitae pellentesque sem placerat. Vitae
               pellentesque sem placerat in id cursus mi.
             </p>
-            <button className="feature-button" onClick={() => navigate("/heatmap")}>
+            <button className="feature-button" onClick={() => navigate(heatmapPath)}>
               Learn more
             </button>
           </div>

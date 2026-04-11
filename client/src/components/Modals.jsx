@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 // ─── Shared shell ─────────────────────────────────────────────
 function Modal({ title, onClose, children, footer }) {
@@ -240,8 +240,35 @@ export function InviteURLModal({ ownerEmail, eventTitle, onClose }) {
 // 5. ApproveSubmissionModal
 //    Professor reviews a student's availability submission.
 // ─────────────────────────────────────────────────────────────
+function formatSlotLabel(slot) {
+  if (!slot?.startTime || !slot?.endTime) return 'Unknown time';
+
+  const start = new Date(slot.startTime);
+  const end = new Date(slot.endTime);
+
+  return `${start.toLocaleDateString('en-CA', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  })} · ${start.toLocaleTimeString('en-CA', {
+    hour: 'numeric',
+    minute: '2-digit',
+  })} - ${end.toLocaleTimeString('en-CA', {
+    hour: 'numeric',
+    minute: '2-digit',
+  })}`;
+}
+
 export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClose }) {
   const s = submission || {};
+  const slotOptions = useMemo(() => s.slots || [], [s.slots]);
+  const [selectedSlotId, setSelectedSlotId] = useState(slotOptions[0]?.id || null);
+
+  useEffect(() => {
+    setSelectedSlotId(slotOptions[0]?.id || null);
+  }, [slotOptions]);
+
+  const selectedSlot = slotOptions.find((slot) => slot.id === selectedSlotId) || slotOptions[0] || null;
 
   return (
     <Modal
@@ -257,7 +284,14 @@ export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClo
           >
             Decline
           </button>
-          <button className="button button-primary button-small" onClick={() => { onApprove(s); onClose(); }}>
+          <button
+            className="button button-primary button-small"
+            onClick={() => {
+              onApprove(s, selectedSlot);
+              onClose();
+            }}
+            disabled={!selectedSlot}
+          >
             Approve
           </button>
         </>
@@ -279,8 +313,39 @@ export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClo
         <span className="modal-row-label">Submitted</span>
         <span className="modal-row-value">{s.submittedAt}</span>
       </div>
+      <div className="modal-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+        <span className="modal-row-label">Choose the booked slot</span>
+        <div style={{ width: '100%', display: 'grid', gap: 8 }}>
+          {slotOptions.length === 0 ? (
+            <span className="modal-row-value">No submitted slots</span>
+          ) : (
+            slotOptions.map((slot) => (
+              <label
+                key={slot.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '8px 10px',
+                  borderRadius: 8,
+                  border: `1px solid ${selectedSlotId === slot.id ? '#E31429' : '#ddd'}`,
+                  cursor: 'pointer',
+                }}
+              >
+                <input
+                  type="radio"
+                  name="approved-slot"
+                  checked={selectedSlotId === slot.id}
+                  onChange={() => setSelectedSlotId(slot.id)}
+                />
+                <span>{formatSlotLabel(slot)}</span>
+              </label>
+            ))
+          )}
+        </div>
+      </div>
       <p style={{ marginTop: 14, fontSize: 12, color: '#aaa', lineHeight: 1.5 }}>
-        Approving will confirm the appointment and notify the student by email.
+        Approving will confirm the selected slot, create the appointment, and notify the student by email.
         Declining will free up their selected slots.
       </p>
     </Modal>

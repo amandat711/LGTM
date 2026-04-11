@@ -279,7 +279,7 @@ export default function StudentDashboard() {
                     {!inv.responded && (
                       <button
                         className="invite-action-button"
-                        onClick={() => navigate(`/heatmap/${inv.token}`)}
+                        onClick={() => navigate(`/heatmap/student/${inv.token}/${userId}`)}
                       >
                         +
                       </button>

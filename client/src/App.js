@@ -2,6 +2,8 @@ import './App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/landingPage';
 import Heatmap from './pages/Heatmap';
+import ProfessorHeatmap from './pages/ProfessorHeatmap';
+import StudentHeatmap from './pages/StudentHeatmap';
 import StudentDashboard   from './pages/StudentDashboard';
 import ProfessorDashboard from './pages/ProfessorDashboard';
 import BookingDiscovery from './pages/BookingDiscovery';
@@ -16,6 +18,8 @@ function App() {
         <Route path="/dashboard/professor/:userId" element={<ProfessorDashboard />} />
         <Route path="/booking/search/:userId" element={<BookingDiscovery />} />
         <Route path="/booking/professor/:professorId" element={<BookingProfessor />} />
+        <Route path="/heatmap/professor/:eventId/:userId" element={<ProfessorHeatmap />} />
+        <Route path="/heatmap/student/:eventId/:userId" element={<StudentHeatmap />} />
         <Route path="/heatmap/:eventId" element={<Heatmap />} />
       </Routes>
     </BrowserRouter>

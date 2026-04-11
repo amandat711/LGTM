@@ -60,8 +60,6 @@ export default function BookingProfessor() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    let active = true;
-
     async function loadProfessor() {
       setLoading(true);
       setError('');
@@ -83,9 +81,6 @@ export default function BookingProfessor() {
     }
 
     loadProfessor();
-    return () => {
-      active = false;
-    };
   }, [professorId]);
 
   useEffect(() => {
