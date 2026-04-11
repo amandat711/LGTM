@@ -27,17 +27,17 @@ import '../styles/Dashboard.css';
  *              Extra buttons rendered on the right.
  */
 export default function Navbar({ logo, title, onLeftClick, user, actions = [] }) {
-  const badgeClass = user?.role === 'professor' ? 'professor-badge' : 'student-badge';
+  const badgeClass = user?.role === 'professor' ? 'role-tag-professor' : 'role-tag-student';
 
   const badgeLabel =
     user?.badgeText ??
     (user?.role === 'professor' ? 'Professor' : user?.role === 'student' ? 'Student' : null);
 
   return (
-    <nav className="navbar-top">
+    <nav className="top-bar">
 
       {/* ── Left: logo + title  OR  plain back-button ──────── */}
-      <div className="navbar-left">
+      <div className="top-bar-left">
         <button
           onClick={onLeftClick}
           style={{
@@ -53,32 +53,32 @@ export default function Navbar({ logo, title, onLeftClick, user, actions = [] })
             <img
               src={logo}
               alt="logo"
-              className="navbar-logo"
+              className="top-bar-logo"
               style={{ height: '100px', width: '100px', objectFit: 'contain' }}
             />
           )}
-          {title && <span className="navbar-title">{title}</span>}
+          {title && <span className="top-bar-title">{title}</span>}
         </button>
       </div>
 
       {/* ── Right: user info  +  action buttons ────────────── */}
-      <div className="navbar-right">
+      <div className="top-bar-right">
         {user && (
           <>
             {user.displayName && (
-              <span className="navbar-user-name">{user.displayName}</span>
+              <span className="top-bar-user-name">{user.displayName}</span>
             )}
             {badgeLabel && (
-              <span className={`navbar-user-role ${badgeClass}`}>{badgeLabel}</span>
+              <span className={`top-bar-user-role ${badgeClass}`}>{badgeLabel}</span>
             )}
             {user.initials && (
-              <div className="navbar-user-avatar">{user.initials}</div>
+              <div className="top-bar-user-avatar">{user.initials}</div>
             )}
           </>
         )}
 
         {actions.map(({ label, onClick }, i) => (
-          <button key={i} className="navbar-button" onClick={onClick}>
+          <button key={i} className="top-bar-button" onClick={onClick}>
             {label}
           </button>
         ))}

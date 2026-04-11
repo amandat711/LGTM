@@ -141,9 +141,9 @@ export default function BookingProfessor() {
 
   if (!professor) {
     return (
-      <div className="dashboard-container">
+      <div className="dashboard-page">
         <Navbar title="Back" onLeftClick={() => navigate(-1)} />
-        <div className="booking-page-content">
+        <div className="booking-page">
           <p>Professor not found.</p>
         </div>
       </div>
@@ -151,39 +151,39 @@ export default function BookingProfessor() {
   }
 
   return (
-    <div className="dashboard-container">
+    <div className="dashboard-page">
       <Navbar
         title="Back to search"
         onLeftClick={() => navigate(-1)}
         user={{ displayName: professor.name, role: 'student', badgeText: 'Student booking' }}
       />
 
-      <div className="booking-page-content">
-        <section className="booking-panel">
+      <div className="booking-page">
+        <section className="booking-box">
           <div className="booking-header">
             <div>
               <h1>{professor.name}</h1>
-              <p className="booking-card-subtitle">{professor.department}</p>
-              <p className="booking-card-bio">{professor.bio}</p>
-              <p className="booking-card-email" style={{ marginTop: 4 }}>{professor.email}</p>
+              <p className="professor-card-subtitle">{professor.department}</p>
+              <p className="professor-card-description">{professor.bio}</p>
+              <p className="professor-card-email" style={{ marginTop: 4 }}>{professor.email}</p>
             </div>
-            <div className="booking-meta-pill">Student ID {studentId}</div>
+            <div className="booking-info-pill">Student ID {studentId}</div>
           </div>
 
-          {message && <div className="booking-status-banner success">{message}</div>}
-          {error && <div className="booking-status-banner error">{error}</div>}
+          {message && <div className="booking-status-message success">{message}</div>}
+          {error && <div className="booking-status-message error">{error}</div>}
 
-          <div className="booking-grid">
-            <div className="booking-slot-list">
+          <div className="booking-layout">
+            <div className="available-slots-panel">
               <div className="booking-section-title">Available slots</div>
               {loading ? (
-                <p className="booking-empty-state">Loading available times...</p>
+                <p className="booking-empty-message">Loading available times...</p>
               ) : slots.length === 0 ? (
-                <p className="booking-empty-state">No slots are currently available.</p>
+                <p className="booking-empty-message">No slots are currently available.</p>
               ) : (
                 Object.entries(groupedSlots).map(([dateKey, daySlots]) => (
-                  <div key={dateKey} className="booking-day-group">
-                    <div className="booking-day-label">{formatSlotDate(daySlots[0].start_time)}</div>
+                  <div key={dateKey} className="booking-day-block">
+                    <div className="booking-day-title">{formatSlotDate(daySlots[0].start_time)}</div>
                     {daySlots.map((slot) => {
                       const isFull = slot.booked_count >= slot.capacity;
                       const isSelected = selectedSlot?.availability_id === slot.availability_id;
@@ -191,16 +191,16 @@ export default function BookingProfessor() {
                       return (
                         <button
                           key={slot.availability_id}
-                          className={`booking-slot-card${isSelected ? ' selected' : ''}${isFull ? ' disabled' : ''}`}
+                          className={`available-slot-card${isSelected ? ' selected' : ''}${isFull ? ' disabled' : ''}`}
                           disabled={isFull}
                           onClick={() => setSelectedSlot(slot)}
                         >
                           <div>
                             <strong>{formatSlotTime(slot.start_time)} – {formatSlotTime(slot.end_time)}</strong>
-                            <p className="booking-slot-title">{getSlotTitle(slot, professor.name)}</p>
-                            <p className="booking-slot-location">{slot.location || 'Online'}</p>
+                            <p className="available-slot-title">{getSlotTitle(slot, professor.name)}</p>
+                            <p className="available-slot-location">{slot.location || 'Online'}</p>
                           </div>
-                          <span className={`booking-slot-status${isFull ? ' full' : ''}`}>
+                          <span className={`available-slot-status${isFull ? ' full' : ''}`}>
                             {isFull ? 'Full' : 'Open'}
                           </span>
                         </button>
@@ -211,36 +211,36 @@ export default function BookingProfessor() {
               )}
             </div>
 
-            <aside className="booking-details-panel">
+            <aside className="selected-slot-panel">
               <h2>Selected slot</h2>
               {selectedSlot ? (
-                <div className="booking-selected-card">
-                  <p className="booking-selected-title">{getSlotTitle(selectedSlot, professor.name)}</p>
-                  <p className="booking-selected-date">{formatSlotDate(selectedSlot.start_time)}</p>
+                <div className="selected-slot-card">
+                  <p className="selected-slot-title">{getSlotTitle(selectedSlot, professor.name)}</p>
+                  <p className="selected-slot-date">{formatSlotDate(selectedSlot.start_time)}</p>
                   <h3>{formatSlotTime(selectedSlot.start_time)} – {formatSlotTime(selectedSlot.end_time)}</h3>
-                  <p className="booking-slot-location">{selectedSlot.location || 'Online meeting'}</p>
-                  <div className="booking-detail-row">
+                  <p className="available-slot-location">{selectedSlot.location || 'Online meeting'}</p>
+                  <div className="slot-detail-row">
                     <span>Capacity</span>
                     <span>{selectedSlot.capacity}</span>
                   </div>
-                  <div className="booking-detail-row">
+                  <div className="slot-detail-row">
                     <span>Booked</span>
                     <span>{selectedSlot.booked_count}/{selectedSlot.capacity}</span>
                   </div>
                 </div>
               ) : (
-                <p className="booking-empty-state">Select a slot to see details and confirm your booking.</p>
+                <p className="booking-empty-message">Select a slot to see details and confirm your booking.</p>
               )}
 
               <button
-                className="booking-card-button"
+                className="professor-card-button"
                 disabled={!selectedSlot || status === 'submitting'}
                 onClick={handleConfirm}
               >
                 Confirm booking
               </button>
               <button
-                className="booking-card-button booking-card-button-secondary"
+                className="professor-card-button secondary-button"
                 onClick={() => navigate(`/dashboard/student/${studentId}`)}
               >
                 Back to dashboard

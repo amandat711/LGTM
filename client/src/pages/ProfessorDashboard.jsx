@@ -177,7 +177,7 @@ useEffect(() => {
 
   return (
     <>
-      <div className="dashboard-container">
+      <div className="dashboard-page">
         {/* ───────────────────────────────────────────────────── */}
         {/* Top Navbar */}
         {/* ───────────────────────────────────────────────────── */}
@@ -197,11 +197,11 @@ useEffect(() => {
           ]}
         />
 
-        <div className="dashboard-content">
+        <div className="dashboard-layout">
           {/* ─────────────────────────────────────────────────── */}
           {/* Sidebar */}
           {/* ─────────────────────────────────────────────────── */}
-          <aside className="sidebar-main">
+          <aside className="side-menu">
             {[
               { id: 'calendar', icon: calendarIcon, label: 'Calendar' },
               { id: 'courses', icon: coursesIcon, label: 'Courses' },
@@ -209,7 +209,7 @@ useEffect(() => {
             ].map((item) => (
               <button
                 key={item.id}
-                className={`sidebar-button${sideTab === item.id ? ' active' : ''}`}
+                className={`side-menu-button${sideTab === item.id ? ' active' : ''}`}
                 onClick={() => setSideTab(item.id)}
               >
                 <img
@@ -217,12 +217,12 @@ useEffect(() => {
                   alt={item.label}
                   style={{ width: 40, height: 40, objectFit: 'contain' }}
                 />
-                <span className="sidebar-label">{item.label}</span>
+                <span className="side-menu-label">{item.label}</span>
               </button>
             ))}
 
             <button
-              className="sidebar-button"
+              className="side-menu-button"
               onClick={() => setModal('createAvailability')}
             >
               <span
@@ -239,12 +239,12 @@ useEffect(() => {
               >
                 +
               </span>
-              <span className="sidebar-label">Create availability</span>
+              <span className="side-menu-label">Create availability</span>
             </button>
 
-            <div className="sidebar-spacer" />
+            <div className="side-menu-spacer" />
 
-            <button className="sidebar-button">
+            <button className="side-menu-button">
               <img
                 src={InfoIcon}
                 alt="Help"
@@ -256,7 +256,7 @@ useEffect(() => {
           {/* ─────────────────────────────────────────────────── */}
           {/* Main dashboard content */}
           {/* ─────────────────────────────────────────────────── */}
-          <div className="main-area">
+          <div className="main-content">
             {/* Calendar area */}
             {loading && <p style={{ padding: 16 }}>Loading appointments...</p>}
             {error && <p style={{ padding: 16, color: 'red' }}>{error}</p>}
@@ -276,10 +276,10 @@ useEffect(() => {
             {/* Right panel */}
             {/* ─────────────────────────────────────────────── */}
             {rightPanelOpen && (
-              <aside className="panel-right">
+              <aside className="side-panel">
                 {/* Upcoming appointments */}
               <div>
-                <div className="panel-section-heading">Upcoming appointments</div>
+                <div className="side-panel-title">Upcoming appointments</div>
                 {upcomingAppts.length === 0 ? (
                   <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
                 ) : (
@@ -289,33 +289,33 @@ useEffect(() => {
                     return (
                       <div
                         key={appt.id}
-                        className="appointment-card"
+                        className="appointment-item"
                         onClick={() => {
                           setActiveAppt(appt);
                           setModal('detail');
                         }}
                       >
-                        <div className="appointment-status-dot" style={{ background: appt.color }} />
+                        <div className="appointment-color-dot" style={{ background: appt.color }} />
                         <div className="">
                           <h4>{appt.title || 'Untitled appointment'}</h4>
                           <h6>{appt.ownerName}</h6>
                           <p>{formatDate(appt.startTime)}</p>
                           <p>{appt.location}</p>
                         </div>
-                        <span className={`appointment-status-badge ${cls}`}>{label}</span>
+                        <span className={`appointment-status-pill ${cls}`}>{label}</span>
                       </div>
                     );
                   })
                 )}
               </div>
 
-              <div className="panel-divider" />
+              <div className="side-panel-divider" />
 
               {/* Heatmap tools - restored intact */}
               <div>
-                <div className="panel-section-heading">Heatmap tools</div>
+                <div className="side-panel-title">Heatmap tools</div>
                 <button
-                  className="navbar-button"
+                  className="top-bar-button"
                   style={{
                     width: '100%',
                     padding: 10,

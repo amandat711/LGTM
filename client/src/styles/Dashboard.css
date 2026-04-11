@@ -1,17 +1,15 @@
 /**
  * Dashboard.css - Styles for the main dashboard interface
  *
- * Naming Convention: semantic, intuitive names
- * - dashboard-* → Main container and layout
- * - navbar-* → Top navigation
- * - sidebar-* → Left navigation
- * - panel-* → Right info panel
- * - appointment-* → Appointment cards
- * - invite-* → Invitations
- * - booking-* → Booking pages
+ * Naming Convention: plain-English, easy-to-scan names
+ * - top-bar-* → Shared top navigation
+ * - side-menu-* → Left navigation
+ * - side-panel-* → Right information area
+ * - appointment-* / invite-* → Dashboard cards
+ * - booking-* / professor-* / slot-* → Booking pages
  */
 
-.dashboard-container {
+.dashboard-page {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -21,7 +19,7 @@
 }
 
 /* ─── TOP NAVIGATION BAR ────────────────────────────────── */
-.navbar-top {
+.top-bar {
   height: 54px;
   background: #fff;
   border-bottom: 1px solid #e4e4e4;
@@ -33,13 +31,13 @@
   z-index: 10;
 }
 
-.navbar-left {
+.top-bar-left {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.navbar-logo-button {
+.top-bar-logo-button {
   display: flex;
   align-items: center;
   background: none;
@@ -48,29 +46,29 @@
   cursor: pointer;
 }
 
-.navbar-logo {
+.top-bar-logo {
   height: 32px;
   width: auto;
 }
 
-.navbar-title {
+.top-bar-title {
   font-size: 15px;
   font-weight: 600;
   color: #0f0f0f;
 }
 
-.navbar-right {
+.top-bar-right {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.navbar-user-name {
+.top-bar-user-name {
   font-size: 13px;
   color: #555;
 }
 
-.navbar-user-avatar {
+.top-bar-user-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -85,26 +83,26 @@
   flex-shrink: 0;
 }
 
-.navbar-user-role {
+.top-bar-user-role {
   padding: 2px 8px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 500;
 }
 
-.navbar-user-role.professor-badge {
+.top-bar-user-role.role-tag-professor {
   background: #fff3e0;
   color: #b85c00;
   border: 1px solid #f5c07a;
 }
 
-.navbar-user-role.student-badge {
+.top-bar-user-role.role-tag-student {
   background: #e8f4fd;
   color: #1565a8;
   border: 1px solid #90c8f0;
 }
 
-.navbar-button {
+.top-bar-button {
   background: none;
   border: 1px solid #e4e4e4;
   border-radius: 5px;
@@ -117,12 +115,12 @@
   transition: border-color 0.15s, color 0.15s;
 }
 
-.navbar-button:hover {
+.top-bar-button:hover {
   border-color: #E31429;
   color: #E31429;
 }
 
-.dashboard-content {
+.dashboard-layout {
   display: flex;
   flex: 1;
   overflow: hidden;
@@ -130,7 +128,7 @@
 
 /* ─── LEFT SIDEBAR NAVIGATION ──────────────────────────── */
 
-.sidebar-main {
+.side-menu {
   width: 72px;
   background: #fff;
   border-right: 1px solid #e4e4e4;
@@ -142,7 +140,7 @@
   flex-shrink: 0;
 }
 
-.sidebar-button {
+.side-menu-button {
   width: 55px;
   height: 55px;
   border-radius: 10px;
@@ -158,23 +156,23 @@
   transition: background 0.15s;
 }
 
-.sidebar-button:hover {
+.side-menu-button:hover {
   background: #f5f5f5;
 }
 
-.sidebar-button.active {
+.side-menu-button.active {
   background: #fff0f1;
 }
 
-.sidebar-button.active .sidebar-icon {
+.side-menu-button.active .side-menu-icon {
   color: #E31429;
 }
 
-.sidebar-button.active .sidebar-label {
+.side-menu-button.active .side-menu-label {
   color: #E31429;
 }
 
-.sidebar-icon {
+.side-menu-icon {
   font-size: 20px;
   color: #888;
   line-height: 1;
@@ -182,7 +180,7 @@
   transition: color 0.15s;
 }
 
-.sidebar-label {
+.side-menu-label {
   font-size: 9px;
   font-weight: 500;
   color: #888;
@@ -191,13 +189,13 @@
   transition: color 0.15s;
 }
 
-.sidebar-spacer {
+.side-menu-spacer {
   flex: 1;
 }
 
 /* ─── MAIN CONTENT AREA ────────────────────────────────── */
 
-.main-area {
+.main-content {
   display: flex;
   flex: 1;
   min-width: 0;
@@ -208,7 +206,7 @@
 
 /* ─── RIGHT INFO PANEL ────────────────────────────────────────── */
 
-.panel-right {
+.side-panel {
   width: 300px;
   flex-shrink: 0;
   display: flex;
@@ -220,7 +218,7 @@
   min-height: 0;
 }
 
-.panel-section-heading {
+.side-panel-title {
   font-size: 15px;
   font-weight: 600;
   color: #0f0f0f;
@@ -230,7 +228,7 @@
 
 /* ─── APPOINTMENT CARDS ────────────────────────────────────── */
 
-.appointment-card {
+.appointment-item {
   border: 1px solid #e4e4e4;
   border-radius: 8px;
   padding: 10px 12px;
@@ -242,12 +240,12 @@
   gap: 10px;
 }
 
-.appointment-card:hover {
+.appointment-item:hover {
   border-color: #ccc;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
-.appointment-status-dot {
+.appointment-color-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -255,21 +253,21 @@
   margin-top: 4px;
 }
 
-.appointment-card h4 {
+.appointment-item h4 {
   font-size: 13px;
   font-weight: 500;
   color: #0f0f0f;
   margin: 0 0 3px;
 }
 
-.appointment-card p {
+.appointment-item p {
   font-size: 11px;
   color: #888;
   margin: 0;
   line-height: 1.5;
 }
 
-.appointment-status-badge {
+.appointment-status-pill {
   margin-left: auto;
   flex-shrink: 0;
   padding: 4px 10px;
@@ -305,7 +303,7 @@
 
 /* ─── HEATMAP INVITE CARDS ────────────────────────────────── */
 
-.invite-card {
+.invite-item {
   border: 1px solid #e4e4e4;
   border-radius: 8px;
   padding: 10px 12px;
@@ -315,7 +313,7 @@
   gap: 10px;
 }
 
-.invite-status-dot {
+.invite-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
@@ -324,24 +322,24 @@
   margin-top: 4px;
 }
 
-.invite-status-dot.responded {
+.invite-dot.responded {
   background: #888;
 }
 
-.invite-card h4 {
+.invite-item h4 {
   font-size: 13px;
   font-weight: 500;
   color: #0f0f0f;
   margin: 0 0 3px;
 }
 
-.invite-card p {
+.invite-item p {
   font-size: 11px;
   color: #888;
   margin: 0;
 }
 
-.invite-open-button {
+.invite-action-button {
   margin-left: auto;
   width: 26px;
   height: 26px;
@@ -358,14 +356,14 @@
   flex-shrink: 0;
 }
 
-.invite-open-button:hover {
+.invite-action-button:hover {
   border-color: #E31429;
   color: #E31429;
 }
 
 /* ─── PANEL DIVIDER ────────────────────────────────────────── */
 
-.panel-divider {
+.side-panel-divider {
   height: 1px;
   background: #f0f0f0;
   margin: 4px 0;
@@ -374,17 +372,17 @@
 /* ─── RESPONSIVE BREAKPOINTS ──────────────────────────────── */
 
 @media (max-width: 900px) {
-  .panel-right {
+  .side-panel {
     width: 240px;
   }
 }
 
 @media (max-width: 700px) {
-  .panel-right {
+  .side-panel {
     display: none;
   }
 
-  .sidebar-main {
+  .side-menu {
     width: 56px;
   }
 }
@@ -393,14 +391,14 @@
    BOOKING PAGE STYLES
    ═══════════════════════════════════════════════════════════════ */
 
-.booking-page-content {
+.booking-page {
   flex: 1;
   overflow-y: auto;
   padding: 32px;
   background: #f5f5f5;
 }
 
-.booking-panel {
+.booking-box {
   max-width: 920px;
   margin: 0 auto 32px;
   background: #fff;
@@ -409,20 +407,20 @@
   padding: 28px;
 }
 
-.booking-panel h1,
-.booking-panel h2 {
+.booking-box h1,
+.booking-box h2 {
   margin: 0 0 10px;
   font-size: 28px;
   color: #111;
 }
 
-.booking-search-hint {
+.booking-help-text {
   margin: 0 0 22px;
   color: #555;
   line-height: 1.6;
 }
 
-.booking-search-input {
+.booking-search-box {
   width: 100%;
   border: 1px solid #d8d8d8;
   border-radius: 14px;
@@ -433,21 +431,21 @@
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.booking-search-input:focus {
+.booking-search-box:focus {
   border-color: #E31429;
   box-shadow: 0 0 0 4px rgba(227, 20, 41, 0.1);
 }
 
 /* ─── PROFESSOR GRID ──────────────────────────────────────── */
 
-.booking-results {
+.professor-list {
   max-width: 920px;
   margin: 0 auto;
   display: grid;
   gap: 18px;
 }
 
-.booking-card {
+.professor-card {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -458,26 +456,26 @@
   border: 1px solid #ebe8e8;
 }
 
-.booking-card h2 {
+.professor-card h2 {
   margin: 0 0 8px;
   font-size: 20px;
 }
 
-.booking-card-subtitle,
-.booking-card-email,
-.booking-card-bio {
+.professor-card-subtitle,
+.professor-card-email,
+.professor-card-description {
   margin: 0 0 6px;
   color: #666;
   font-size: 13px;
 }
 
-.booking-card-bio {
+.professor-card-description {
   margin: 0 0 22px;
   color: #555;
   line-height: 1.6;
 }
 
-.booking-card-button {
+.professor-card-button {
   background: #E31429;
   border: none;
   border-radius: 999px;
@@ -489,20 +487,20 @@
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
-.booking-card-button:hover {
+.professor-card-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(227, 20, 41, 0.18);
 }
 
-.booking-empty-state,
-.booking-placeholder {
+.booking-empty-message,
+.booking-placeholder-box {
   max-width: 920px;
   margin: 0 auto;
   color: #666;
   font-size: 15px;
 }
 
-.booking-placeholder {
+.booking-placeholder-box {
   border: 1px dashed #d8d8d8;
   border-radius: 16px;
   padding: 28px;
@@ -519,7 +517,7 @@
   margin-bottom: 22px;
 }
 
-.booking-meta-pill {
+.booking-info-pill {
   border-radius: 999px;
   background: #f1f5f9;
   color: #334155;
@@ -528,32 +526,32 @@
   font-weight: 600;
 }
 
-.booking-status-banner {
+.booking-status-message {
   border-radius: 14px;
   padding: 14px 16px;
   margin-bottom: 18px;
   font-size: 14px;
 }
 
-.booking-status-banner.success {
+.booking-status-message.success {
   background: #e6ffed;
   color: #1f7255;
   border: 1px solid #b7f0c3;
 }
 
-.booking-status-banner.error {
+.booking-status-message.error {
   background: #ffe8e8;
   color: #8f1d23;
   border: 1px solid #f1c1c1;
 }
 
-.booking-grid {
+.booking-layout {
   display: grid;
   grid-template-columns: 1.8fr 1fr;
   gap: 24px;
 }
 
-.booking-slot-list {
+.available-slots-panel {
   background: #fafafa;
   border: 1px solid #ececec;
   border-radius: 18px;
@@ -567,22 +565,22 @@
   color: #111;
 }
 
-.booking-day-group {
+.booking-day-block {
   margin-top: 18px;
 }
 
-.booking-day-group:first-child {
+.booking-day-block:first-child {
   margin-top: 0;
 }
 
-.booking-day-label {
+.booking-day-title {
   font-size: 13px;
   font-weight: 600;
   color: #555;
   margin-bottom: 10px;
 }
 
-.booking-slot-card {
+.available-slot-card {
   width: 100%;
   border: 1px solid #e6e6e6;
   border-radius: 16px;
@@ -598,50 +596,50 @@
   transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
 }
 
-.booking-slot-card:hover {
+.available-slot-card:hover {
   border-color: #dadada;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
 }
 
-.booking-slot-card.selected {
+.available-slot-card.selected {
   border-color: #E31429;
   background: #fff7f6;
 }
 
-.booking-slot-card.disabled {
+.available-slot-card.disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
-.booking-slot-card.disabled:hover {
+.available-slot-card.disabled:hover {
   box-shadow: none;
   border-color: #e6e6e6;
 }
 
-.booking-slot-status {
+.available-slot-status {
   font-size: 12px;
   font-weight: 700;
   color: #1565a8;
 }
 
-.booking-slot-status.full {
+.available-slot-status.full {
   color: #b01020;
 }
 
-.booking-slot-title {
+.available-slot-title {
   margin: 4px 0 0;
   font-size: 13px;
   color: #444;
   line-height: 1.4;
 }
 
-.booking-slot-location {
+.available-slot-location {
   margin: 4px 0 0;
   font-size: 12px;
   color: #666;
 }
 
-.booking-details-panel {
+.selected-slot-panel {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -651,26 +649,26 @@
   padding: 20px;
 }
 
-.booking-details-panel h2 {
+.selected-slot-panel h2 {
   margin: 0;
   font-size: 18px;
   color: #111;
 }
 
-.booking-selected-card {
+.selected-slot-card {
   border: 1px solid #e4e4e4;
   border-radius: 16px;
   padding: 18px;
   background: #fff;
 }
 
-.booking-selected-date {
+.selected-slot-date {
   margin: 0 0 6px;
   color: #555;
   font-size: 13px;
 }
 
-.booking-detail-row {
+.slot-detail-row {
   display: flex;
   justify-content: space-between;
   margin-top: 10px;
@@ -678,7 +676,7 @@
   font-size: 14px;
 }
 
-.booking-card-button-secondary {
+.secondary-button {
   background: #fff;
   color: #333;
   border: 1px solid #d8d8d8;
@@ -690,13 +688,13 @@
   transition: transform 0.15s, box-shadow 0.15s;
 }
 
-.booking-card-button-secondary:hover {
+.secondary-button:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 @media (max-width: 900px) {
-  .booking-grid {
+  .booking-layout {
     grid-template-columns: 1fr;
   }
 }

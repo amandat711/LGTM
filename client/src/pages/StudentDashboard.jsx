@@ -140,7 +140,7 @@ export default function StudentDashboard() {
 
   return (
     <>
-      <div className="dashboard-container">
+      <div className="dashboard-page">
         {/* ───────────────────────────────────────────────────── */}
         {/* Top Navbar */}
         {/* ───────────────────────────────────────────────────── */}
@@ -159,11 +159,11 @@ export default function StudentDashboard() {
           ]}
         />
 
-        <div className="dashboard-content">
+        <div className="dashboard-layout">
           {/* ─────────────────────────────────────────────────── */}
           {/* Sidebar */}
           {/* ─────────────────────────────────────────────────── */}
-          <aside className="sidebar-main">
+          <aside className="side-menu">
             {[
               { id: 'calendar', icon: calendarIcon, label: 'Calendar' },
               { id: 'courses', icon: coursesIcon, label: 'Courses' },
@@ -171,7 +171,7 @@ export default function StudentDashboard() {
             ].map((item) => (
               <button
                 key={item.id}
-                className={`sidebar-button${sideTab === item.id ? ' active' : ''}`}
+                className={`side-menu-button${sideTab === item.id ? ' active' : ''}`}
                 onClick={() => {
                   if (item.id === 'search') {
                     navigate(`/booking/search/${userId}`);
@@ -185,13 +185,13 @@ export default function StudentDashboard() {
                   alt={item.label}
                   style={{ width: 40, height: 40, objectFit: 'contain' }}
                 />
-                <span className="sidebar-label">{item.label}</span>
+                <span className="side-menu-label">{item.label}</span>
               </button>
             ))}
 
-            <div className="sidebar-spacer" />
+            <div className="side-menu-spacer" />
 
-            <button className="sidebar-button">
+            <button className="side-menu-button">
               <img
                 src={InfoIcon}
                 alt="Help"
@@ -203,7 +203,7 @@ export default function StudentDashboard() {
           {/* ─────────────────────────────────────────────────── */}
           {/* Main dashboard content */}
           {/* ─────────────────────────────────────────────────── */}
-          <div className="main-area">
+          <div className="main-content">
             {/* Calendar area */}
             {loading && <p style={{ padding: 16 }}>Loading appointments...</p>}
             {error && <p style={{ padding: 16, color: 'red' }}>{error}</p>}
@@ -223,10 +223,10 @@ export default function StudentDashboard() {
             {/* Right panel */}
             {/* ─────────────────────────────────────────────── */}
             {rightPanelOpen && (
-              <aside className="panel-right">
+              <aside className="side-panel">
                 {/* Upcoming appointments */}
               <div>
-                <div className="panel-section-heading">Upcoming appointments</div>
+                <div className="side-panel-title">Upcoming appointments</div>
                 {upcomingAppts.length === 0 ? (
                   <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
                 ) : (
@@ -236,34 +236,34 @@ export default function StudentDashboard() {
                     return (
                       <div
                         key={appt.id}
-                        className="appointment-card"
+                        className="appointment-item"
                         onClick={() => {
                           setActiveAppt(appt);
                           setModal('detail');
                         }}
                       >
-                        <div className="appointment-status-dot" style={{ background: appt.color }} />
+                        <div className="appointment-color-dot" style={{ background: appt.color }} />
                         <div className="">
                           <h4>{appt.title || 'Untitled appointment'}</h4>
                           <h6>{appt.ownerName}</h6>
                           <p>{formatDate(appt.startTime)}</p>
                           <p>{appt.location}</p>
                         </div>
-                        <span className={`appointment-status-badge ${cls}`}>{label}</span>
+                        <span className={`appointment-status-pill ${cls}`}>{label}</span>
                       </div>
                     );
                   })
                 )}
               </div>
 
-              <div className="panel-divider" />
+              <div className="side-panel-divider" />
 
               {/* Heatmap invitations - restored intact with dummy data */}
               <div>
-                <div className="panel-section-heading">Heatmap invitations</div>
+                <div className="side-panel-title">Heatmap invitations</div>
                 {SAMPLE_INVITES.map((inv) => (
-                  <div key={inv.id} className="invite-card">
-                    <div className={`invite-status-dot${inv.responded ? ' responded' : ''}`} />
+                  <div key={inv.id} className="invite-item">
+                    <div className={`invite-dot${inv.responded ? ' responded' : ''}`} />
                     <div className="">
                       <h4>{inv.profName}</h4>
                       <p>{inv.title}</p>
@@ -278,7 +278,7 @@ export default function StudentDashboard() {
                     </div>
                     {!inv.responded && (
                       <button
-                        className="invite-open-button"
+                        className="invite-action-button"
                         onClick={() => navigate(`/heatmap/${inv.token}`)}
                       >
                         +
