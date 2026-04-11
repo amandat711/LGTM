@@ -11,12 +11,12 @@ export function generateDays(startDate, numDays = 5) {
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   for (let i = 0; i < numDays; i++) {
-    const d = new Date(startDate);
+    const d = new Date(`${startDate}T00:00:00`);
     d.setDate(d.getDate() + i);
     days.push({
       short: shorts[d.getDay()],
       date:  `${months[d.getMonth()]} ${d.getDate()}`,
-      iso:   d.toISOString().slice(0, 10),
+      iso:   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
     });
   }
   return days;

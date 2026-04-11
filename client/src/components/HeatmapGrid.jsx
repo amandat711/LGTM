@@ -24,7 +24,7 @@ export function PersonalGrid({ days, times, selected, setSelected }) {
       <TimeLabels times={times} />
       <div className="days-grid">
         {days.map((day) => (
-          <div key={day.iso} className="day-col">
+          <div key={day.iso} className="day-column">
             <DayHeader day={day} />
             {times.map((_, ti) => {
               const key = makeKey(day.iso, ti);
@@ -55,7 +55,7 @@ export function ProfAvailGrid({ days, times, profSlots, selected, setSelected })
       <TimeLabels times={times} />
       <div className="days-grid">
         {days.map((day) => (
-          <div key={day.iso} className="day-col">
+          <div key={day.iso} className="day-column">
             <DayHeader day={day} />
             {times.map((timeLabel, ti) => {
               const key     = makeKey(day.iso, ti);
@@ -102,7 +102,7 @@ export function GroupGrid({ days, times, participants, activeNames, selectedKey,
       <TimeLabels times={times} />
       <div className="days-grid">
         {days.map((day) => (
-          <div key={day.iso} className="day-col">
+          <div key={day.iso} className="day-column">
             <DayHeader day={day} />
             {times.map((timeLabel, ti) => {
               const key   = makeKey(day.iso, ti);
@@ -112,7 +112,7 @@ export function GroupGrid({ days, times, participants, activeNames, selectedKey,
               return (
                 <div
                   key={ti}
-                  className={`gcell${selectedKey === key ? ' g-selected' : ''}`}
+                  className={`group-cell${selectedKey === key ? ' selected' : ''}`}
                   style={{ background: heatColor(count, max) }}
                   onClick={() => onSelectKey(key, { timeLabel, day, count, max, who })}
                 >
@@ -138,9 +138,9 @@ export function HeatmapLegend({ max }) {
   return (
     <div className="legend">
       <span className="legend-label">0 available</span>
-      <div className="legend-swatch">
+      <div className="legend-colors">
         {Array.from({ length: max + 1 }, (_, i) => (
-          <div key={i} className="swatch" style={{ background: heatColor(i, max) }} />
+          <div key={i} className="color-swatch" style={{ background: heatColor(i, max) }} />
         ))}
       </div>
       <span className="legend-label">All available</span>
@@ -150,7 +150,7 @@ export function HeatmapLegend({ max }) {
 
 function TimeLabels({ times }) {
   return (
-    <div className="time-col">
+    <div className="time-column">
       {times.map((t, i) => (
         <div key={i} className="time-label">
           {i % 2 === 0 ? t : ''}

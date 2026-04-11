@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import logo from '../assets/logo1.png';
+import Navbar from '../components/Navbar';
 import calendarIcon from '../assets/calendarIcon.png';
 import coursesIcon from '../assets/courseIcon.png';
 import searchIcon from '../assets/searchIcon.png';
@@ -176,68 +177,31 @@ useEffect(() => {
 
   return (
     <>
-      <div className="dash-root">
+      <div className="dashboard-page">
         {/* ───────────────────────────────────────────────────── */}
         {/* Top Navbar */}
         {/* ───────────────────────────────────────────────────── */}
-        <nav className="dash-nav">
-          <div className="dash-nav-left">
-            <button
-              onClick={() => navigate('/')}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <img
-                src={logo}
-                alt="LGTM"
-                className="dash-nav-logo"
-                style={{ height: '100px', width: '100px', objectFit: 'contain' }}
-              />
-            </button>
-            <span className="dash-nav-title">Dashboard</span>
-          </div>
+        <Navbar
+          logo={logo}
+          title="Dashboard"
+          onLeftClick={() => navigate('/')}
+          user={{
+            displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
+            role: 'professor',
+            initials,
+          }}
+          actions={[
+            { label: '+ New heatmap', onClick: () => navigate(`/heatmap/professor/1/${userId}`) },
+            { label: rightPanelOpen ? 'Hide panel' : 'Show panel', onClick: () => setRightPanelOpen((open) => !open) },
+            { label: 'Back to home', onClick: () => navigate('/') },
+          ]}
+        />
 
-          <div className="dash-nav-right">
-            <span className="dash-nav-name">
-              {currentUser.lastName}, {currentUser.firstName}
-            </span>
-            <span className="dash-nav-role professor">Professor</span>
-            <div className="dash-nav-avatar">{initials}</div>
-
-            {/* Restored heatmap button */}
-            <button
-              className="dash-logout"
-              style={{ marginRight: 8 }}
-              onClick={() => navigate('/heatmap/1')}
-            >
-              + New heatmap
-            </button>
-
-            <button
-              className="dash-logout"
-              style={{ marginRight: 8 }}
-              onClick={() => setRightPanelOpen((open) => !open)}
-            >
-              {rightPanelOpen ? 'Hide panel' : 'Show panel'}
-            </button>
-
-            <button className="dash-logout" onClick={() => navigate('/')}>
-              Back to home
-            </button>
-          </div>
-        </nav>
-
-        <div className="dash-body">
+        <div className="dashboard-layout">
           {/* ─────────────────────────────────────────────────── */}
           {/* Sidebar */}
           {/* ─────────────────────────────────────────────────── */}
-          <aside className="dash-sidebar">
+          <aside className="side-menu">
             {[
               { id: 'calendar', icon: calendarIcon, label: 'Calendar' },
               { id: 'courses', icon: coursesIcon, label: 'Courses' },
@@ -245,7 +209,7 @@ useEffect(() => {
             ].map((item) => (
               <button
                 key={item.id}
-                className={`dash-sidebar-btn${sideTab === item.id ? ' active' : ''}`}
+                className={`side-menu-button${sideTab === item.id ? ' active' : ''}`}
                 onClick={() => setSideTab(item.id)}
               >
                 <img
@@ -253,12 +217,12 @@ useEffect(() => {
                   alt={item.label}
                   style={{ width: 40, height: 40, objectFit: 'contain' }}
                 />
-                <span className="dash-sidebar-label">{item.label}</span>
+                <span className="side-menu-label">{item.label}</span>
               </button>
             ))}
 
             <button
-              className="dash-sidebar-btn"
+              className="side-menu-button"
               onClick={() => setModal('createAvailability')}
             >
               <span
@@ -275,12 +239,12 @@ useEffect(() => {
               >
                 +
               </span>
-              <span className="dash-sidebar-label">Create availability</span>
+              <span className="side-menu-label">Create availability</span>
             </button>
 
-            <div className="dash-sidebar-spacer" />
+            <div className="side-menu-spacer" />
 
-            <button className="dash-sidebar-btn">
+            <button className="side-menu-button">
               <img
                 src={InfoIcon}
                 alt="Help"
@@ -292,7 +256,7 @@ useEffect(() => {
           {/* ─────────────────────────────────────────────────── */}
           {/* Main dashboard content */}
           {/* ─────────────────────────────────────────────────── */}
-          <div className="dash-main">
+          <div className="main-content">
             {/* Calendar area */}
             {loading && <p style={{ padding: 16 }}>Loading appointments...</p>}
             {error && <p style={{ padding: 16, color: 'red' }}>{error}</p>}
@@ -312,10 +276,10 @@ useEffect(() => {
             {/* Right panel */}
             {/* ─────────────────────────────────────────────── */}
             {rightPanelOpen && (
-              <aside className="dash-right-panel">
+              <aside className="side-panel">
                 {/* Upcoming appointments */}
               <div>
-                <div className="dash-panel-section-title">Upcoming appointments</div>
+                <div className="side-panel-title">Upcoming appointments</div>
                 {upcomingAppts.length === 0 ? (
                   <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
                 ) : (
@@ -325,33 +289,33 @@ useEffect(() => {
                     return (
                       <div
                         key={appt.id}
-                        className="dash-appt-card"
+                        className="appointment-item"
                         onClick={() => {
                           setActiveAppt(appt);
                           setModal('detail');
                         }}
                       >
-                        <div className="dash-appt-dot" style={{ background: appt.color }} />
-                        <div className="dash-appt-info">
+                        <div className="appointment-color-dot" style={{ background: appt.color }} />
+                        <div className="">
                           <h4>{appt.title || 'Untitled appointment'}</h4>
                           <h6>{appt.ownerName}</h6>
                           <p>{formatDate(appt.startTime)}</p>
                           <p>{appt.location}</p>
                         </div>
-                        <span className={`dash-appt-status ${cls}`}>{label}</span>
+                        <span className={`appointment-status-pill ${cls}`}>{label}</span>
                       </div>
                     );
                   })
                 )}
               </div>
 
-              <div className="dash-divider" />
+              <div className="side-panel-divider" />
 
               {/* Heatmap tools - restored intact */}
               <div>
-                <div className="dash-panel-section-title">Heatmap tools</div>
+                <div className="side-panel-title">Heatmap tools</div>
                 <button
-                  className="dash-logout"
+                  className="top-bar-button"
                   style={{
                     width: '100%',
                     padding: 10,
@@ -360,7 +324,7 @@ useEffect(() => {
                     marginBottom: 8,
                     textAlign: 'center',
                   }}
-                  onClick={() => navigate('/heatmap/1')}
+                  onClick={() => navigate(`/heatmap/professor/1/${userId}`)}
                 >
                   + Create new heatmap
                 </button>

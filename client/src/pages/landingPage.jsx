@@ -2,16 +2,13 @@ import { useState, useEffect } from "react";
 import logo1 from "../assets/logo1.png";
 import header from "../assets/header.png";
 import { useNavigate } from "react-router-dom";
+import { getUsers } from "../api/users";
 import "../styles/LandingPage.css";
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
-
-  const TEST_USERS = {
-    student: 2,
-    professor: 1
-  };
+  const [demoUsers, setDemoUsers] = useState({ student: null, professor: null });
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -19,19 +16,53 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadDemoUsers() {
+      try {
+        const [students, professors] = await Promise.all([
+          getUsers("student"),
+          getUsers("professor"),
+        ]);
+
+        if (!active) return;
+
+        setDemoUsers({
+          student: students[0] || null,
+          professor: professors[0] || null,
+        });
+      } catch (err) {
+        if (!active) return;
+        setDemoUsers({ student: null, professor: null });
+      }
+    }
+
+    loadDemoUsers();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const studentDashboardPath = demoUsers.student ? `/dashboard/student/${demoUsers.student.id}` : "/";
+  const professorDashboardPath = demoUsers.professor ? `/dashboard/professor/${demoUsers.professor.id}` : "/";
+  const heatmapPath = demoUsers.student
+    ? `/heatmap/student/1/${demoUsers.student.id}`
+    : "/heatmap/1";
+
   return (
-    <div className="lp-root">
+    <div className="landing-page">
       {/* ── Navbar ─────────────────────────────────────── */}
-      <nav className={`lp-nav${scrolled ? " lp-nav--scrolled" : ""}`}>
-        <div className="lp-nav-inner">
-          <div className="lp-logo-wrap">
-            <img src={logo1} alt="McGill logo" className="lp-logo-img" style={{ height: '100px', width: '100px', objectFit: 'contain' }} />
+      <nav className={`landing-top-bar${scrolled ? " landing-top-bar-scrolled" : ""}`}>
+        <div className="landing-top-bar-content">
+          <div className="brand-area">
+            <img src={logo1} alt="McGill logo" className="brand-logo" />
           </div>
-          <div className="lp-nav-right">
-            <button className="lp-nav-link" onClick={() => navigate(`/dashboard/student/${TEST_USERS.student}`)}>
+          <div className="landing-top-bar-actions">
+            <button className="login-button" onClick={() => navigate(studentDashboardPath)}>
               Login
             </button>
-            <button className="lp-profile-icon" aria-label="Profile">
+            <button className="profile-button" aria-label="Profile">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
               //the profile icon on the right of the nav bar
                 stroke="#333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -44,21 +75,21 @@ export default function LandingPage() {
       </nav>
 
       {/* ── Hero ───────────────────────────────────────── */}
-      <div className="lp-hero">
-        <img src={header} alt="Header background" className="lp-hero-img" />
-        <div className="lp-hero-overlay" />
-        <div className="lp-hero-body">
-          <p className="lp-hero-eyebrow">McGill University</p>
-          <h1 className="lp-hero-title">Some Headline phrase<br /></h1>
-          <button className="lp-hero-btn" onClick={() => navigate(`/dashboard/student/${TEST_USERS.student}`)}>
+      <div className="hero-section">
+        <img src={header} alt="Header background" className="hero-image" />
+        <div className="hero-overlay" />
+        <div className="hero-content">
+          <p className="hero-subtitle">McGill University</p>
+          <h1 className="hero-title">Some Headline phrase<br /></h1>
+          <button className="hero-button" onClick={() => navigate(studentDashboardPath)}>
             Find availabilities
           </button>
         </div>
       </div>
 
       {/* ── Intro ──────────────────────────────────────── */}
-      <section className="lp-intro">
-        <p className="lp-intro-text">
+      <section className="intro-section">
+        <p className="intro-text">
           Lorem ipsum dolor sit amet consectetur adipiscing elit. Amet
           consectetur adipiscing elit quisque faucibus ex sapien. Quisque
           faucibus ex sapien vitae pellentesque sem placerat. Vitae pellentesque
@@ -67,17 +98,17 @@ export default function LandingPage() {
       </section>
 
       {/* ── Feature 1 ──────────────────────────────────── */}
-      <section className="lp-feature-section">
-        <div className="lp-feature-row">
-          <div className="lp-feature-text">
-            <h2 className="lp-feature-heading">All your appointments in one place!</h2>
-            <p className="lp-feature-desc">
+      <section className="feature-section">
+        <div className="feature-row">
+          <div className="feature-text">
+            <h2 className="feature-title">All your appointments in one place!</h2>
+            <p className="feature-text-block">
               Lorem ipsum dolor sit amet consectetur adipiscing elit. Amet
               consectetur adipiscing elit quisque faucibus ex sapien. Quisque
               faucibus ex sapien vitae pellentesque sem placerat. Vitae
               pellentesque sem placerat in id cursus mi.
             </p>
-            <button className="lp-feature-btn" onClick={() => navigate(`/dashboard/professor/${TEST_USERS.professor}`)}>
+            <button className="feature-button" onClick={() => navigate(professorDashboardPath)}>
               Get started
             </button>
           </div>
@@ -85,20 +116,20 @@ export default function LandingPage() {
       </section>
 
       {/* ── Feature 2 ──────────────────────────────────── */}
-      <section className="lp-feature-section lp-feature-section--alt">
-        <div className="lp-feature-row lp-feature-row--reverse">
-          <div className="lp-feature-media">
-            <div className="lp-img-placeholder" />
+      <section className="feature-section feature-section-light">
+        <div className="feature-row feature-row-reversed">
+          <div className="feature-image-area">
+            <div className="image-placeholder" />
           </div>
-          <div className="lp-feature-text">
-            <h2 className="lp-feature-heading">Other feature!</h2>
-            <p className="lp-feature-desc">
+          <div className="feature-text">
+            <h2 className="feature-title">Other feature!</h2>
+            <p className="feature-text-block">
               Lorem ipsum dolor sit amet consectetur adipiscing elit. Amet
               consectetur adipiscing elit quisque faucibus ex sapien. Quisque
               faucibus ex sapien vitae pellentesque sem placerat. Vitae
               pellentesque sem placerat in id cursus mi.
             </p>
-            <button className="lp-feature-btn" onClick={() => navigate("/heatmap")}>
+            <button className="feature-button" onClick={() => navigate(heatmapPath)}>
               Learn more
             </button>
           </div>
@@ -108,21 +139,19 @@ export default function LandingPage() {
       <div style={{ height: 60 }} />
 
       {/* ── Footer ─────────────────────────────────────── */}
-      <footer className="lp-footer">
-        <div className="lp-footer-inner">
-          <div className="lp-footer-brand">
-            <img src={logo1} alt="McGill logo" className="lp-footer-logo" />
-            <p className="lp-footer-tagline">McGill University Booking System</p>
+      <footer className="page-footer">
+        <div className="footer-content">
+          <div className="footer-brand">
+            <img src={logo1} alt="McGill logo" className="footer-logo" />
+            <p className="footer-tagline">McGill University Booking System</p>
           </div>
-          <div className="lp-footer-links">
-            <button className="lp-footer-link" onClick={() => navigate("/heatmap")}>Dashboard</button>
-            <button className="lp-footer-link">Contact</button>
-            <button className="lp-footer-link">Privacy</button>
+          <div className="footer-links">
+            <button className="footer-link">Contact</button>
+            <button className="footer-link">Privacy</button>
           </div>
         </div>
-        <p className="lp-footer-copy">© 2026 McGill University. All rights reserved.</p>
+        <p className="footer-copy">© 2026 McGill University. All rights reserved.</p>
       </footer>
     </div>
   );
 }
-
