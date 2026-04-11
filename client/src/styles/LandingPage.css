@@ -9,7 +9,7 @@
   overflow-x: hidden;
 }
 
-.top-bar {
+.landing-top-bar {
   position: sticky;
   top: 0;
   background: rgba(255,255,255,0.95);
@@ -18,14 +18,14 @@
   transition: box-shadow 0.2s;
   box-shadow: 0 1px 0 #e4e4e4;
 }
-.top-bar-scrolled { box-shadow: 0 1px 6px rgba(0,0,0,0.10); }
-.top-bar-content {
+.landing-top-bar-scrolled { box-shadow: 0 1px 6px rgba(0,0,0,0.10); }
+.landing-top-bar-content {
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 40px; max-width: 1100px; height: 54px; margin: 0 auto;
 }
 .brand-area { display: flex; align-items: center; }
 .brand-logo { height: 36px; width: auto; display: block; }
-.top-bar-actions { display: flex; align-items: center; gap: 8px; }
+.landing-top-bar-actions { display: flex; align-items: center; gap: 8px; }
 .login-button {
   background: none; border: 1px solid #e4e4e4; border-radius: 5px;
   padding: 6px 14px; font-size: 13px; font-family: 'DM Sans', Arial, sans-serif;
@@ -102,7 +102,7 @@
   padding-bottom: 28px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 20px;
 }
 .footer-brand { display: flex; flex-direction: column; gap: 8px; }
-.footer-logo { height: 30px; width: auto; filter: brightness(0) invert(1); opacity: 0.8; }
+.footer-logo { height: 200px; width: auto;}
 .footer-tagline { font-size: 12px; color: rgba(255,255,255,0.4); margin: 0; }
 .footer-links { display: flex; gap: 4px; flex-wrap: wrap; }
 .footer-link {
@@ -114,7 +114,7 @@
 .footer-copy { max-width: 1000px; margin: 0 auto; font-size: 11px; color: rgba(255,255,255,0.25); }
 
 @media (max-width: 768px) {
-  .top-bar-content { padding: 0 16px; }
+  .landing-top-bar-content { padding: 0 16px; }
   .brand-logo  { width: 500px; height:auto;}
   .hero-section      { height: 290px; }
   .hero-title { font-size: 26px; }

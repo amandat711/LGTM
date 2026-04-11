@@ -22,12 +22,12 @@ export default function LandingPage() {
   return (
     <div className="landing-page">
       {/* ── Navbar ─────────────────────────────────────── */}
-      <nav className={`top-bar${scrolled ? " top-bar-scrolled" : ""}`}>
-        <div className="top-bar-content">
+      <nav className={`landing-top-bar${scrolled ? " landing-top-bar-scrolled" : ""}`}>
+        <div className="landing-top-bar-content">
           <div className="brand-area">
             <img src={logo1} alt="McGill logo" className="brand-logo" style={{ height: '100px', width: '100px', objectFit: 'contain' }} />
           </div>
-          <div className="top-bar-actions">
+          <div className="landing-top-bar-actions">
             <button className="login-button" onClick={() => navigate(`/dashboard/student/${TEST_USERS.student}`)}>
               Login
             </button>
@@ -115,7 +115,6 @@ export default function LandingPage() {
             <p className="footer-tagline">McGill University Booking System</p>
           </div>
           <div className="footer-links">
-            <button className="footer-link" onClick={() => navigate("/heatmap")}>Dashboard</button>
             <button className="footer-link">Contact</button>
             <button className="footer-link">Privacy</button>
           </div>
