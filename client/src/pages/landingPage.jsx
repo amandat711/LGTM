@@ -8,6 +8,11 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
 
+  const TEST_USERS = {
+    student: 2,
+    professor: 1
+  };
+
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll);
@@ -44,7 +49,7 @@ export default function LandingPage() {
         <div className="lp-hero-body">
           <p className="lp-hero-eyebrow">McGill University</p>
           <h1 className="lp-hero-title">Some Headline phrase<br /></h1>
-          <button className="lp-hero-btn" onClick={() => navigate("/student")}>
+          <button className="lp-hero-btn" onClick={() => navigate(`/dashboard/student/${TEST_USERS.student}`)}>
             Find availabilities
           </button>
         </div>
@@ -71,7 +76,7 @@ export default function LandingPage() {
               faucibus ex sapien vitae pellentesque sem placerat. Vitae
               pellentesque sem placerat in id cursus mi.
             </p>
-            <button className="lp-feature-btn" onClick={() => navigate("/professor")}>
+            <button className="lp-feature-btn" onClick={() => navigate(`/dashboard/professor/${TEST_USERS.professor}`)}>
               Get started
             </button>
           </div>
