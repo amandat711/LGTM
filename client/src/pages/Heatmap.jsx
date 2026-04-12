@@ -1,3 +1,4 @@
+/*AMANDA TRAN*/
 import React, { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import '../styles/Heatmap.css';
@@ -123,6 +124,13 @@ function buildHeatmapPath(role, heatmapId, userId) {
   return `/heatmap/${role}/${heatmapId}/${userId}`;
 }
 
+function buildDashboardPath(user) {
+  if (!user?.id || !user?.role) return '/';
+  return user.role === 'professor'
+    ? `/dashboard/professor/${user.id}`
+    : `/dashboard/student/${user.id}`;
+}
+
 export default function Heatmap({ forcedRole = null }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -130,6 +138,7 @@ export default function Heatmap({ forcedRole = null }) {
   const searchParams = new URLSearchParams(location.search);
   const requestedUserId = routeUserId || searchParams.get('userId');
   const requestedRole = forcedRole || searchParams.get('role');
+  const isNewHeatmapRoute = eventId === 'new';
 
   const [availableUsers, setAvailableUsers] = useState({ professor: null, student: null });
   const [user, setUser] = useState(null);
@@ -166,7 +175,7 @@ export default function Heatmap({ forcedRole = null }) {
 
   const heatmap = heatmapBundle?.heatmap;
   const allSubmissions = useMemo(() => heatmapBundle?.submissions || [], [heatmapBundle]);
-  const currentHeatmapId = heatmap?.id || Number(eventId);
+  const currentHeatmapId = heatmap?.id || (isNewHeatmapRoute ? null : Number(eventId));
   const hostSubmission = allSubmissions.find((submission) => submission.participantRole === 'host') || null;
   const participantSubmissions = useMemo(
     () => allSubmissions.filter((submission) => submission.participantRole !== 'host'),
@@ -249,23 +258,27 @@ export default function Heatmap({ forcedRole = null }) {
       setError('');
 
       try {
-        let bundle;
-        try {
-          bundle = await getHeatmap(eventId);
-        } catch (err) {
-          if (!String(err.message).includes('not found')) throw err;
+        let bundle = null;
+
+        if (isNewHeatmapRoute) {
+          const creatorId = availableUsers.professor?.id || user?.id;
+          if (!creatorId) {
+            return;
+          }
 
           bundle = await createHeatmap({
-            created_by: availableUsers.professor?.id || user?.id,
+            created_by: creatorId,
             hm_title: 'Office Hours Heatmap',
             hm_description: 'Shared availability collection for bookings',
             visibility: 'public',
             time_zone: 'America/Toronto',
           });
 
-          const nextRole = requestedRole || 'professor';
-          const nextUserId = requestedUserId || availableUsers.professor?.id || user?.id;
+          const nextRole = 'professor';
+          const nextUserId = requestedUserId || creatorId;
           navigate(buildHeatmapPath(nextRole, bundle.heatmap.id, nextUserId), { replace: true });
+        } else {
+          bundle = await getHeatmap(eventId);
         }
 
         if (!active) return;
@@ -293,7 +306,7 @@ export default function Heatmap({ forcedRole = null }) {
     return () => {
       active = false;
     };
-  }, [availableUsers.professor?.id, eventId, navigate, requestedRole, requestedUserId, user?.id]);
+  }, [availableUsers.professor?.id, eventId, isNewHeatmapRoute, navigate, requestedUserId, user?.id]);
 
   useEffect(() => {
     if (participants.length > 0) {
@@ -435,8 +448,10 @@ export default function Heatmap({ forcedRole = null }) {
       <Navbar
         logo={logo}
         title="Heatmap Booking"
-        onLeftClick={() => navigate('/')}
         user={user ? { displayName: user.name, role: user.role, initials: userInitials } : undefined}
+        actions={[
+          { label: 'Back to dashboard', onClick: () => navigate(buildDashboardPath(user)) },
+        ]}
       />
 
       <div className="heatmap-page">
@@ -796,7 +811,12 @@ export default function Heatmap({ forcedRole = null }) {
         )}
 
         {modal === 'invite' && (
-          <InviteURLModal ownerEmail={heatmap?.hostEmail || user.email} eventTitle={heatmap?.title || 'Heatmap Booking'} onClose={() => setModal(null)} />
+          <InviteURLModal
+            ownerEmail={heatmap?.hostEmail || user.email}
+            eventTitle={heatmap?.title || 'Heatmap Booking'}
+            inviteURL={`${window.location.origin}/heatmap/${currentHeatmapId}?role=student`}
+            onClose={() => setModal(null)}
+          />
         )}
 
         {modal === 'approve' && activeSub && (

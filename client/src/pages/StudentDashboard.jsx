@@ -1,3 +1,5 @@
+//AMANDA TRAN
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import logo from '../assets/logo1.png';
@@ -15,30 +17,11 @@ import {
   mapAppointmentToCalendarEvent,
 } from '../components/calendar/calendarUtils';
 import { getMyAppointments, cancelAppointment } from '../api/appointments';
-import '../styles/Dashboard.css';
+import { getHeatmaps } from '../api/heatmaps';
 
-// ─────────────────────────────────────────────────────────────
-// Temporary dummy heatmap invite data
-// Keep this until the heatmap backend/invite flow is connected
-// ─────────────────────────────────────────────────────────────
-const SAMPLE_INVITES = [
-  {
-    id: 1,
-    token: '1',
-    title: 'Office Hours — Prof. Vybihal',
-    profName: 'Prof. Vybihal',
-    dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
-    responded: false,
-  },
-  {
-    id: 2,
-    token: '2',
-    title: 'COMP 307 Project Meeting',
-    profName: 'Prof. Vybihal',
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    responded: true,
-  },
-];
+// [MODIFIED] replaced inline <aside> with reusable Sidebar component
+import Sidebar from '../components/Sidebar'; 
+import '../styles/Dashboard.css';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -51,6 +34,7 @@ export default function StudentDashboard() {
   const [sideTab, setSideTab] = useState('calendar');
   const [modal, setModal] = useState(null);
   const [activeAppt, setActiveAppt] = useState(null);
+  const [heatmaps, setHeatmaps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
@@ -62,8 +46,13 @@ export default function StudentDashboard() {
     async function loadAppointments() {
       try {
         setLoading(true);
-        const data = await getMyAppointments(userId);
+        const [data, heatmapData] = await Promise.all([
+          getMyAppointments(userId),
+          getHeatmaps({ participant_user_id: userId, include_public: 1 }),
+        ]);
+
         setAppointments(data.map(mapAppointmentToCalendarEvent));
+        setHeatmaps(heatmapData);
         setError('');
       } catch (err) {
         setError(err.message);
@@ -106,6 +95,17 @@ export default function StudentDashboard() {
       .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
       .slice(0, 5);
   }, [appointments]);
+
+  const heatmapInvites = useMemo(() => {
+    return heatmaps.map((heatmap) => ({
+      id: heatmap.id,
+      title: heatmap.title,
+      profName: heatmap.hostName,
+      dueDate: heatmap.noLaterTime || heatmap.createdAt,
+      responded: Boolean(heatmap.mySubmission),
+      status: heatmap.mySubmission?.status || 'open',
+    }));
+  }, [heatmaps]);
 
   // ─────────────────────────────────────────────────────────────
   // Cancel appointment
@@ -160,45 +160,22 @@ export default function StudentDashboard() {
         />
 
         <div className="dashboard-layout">
-          {/* ─────────────────────────────────────────────────── */}
-          {/* Sidebar */}
-          {/* ─────────────────────────────────────────────────── */}
-          <aside className="side-menu">
-            {[
-              { id: 'calendar', icon: calendarIcon, label: 'Calendar' },
-              { id: 'courses', icon: coursesIcon, label: 'Courses' },
-              { id: 'search', icon: searchIcon, label: 'Search' },
-            ].map((item) => (
-              <button
-                key={item.id}
-                className={`side-menu-button${sideTab === item.id ? ' active' : ''}`}
-                onClick={() => {
-                  if (item.id === 'search') {
-                    navigate(`/booking/search/${userId}`);
-                  } else {
-                    setSideTab(item.id);
-                  }
-                }}
-              >
-                <img
-                  src={item.icon}
-                  alt={item.label}
-                  style={{ width: 40, height: 40, objectFit: 'contain' }}
-                />
-                <span className="side-menu-label">{item.label}</span>
-              </button>
-            ))}
-
-            <div className="side-menu-spacer" />
-
-            <button className="side-menu-button">
-              <img
-                src={InfoIcon}
-                alt="Help"
-                style={{ width: 40, height: 40, objectFit: 'contain' }}
-              />
-            </button>
-          </aside>
+          
+          {/* Sidebar                                           */}
+          {/* [MODIFIED] replaced inline <aside> with the      */}
+          {/* reusable <Sidebar> component.                    */}
+      
+          <Sidebar
+            activeId={sideTab}
+            items={[
+              { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => setSideTab('calendar') },
+              { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => setSideTab('courses') },
+              { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate(`/booking/search/${userId}`) },
+            ]}
+            bottomItems={[
+              { id: 'help', icon: InfoIcon, label: 'Help' },
+            ]}
+          />
 
           {/* ─────────────────────────────────────────────────── */}
           {/* Main dashboard content */}
@@ -258,34 +235,41 @@ export default function StudentDashboard() {
 
               <div className="side-panel-divider" />
 
-              {/* Heatmap invitations - restored intact with dummy data */}
+              {/* Heatmap invitations */}
               <div>
                 <div className="side-panel-title">Heatmap invitations</div>
-                {SAMPLE_INVITES.map((inv) => (
-                  <div key={inv.id} className="invite-item">
-                    <div className={`invite-dot${inv.responded ? ' responded' : ''}`} />
-                    <div className="">
-                      <h4>{inv.profName}</h4>
-                      <p>{inv.title}</p>
-                      <p style={{ color: inv.responded ? '#888' : '#E31429' }}>
-                        {inv.responded
-                          ? 'Responded'
-                          : `Due ${new Date(inv.dueDate).toLocaleDateString('en-CA', {
-                              month: 'short',
-                              day: 'numeric',
-                            })}`}
-                      </p>
-                    </div>
-                    {!inv.responded && (
+                {heatmapInvites.length === 0 ? (
+                  <p style={{ fontSize: 12, color: '#aaa' }}>No heatmap invitations right now.</p>
+                ) : (
+                  heatmapInvites.map((inv) => (
+                    <div key={inv.id} className="invite-item">
+                      <div className={`invite-dot${inv.responded ? ' responded' : ''}`} />
+                      <div className="">
+                        <h4>{inv.profName}</h4>
+                        <p>{inv.title}</p>
+                        <p style={{ color: inv.responded ? '#888' : '#E31429' }}>
+                          {inv.responded
+                            ? inv.status === 'approved'
+                              ? 'Approved'
+                              : inv.status === 'declined'
+                                ? 'Declined'
+                                : 'Responded'
+                            : `Open ${new Date(inv.dueDate).toLocaleDateString('en-CA', {
+                                month: 'short',
+                                day: 'numeric',
+                              })}`}
+                        </p>
+                      </div>
                       <button
                         className="invite-action-button"
-                        onClick={() => navigate(`/heatmap/student/${inv.token}/${userId}`)}
+                        onClick={() => navigate(`/heatmap/student/${inv.id}/${userId}`)}
+                        title={inv.responded ? 'View heatmap' : 'Respond to heatmap'}
                       >
-                        +
+                        {inv.responded ? '>' : '+'}
                       </button>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  ))
+                )}
               </div>
             </aside>
           )}

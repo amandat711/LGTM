@@ -1,13 +1,4 @@
-/**
- * Dashboard.css - Styles for the main dashboard interface
- *
- * Naming Convention: plain-English, easy-to-scan names
- * - top-bar-* → Shared top navigation
- * - side-menu-* → Left navigation
- * - side-panel-* → Right information area
- * - appointment-* / invite-* → Dashboard cards
- * - booking-* / professor-* / slot-* → Booking pages
- */
+/*AMANDA TRAN*/
 
 .dashboard-page {
   display: flex;
@@ -178,6 +169,25 @@
   line-height: 1;
   padding: 20px;
   transition: color 0.15s;
+}
+
+/* REUSABLE SIDEBAR: text-based icon for sidebar items that use iconText (e.g. the "+" button) */
+.side-menu-icon-text {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1;
+  color: #888;
+  transition: color 0.15s;
+}
+
+/* [MODIFIED] active state for text-based icon */
+.side-menu-button.active .side-menu-icon-text {
+  color: #E31429;
 }
 
 .side-menu-label {

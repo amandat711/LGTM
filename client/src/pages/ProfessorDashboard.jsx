@@ -1,3 +1,5 @@
+//AMANDA TRAN
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import logo from '../assets/logo1.png';
@@ -21,14 +23,17 @@ import {
   deleteAvailability,
   getProfessorAvailabilities,
 } from '../api/availabilities';
+import { getHeatmaps } from '../api/heatmaps';
 import CreateAvailabilityModal from '../components/CreateAvailabilityModal';
+
+//replaced inline <aside> with reusable Sidebar component
+import Sidebar from '../components/Sidebar'; 
 import '../styles/Dashboard.css';
 
 export default function ProfessorDashboard() {
   const navigate = useNavigate();
   const { userId } = useParams();
 
-  // ─────────────────────────────────────────────────────────────
   // State
   // ─────────────────────────────────────────────────────────────
   const [appointments, setAppointments] = useState([]);
@@ -36,11 +41,12 @@ export default function ProfessorDashboard() {
   const [sideTab, setSideTab] = useState('calendar');
   const [modal, setModal] = useState(null);
   const [activeAppt, setActiveAppt] = useState(null);
+  const [heatmaps, setHeatmaps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
-  // ─────────────────────────────────────────────────────────────
+
   // Load professor-hosted appointments from backend
   // ─────────────────────────────────────────────────────────────
 useEffect(() => {
@@ -66,7 +72,27 @@ useEffect(() => {
   loadDashboardData();
 }, [userId]);
 
-  // ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    let active = true;
+
+    async function loadHeatmaps() {
+      try {
+        const data = await getHeatmaps({ created_by: userId });
+        if (!active) return;
+        setHeatmaps(data);
+      } catch (err) {
+        if (!active) return;
+        setError((prev) => prev || err.message);
+      }
+    }
+
+    loadHeatmaps();
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+
+
   // Derive current user display info from loaded appointment data
   // Fallback to generic values if nothing is found yet
   // ─────────────────────────────────────────────────────────────
@@ -87,7 +113,7 @@ useEffect(() => {
     };
   }, [appointments, userId]);
 
-  // ─────────────────────────────────────────────────────────────
+
   // Get up to 5 upcoming non-cancelled appointments
   // ─────────────────────────────────────────────────────────────
   const calendarEvents = useMemo(() => {
@@ -120,7 +146,7 @@ useEffect(() => {
       .slice(0, 5);
   }, [appointments]);
 
-  // ─────────────────────────────────────────────────────────────
+  
   // Cancel appointment, create + delete availabilities
   // ─────────────────────────────────────────────────────────────
   async function handleDelete() {
@@ -170,7 +196,7 @@ useEffect(() => {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────
+ 
   // Avatar initials
   // ─────────────────────────────────────────────────────────────
   const initials = `${currentUser.firstName?.[0] || 'U'}${currentUser.lastName?.[0] || ''}`;
@@ -178,7 +204,7 @@ useEffect(() => {
   return (
     <>
       <div className="dashboard-page">
-        {/* ───────────────────────────────────────────────────── */}
+      
         {/* Top Navbar */}
         {/* ───────────────────────────────────────────────────── */}
         <Navbar
@@ -191,69 +217,33 @@ useEffect(() => {
             initials,
           }}
           actions={[
-            { label: '+ New heatmap', onClick: () => navigate(`/heatmap/professor/1/${userId}`) },
+            { label: '+ New heatmap', onClick: () => navigate(`/heatmap/professor/new/${userId}`) },
             { label: rightPanelOpen ? 'Hide panel' : 'Show panel', onClick: () => setRightPanelOpen((open) => !open) },
             { label: 'Back to home', onClick: () => navigate('/') },
           ]}
         />
 
         <div className="dashboard-layout">
+       
+          {/* Sidebar                                           */}
+          {/* [MODIFIED] replaced inline <aside> with the      */}
+          {/* reusable <Sidebar> component.                    */}
+          {/* 'create' uses iconText='+' (no image asset).     */}
           {/* ─────────────────────────────────────────────────── */}
-          {/* Sidebar */}
-          {/* ─────────────────────────────────────────────────── */}
-          <aside className="side-menu">
-            {[
-              { id: 'calendar', icon: calendarIcon, label: 'Calendar' },
-              { id: 'courses', icon: coursesIcon, label: 'Courses' },
-              { id: 'search', icon: searchIcon, label: 'Search' },
-            ].map((item) => (
-              <button
-                key={item.id}
-                className={`side-menu-button${sideTab === item.id ? ' active' : ''}`}
-                onClick={() => setSideTab(item.id)}
-              >
-                <img
-                  src={item.icon}
-                  alt={item.label}
-                  style={{ width: 40, height: 40, objectFit: 'contain' }}
-                />
-                <span className="side-menu-label">{item.label}</span>
-              </button>
-            ))}
+          <Sidebar
+            activeId={sideTab}
+            items={[
+              { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => setSideTab('calendar') },
+              { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => setSideTab('courses') },
+              { id: 'search', icon: searchIcon, label: 'Search', onClick: () => setSideTab('search') },
+              { id: 'create', iconText: '+', label: 'Create availability', onClick: () => setModal('createAvailability') },
+            ]}
+            bottomItems={[
+              { id: 'help', icon: InfoIcon, label: 'Help' },
+            ]}
+          />
 
-            <button
-              className="side-menu-button"
-              onClick={() => setModal('createAvailability')}
-            >
-              <span
-                style={{
-                  width: 40,
-                  height: 40,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 28,
-                  fontWeight: 500,
-                  lineHeight: 1,
-                }}
-              >
-                +
-              </span>
-              <span className="side-menu-label">Create availability</span>
-            </button>
-
-            <div className="side-menu-spacer" />
-
-            <button className="side-menu-button">
-              <img
-                src={InfoIcon}
-                alt="Help"
-                style={{ width: 40, height: 40, objectFit: 'contain' }}
-              />
-            </button>
-          </aside>
-
-          {/* ─────────────────────────────────────────────────── */}
+         
           {/* Main dashboard content */}
           {/* ─────────────────────────────────────────────────── */}
           <div className="main-content">
@@ -272,7 +262,7 @@ useEffect(() => {
               />
             )}
 
-            {/* ─────────────────────────────────────────────── */}
+           
             {/* Right panel */}
             {/* ─────────────────────────────────────────────── */}
             {rightPanelOpen && (
@@ -311,7 +301,7 @@ useEffect(() => {
 
               <div className="side-panel-divider" />
 
-              {/* Heatmap tools - restored intact */}
+              {/* Heatmap tools */}
               <div>
                 <div className="side-panel-title">Heatmap tools</div>
                 <button
@@ -324,7 +314,7 @@ useEffect(() => {
                     marginBottom: 8,
                     textAlign: 'center',
                   }}
-                  onClick={() => navigate(`/heatmap/professor/1/${userId}`)}
+                  onClick={() => navigate(`/heatmap/professor/new/${userId}`)}
                 >
                   + Create new heatmap
                 </button>
@@ -332,6 +322,38 @@ useEffect(() => {
                   Create a heatmap, share the link with students, and approve their
                   submissions from the heatmap page.
                 </p>
+
+                {/* REUSABLE SIDEBAR*/}
+                <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
+                  {heatmaps.length === 0 ? (
+                    <p style={{ fontSize: 12, color: '#888', margin: 0 }}>No heatmaps created yet.</p>
+                  ) : (
+                    heatmaps.slice(0, 4).map((heatmap) => (
+                      <div key={heatmap.id} className="invite-item">
+                        <div className={`invite-dot${heatmap.pendingCount > 0 ? '' : ' responded'}`} />
+                        <div className="">
+                          <h4>{heatmap.title}</h4>
+                          <p>
+                            {heatmap.pendingCount} pending · {heatmap.submissionCount} submission{heatmap.submissionCount !== 1 ? 's' : ''}
+                          </p>
+                          <p style={{ color: '#888' }}>
+                            Created {new Date(heatmap.createdAt).toLocaleDateString('en-CA', {
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                        <button
+                          className="invite-action-button"
+                          onClick={() => navigate(`/heatmap/professor/${heatmap.id}/${userId}`)}
+                          title="Open heatmap"
+                        >
+                          &gt;
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </aside>
           )}
@@ -339,7 +361,6 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* ───────────────────────────────────────────────────── */}
       {/* Create availability modal and appointment detail modal */}
       {/* ───────────────────────────────────────────────────── */}
       {modal === 'createAvailability' && (
@@ -374,7 +395,7 @@ useEffect(() => {
         />
       )}
 
-      {/* ───────────────────────────────────────────────────── */}
+    
       {/* Delete/cancel confirmation modal */}
       {/* ───────────────────────────────────────────────────── */}
       {modal === 'delete' && activeAppt && (

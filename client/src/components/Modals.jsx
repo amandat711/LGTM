@@ -190,14 +190,12 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
 // 4. InviteURLModal
 //    Generates a shareable booking link for owners.
 // ─────────────────────────────────────────────────────────────
-export function InviteURLModal({ ownerEmail, eventTitle, onClose }) {
+export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
   const [copied, setCopied] = useState(false);
-  const baseURL   = window.location.origin;
-  const token     = btoa(ownerEmail || 'unknown').replace(/=/g, '');
-  const inviteURL = `${baseURL}/book/${token}`;
+  const shareURL = inviteURL || `${window.location.origin}/heatmap`;
 
   function handleCopy() {
-    navigator.clipboard.writeText(inviteURL).then(() => {
+    navigator.clipboard.writeText(shareURL).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -217,14 +215,14 @@ export function InviteURLModal({ ownerEmail, eventTitle, onClose }) {
       }
     >
       <p style={{ fontSize: 13, color: '#666', marginBottom: 14, lineHeight: 1.6 }}>
-        Share this link so others can book a slot with you. They'll be asked to log in with their McGill email first.
+        Share this link so students can open the heatmap, mark their availability, and send it back to you.
       </p>
       <p style={{ fontSize: 11, color: '#aaa', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         Booking page for
       </p>
       <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{eventTitle || ownerEmail}</p>
       <div className="copy-row">
-        <input className="copy-input" readOnly value={inviteURL} />
+        <input className="copy-input" readOnly value={shareURL} />
         <button className="button button-outline button-small" onClick={handleCopy} style={{ whiteSpace: 'nowrap' }}>
           {copied ? '✓ Copied' : 'Copy'}
         </button>

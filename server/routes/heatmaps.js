@@ -52,6 +52,113 @@ async function ensureSubmissionStatusColumn() {
   }
 }
 
+function mapHeatmapSummary(row) {
+  return {
+    id: row.hm_id,
+    createdBy: row.created_by,
+    title: row.hm_title,
+    description: row.hm_description,
+    link: row.hm_link,
+    visibility: row.visibility,
+    noEarlierTime: row.no_earlier_time,
+    noLaterTime: row.no_later_time,
+    timeZone: row.time_zone,
+    createdAt: row.created_at,
+    hostName: `${row.first_name} ${row.last_name}`,
+    hostEmail: row.mcgill_email,
+    submissionCount: Number(row.submission_count || 0),
+    pendingCount: Number(row.pending_count || 0),
+    mySubmission: row.my_submission_id
+      ? {
+          id: row.my_submission_id,
+          status: row.my_submission_status,
+          participantRole: row.my_submission_role,
+          submittedAt: row.my_submission_submitted_at,
+        }
+      : null,
+  };
+}
+
+async function listHeatmapSummaries({ createdBy = null, participantUserId = null, includePublic = false, limit = null } = {}) {
+  const currentUserId = Number(participantUserId || createdBy || 0);
+  const conditions = [];
+  const params = [currentUserId];
+
+  if (createdBy) {
+    conditions.push(`h.created_by = ?`);
+    params.push(Number(createdBy));
+  }
+
+  if (participantUserId) {
+    conditions.push(
+      includePublic
+        ? `(h.visibility = 'public' OR my.submission_id IS NOT NULL)`
+        : `my.submission_id IS NOT NULL`
+    );
+  } else if (includePublic && !createdBy) {
+    conditions.push(`h.visibility = 'public'`);
+  }
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const limitClause = limit ? `LIMIT ?` : '';
+  if (limit) {
+    params.push(Number(limit));
+  }
+
+  return dbAll(
+    `
+      SELECT
+        h.hm_id,
+        h.created_by,
+        h.hm_title,
+        h.hm_description,
+        h.hm_link,
+        h.visibility,
+        h.no_earlier_time,
+        h.no_later_time,
+        h.time_zone,
+        h.created_at,
+        u.first_name,
+        u.last_name,
+        u.mcgill_email,
+        COUNT(DISTINCT CASE WHEN s.participant_role != 'host' THEN s.submission_id END) AS submission_count,
+        COUNT(DISTINCT CASE WHEN s.participant_role != 'host' AND s.status = 'pending' THEN s.submission_id END) AS pending_count,
+        my.submission_id AS my_submission_id,
+        my.status AS my_submission_status,
+        my.participant_role AS my_submission_role,
+        my.submitted_at AS my_submission_submitted_at
+      FROM heatmaps h
+      JOIN users u ON u.user_id = h.created_by
+      LEFT JOIN hm_availability_submissions s ON s.heatmap_id = h.hm_id
+      LEFT JOIN hm_availability_submissions my
+        ON my.heatmap_id = h.hm_id
+       AND my.user_id = ?
+      ${whereClause}
+      GROUP BY
+        h.hm_id,
+        h.created_by,
+        h.hm_title,
+        h.hm_description,
+        h.hm_link,
+        h.visibility,
+        h.no_earlier_time,
+        h.no_later_time,
+        h.time_zone,
+        h.created_at,
+        u.first_name,
+        u.last_name,
+        u.mcgill_email,
+        my.submission_id,
+        my.status,
+        my.participant_role,
+        my.submitted_at
+      ORDER BY datetime(h.created_at) DESC
+      ${limitClause}
+    `,
+    params
+  );
+}
+
 async function getHeatmapBundle(heatmapId) {
   const heatmap = await dbGet(
     `
@@ -181,6 +288,29 @@ async function getAppointmentWithParticipants(appointmentId) {
     participants,
   };
 }
+
+router.get('/', async (req, res) => {
+  try {
+    await ensureSubmissionStatusColumn();
+
+    const { created_by, participant_user_id, include_public, limit } = req.query;
+    const heatmaps = await listHeatmapSummaries({
+      createdBy: created_by ? Number(created_by) : null,
+      participantUserId: participant_user_id ? Number(participant_user_id) : null,
+      includePublic: include_public === '1' || include_public === 'true',
+      limit: limit ? Number(limit) : null,
+    });
+
+    return res.json(heatmaps.map(mapHeatmapSummary));
+  } catch (err) {
+    console.error('GET /heatmaps failed:', {
+      query: req.query,
+      message: err.message,
+      stack: err.stack,
+    });
+    return res.status(500).json({ error: err.message });
+  }
+});
 
 router.get('/:id', async (req, res) => {
   try {
