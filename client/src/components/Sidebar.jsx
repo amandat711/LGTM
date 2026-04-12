@@ -1,22 +1,9 @@
 import React from 'react';
-import '../styles/Dashboard.css';
+import '../styles/Sidebar.css';
 
 /**
  * Sidebar — reusable left navigation bar used across dashboard pages.
- *
- * Props
- * ─────
- * items        {Array}   Main navigation buttons, rendered top-to-bottom.
- *   .id          {string}    Unique key; matched against activeId for highlight.
- *   .icon        {string}    img src — renders an <img> icon.
- *   .iconText    {string}    Text/symbol used instead of an image (e.g. "+").
- *   .label       {string}    Small label shown below the icon.
- *   .onClick     {Function}  Called when the button is clicked.
- *
- * activeId     {string}   id of the currently active item (highlighted in red).
- *
- * bottomItems  {Array}    Same shape as `items`, but pinned to the bottom.
- *                         Typically used for the Help / Info button.
+ 
  */
 export default function Sidebar({ items = [], activeId, bottomItems = [] }) {
   function renderButton({ id, icon, iconText, label, onClick }) {

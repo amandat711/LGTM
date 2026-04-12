@@ -10,106 +10,7 @@
 }
 
 /* ─── TOP NAVIGATION BAR ────────────────────────────────── */
-.top-bar {
-  height: 54px;
-  background: #fff;
-  border-bottom: 1px solid #e4e4e4;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  flex-shrink: 0;
-  z-index: 10;
-}
-
-.top-bar-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.top-bar-logo-button {
-  display: flex;
-  align-items: center;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-.top-bar-logo {
-  height: 32px;
-  width: auto;
-}
-
-.top-bar-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #0f0f0f;
-}
-
-.top-bar-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.top-bar-user-name {
-  font-size: 13px;
-  color: #555;
-}
-
-.top-bar-user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #fff0f1;
-  border: 1.5px solid #E31429;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: #E31429;
-  flex-shrink: 0;
-}
-
-.top-bar-user-role {
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.top-bar-user-role.role-tag-professor {
-  background: #fff3e0;
-  color: #b85c00;
-  border: 1px solid #f5c07a;
-}
-
-.top-bar-user-role.role-tag-student {
-  background: #e8f4fd;
-  color: #1565a8;
-  border: 1px solid #90c8f0;
-}
-
-.top-bar-button {
-  background: none;
-  border: 1px solid #e4e4e4;
-  border-radius: 5px;
-  padding: 5px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #555;
-  cursor: pointer;
-  font-family: inherit;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.top-bar-button:hover {
-  border-color: #E31429;
-  color: #E31429;
-}
+/* Navbar styles live in Navbar.css — imported by Navbar.jsx */
 
 .dashboard-layout {
   display: flex;
@@ -118,90 +19,7 @@
 }
 
 /* ─── LEFT SIDEBAR NAVIGATION ──────────────────────────── */
-
-.side-menu {
-  width: 72px;
-  background: #fff;
-  border-right: 1px solid #e4e4e4;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 24px 0;
-  gap: 40px;
-  flex-shrink: 0;
-}
-
-.side-menu-button {
-  width: 55px;
-  height: 55px;
-  border-radius: 10px;
-  border: none;
-  background: transparent;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  cursor: pointer;
-  font-family: Arial;
-  transition: background 0.15s;
-}
-
-.side-menu-button:hover {
-  background: #f5f5f5;
-}
-
-.side-menu-button.active {
-  background: #fff0f1;
-}
-
-.side-menu-button.active .side-menu-icon {
-  color: #E31429;
-}
-
-.side-menu-button.active .side-menu-label {
-  color: #E31429;
-}
-
-.side-menu-icon {
-  font-size: 20px;
-  color: #888;
-  line-height: 1;
-  padding: 20px;
-  transition: color 0.15s;
-}
-
-/* REUSABLE SIDEBAR: text-based icon for sidebar items that use iconText (e.g. the "+" button) */
-.side-menu-icon-text {
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: 500;
-  line-height: 1;
-  color: #888;
-  transition: color 0.15s;
-}
-
-/* [MODIFIED] active state for text-based icon */
-.side-menu-button.active .side-menu-icon-text {
-  color: #E31429;
-}
-
-.side-menu-label {
-  font-size: 9px;
-  font-weight: 500;
-  color: #888;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  transition: color 0.15s;
-}
-
-.side-menu-spacer {
-  flex: 1;
-}
+/* Sidebar styles live in Sidebar.css — imported by Sidebar.jsx */
 
 /* ─── MAIN CONTENT AREA ────────────────────────────────── */
 
@@ -391,15 +209,12 @@
   .side-panel {
     display: none;
   }
-
-  .side-menu {
-    width: 56px;
-  }
+  /* .side-menu responsive rule moved to Sidebar.css */
 }
 
-/* ═══════════════════════════════════════════════════════════════
+/* 
    BOOKING PAGE STYLES
-   ═══════════════════════════════════════════════════════════════ */
+   */
 
 .booking-page {
   flex: 1;
