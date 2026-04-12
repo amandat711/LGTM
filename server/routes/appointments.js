@@ -33,6 +33,12 @@ router.post('/', (req, res) => {
             return res.status(404).json({ error: 'Availability not found' });
           }
 
+          if (Number(availability.created_by) === Number(booked_by)) {
+            return res.status(400).json({
+              error: 'You cannot book your own availability'
+            });
+          }
+
           // Check visibility
           if (availability.visibility !== 'public') {
             return res.status(403).json({
