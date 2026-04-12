@@ -1,3 +1,5 @@
+//AMANDA TRAN
+
 import { useState, useEffect } from "react";
 import logo1 from "../assets/logo1.png";
 import header from "../assets/header.png";
@@ -6,19 +8,41 @@ import { getUsers } from "../api/users";
 import "../styles/LandingPage.css";
 
 export default function LandingPage() {
+
+  
+  //--------------SET UP & EFFECTS----------------//
+  
+  //When someone clicks Login, Find availabilities, or Get started, 
+  // this is what lets the app switch to the correct screen without reloading the whole website.
   const navigate = useNavigate();
+
+  //This state tracks is the user scrolled down the page yet
+  //This setScrolled function will change the value to true when user scrolls down
+
+  // For navbar styling  - TBC
   const [scrolled, setScrolled] = useState(false);
+
+  //When page gets data from the backend, this will determine the type of user ==> leads user to corresponding web pages (MUST IMPLEMENT LOGING)
   const [demoUsers, setDemoUsers] = useState({ student: null, professor: null });
 
+
+  //f the user is still near the top, scrolled stays false
+  //if the user moves down a little, scrolled becomes true
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+
+  //load demo users from the backend
   useEffect(() => {
     let active = true;
 
+
+  //This asks the backend for two sets of users at the same time:
+  //all student users
+  //all professor users
     async function loadDemoUsers() {
       try {
         const [students, professors] = await Promise.all([
@@ -32,6 +56,10 @@ export default function LandingPage() {
           student: students[0] || null,
           professor: professors[0] || null,
         });
+
+
+      //Take the first available student and the first available professor from the backend, 
+      // and keep them in the page memory so we can use their IDs for navigation.
       } catch (err) {
         if (!active) return;
         setDemoUsers({ student: null, professor: null });
@@ -44,6 +72,9 @@ export default function LandingPage() {
     };
   }, []);
 
+  // Path constructions with == > if successful load, the links include real ids. 
+  // Otherwise, they default to root or get a generic path that won't break the app. 
+  // This allows the landing page to function even if the demo users fail to load for some reason.
   const studentDashboardPath = demoUsers.student ? `/dashboard/student/${demoUsers.student.id}` : "/";
   const professorDashboardPath = demoUsers.professor ? `/dashboard/professor/${demoUsers.professor.id}` : "/";
   const heatmapPath = demoUsers.student
@@ -59,11 +90,17 @@ export default function LandingPage() {
             <img src={logo1} alt="McGill logo" className="brand-logo" />
           </div>
           <div className="landing-top-bar-actions">
+
+            {/*currrently ==> goes to student dashboard by default ( SHOULD go to LOGIN)*/}
             <button className="login-button" onClick={() => navigate(studentDashboardPath)}>
               Login
             </button>
+
+            {/*Profile icon button - NOT functional yet*/}
             <button className="profile-button" aria-label="Profile">
+
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+
               //the profile icon on the right of the nav bar
                 stroke="#333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -76,6 +113,7 @@ export default function LandingPage() {
 
       {/* ── Hero ───────────────────────────────────────── */}
       <div className="hero-section">
+        {/*McGill Buildings behing "Find Availabilities*/}
         <img src={header} alt="Header background" className="hero-image" />
         <div className="hero-overlay" />
         <div className="hero-content">
