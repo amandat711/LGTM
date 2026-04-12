@@ -15,6 +15,20 @@ export async function getHeatmap(heatmapId) {
   return handleResponse(res);
 }
 
+export async function getHeatmaps(params = {}) {
+  const search = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      search.set(key, String(value));
+    }
+  });
+
+  const query = search.toString();
+  const res = await fetch(`${API_BASE}/heatmaps${query ? `?${query}` : ''}`);
+  return handleResponse(res);
+}
+
 export async function createHeatmap(payload) {
   const res = await fetch(`${API_BASE}/heatmaps`, {
     method: 'POST',
