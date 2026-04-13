@@ -28,10 +28,12 @@ function App() {
             element={<Navigate to="/booking/search" replace />}
           />
           <Route path="/booking/professor/:professorId" element={<BookingProfessor />} />
+          <Route path="/heatmap/student/:eventId/:userId" element={<Heatmap />} />
         </Route>
 
         <Route element={<AppShellLayout variant="professor" />}>
           <Route path="/dashboard/professor/:userId" element={<ProfessorDashboard />} />
+          <Route path="/heatmap/professor/:eventId/:userId" element={<Heatmap />} />
         </Route>
 
         <Route element={<AppShellLayout variant="any" />}>

@@ -1,0 +1,126 @@
+/**
+ * Navbar.css — styles for the reusable Navbar component.
+ *
+ * Naming convention: top-bar-*
+ *   top-bar              → the <nav> container
+ *   top-bar-left         → left side (logo + title)
+ *   top-bar-logo-button  → clickable logo wrapper
+ *   top-bar-logo         → logo image
+ *   top-bar-title        → page title text
+ *   top-bar-right        → right side (user info + action buttons)
+ *   top-bar-user-name    → displayed user name
+ *   top-bar-user-avatar  → initials circle
+ *   top-bar-user-role    → role badge
+ *   top-bar-button       → action buttons on the right
+ */
+
+/* ─── CONTAINER ──────────────────────────────────────────── */
+
+.top-bar {
+  height: 54px;
+  background: #fff;
+  border-bottom: 1px solid #e4e4e4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+/* ─── LEFT SIDE ───────────────────────────────────────────── */
+
+.top-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.top-bar-logo-button {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.top-bar-logo {
+  height: 32px;
+  width: auto;
+}
+
+.top-bar-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f0f0f;
+}
+
+/* ─── RIGHT SIDE ──────────────────────────────────────────── */
+
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.top-bar-user-name {
+  font-size: 13px;
+  color: #555;
+}
+
+.top-bar-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #fff0f1;
+  border: 1.5px solid #E31429;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: #E31429;
+  flex-shrink: 0;
+}
+
+/* ─── ROLE BADGE ──────────────────────────────────────────── */
+
+.top-bar-user-role {
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.top-bar-user-role.role-tag-professor {
+  background: #fff3e0;
+  color: #b85c00;
+  border: 1px solid #f5c07a;
+}
+
+.top-bar-user-role.role-tag-student {
+  background: #e8f4fd;
+  color: #1565a8;
+  border: 1px solid #90c8f0;
+}
+
+/* ─── ACTION BUTTONS ──────────────────────────────────────── */
+
+.top-bar-button {
+  background: none;
+  border: 1px solid #e4e4e4;
+  border-radius: 5px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.top-bar-button:hover {
+  border-color: #E31429;
+  color: #E31429;
+}

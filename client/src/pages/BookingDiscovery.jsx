@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getAvailableProfessors } from '../api/availabilities';
 import useAppShellSession from '../hooks/useAppShellSession';
 import { resolvePath } from '../auth/authUtils';
+import Navbar from '../components/Navbar';
 
 function mapOwnerToProfessor(owner) {
   return {
@@ -31,7 +32,7 @@ export default function BookingDiscovery() {
       setLoading(true);
       setError('');
       try {
-        const data = await getAvailableProfessors(query);
+        const data = await getAvailableProfessors('');
         if (!active) return;
 
         setProfessors(Array.isArray(data) ? data.map(mapOwnerToProfessor) : []);
@@ -48,42 +49,35 @@ export default function BookingDiscovery() {
     return () => {
       active = false;
     };
-  }, [query]);
+  }, []);
 
-  const filteredProfessors = useMemo(() => professors, [professors]);
+  const filteredProfessors = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return professors;
+
+    return professors.filter((prof) =>
+      [prof.name, prof.department, prof.email, prof.bio]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(normalizedQuery))
+    );
+  }, [professors, query]);
 
   return (
-    <div className="dash-root">
-      <nav className="dash-nav">
-        <div className="dash-nav-left">
-          <button
-            onClick={() => navigate(resolvePath('dashboard', user))}
-            style={{
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-            }}
-          >
-            <span className="dash-nav-title">Back to dashboard</span>
-          </button>
-        </div>
+    <div className="dashboard-page">
+      <Navbar
+        title="Back to dashboard"
+        onLeftClick={() => navigate(resolvePath('dashboard', user))}
+        user={{ displayName: 'Booking discovery' }}
+      />
 
-        <div className="dash-nav-right">
-          <span className="dash-nav-name">Booking discovery</span>
-        </div>
-      </nav>
-
-      <div className="booking-page-content">
-        <section className="booking-search-panel">
+      <div className="booking-page">
+        <section className="booking-box">
           <h1>Find a professor to book with</h1>
-          <p className="booking-search-hint">
+          <p className="booking-help-text">
             Search professors by name, department, or email to view booking availability.
           </p>
           <input
-            className="booking-search-input"
+            className="booking-search-box"
             type="search"
             placeholder="Search for a professor"
             value={query}
@@ -93,20 +87,20 @@ export default function BookingDiscovery() {
           {error && <p style={{ marginTop: 12, color: '#d13434' }}>{error}</p>}
         </section>
 
-        <section className="booking-results">
+        <section className="professor-list">
           {filteredProfessors.length === 0 ? (
-            <p className="booking-empty-state">No matching professors found.</p>
+            <p className="booking-empty-message">No matching professors found.</p>
           ) : (
             filteredProfessors.map((prof) => (
-              <div key={prof.id} className="booking-card">
+              <div key={prof.id} className="professor-card">
                 <div>
                   <h2>{prof.name}</h2>
-                  <p className="booking-card-subtitle">{prof.department}</p>
-                  <p className="booking-card-email">{prof.email}</p>
-                  <p className="booking-card-bio">{prof.bio}</p>
+                  <p className="professor-card-subtitle">{prof.department}</p>
+                  <p className="professor-card-email">{prof.email}</p>
+                  <p className="professor-card-description">{prof.bio}</p>
                 </div>
                 <button
-                  className="booking-card-button"
+                  className="professor-card-button"
                   onClick={() => navigate(`/booking/professor/${prof.id}`)}
                 >
                   View availability

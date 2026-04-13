@@ -1,7 +1,10 @@
+//AMANDA TRAN
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAppShellSession from '../hooks/useAppShellSession';
 import logo from '../assets/logo1.png';
+import Navbar from '../components/Navbar';
 import calendarIcon from '../assets/calendarIcon.png';
 import coursesIcon from '../assets/courseIcon.png';
 import searchIcon from '../assets/searchIcon.png';
@@ -21,14 +24,17 @@ import {
   deleteAvailability,
   getProfessorAvailabilities,
 } from '../api/availabilities';
+import { getHeatmaps } from '../api/heatmaps';
 import CreateAvailabilityModal from '../components/CreateAvailabilityModal';
+
+//replaced inline <aside> with reusable Sidebar component
+import Sidebar from '../components/Sidebar'; 
 import '../styles/Dashboard.css';
 
 export default function ProfessorDashboard() {
   const navigate = useNavigate();
   const { user, userId } = useAppShellSession();
 
-  // ─────────────────────────────────────────────────────────────
   // State
   // ─────────────────────────────────────────────────────────────
   const [appointments, setAppointments] = useState([]);
@@ -36,11 +42,12 @@ export default function ProfessorDashboard() {
   const [sideTab, setSideTab] = useState('calendar');
   const [modal, setModal] = useState(null);
   const [activeAppt, setActiveAppt] = useState(null);
+  const [heatmaps, setHeatmaps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
-  // ─────────────────────────────────────────────────────────────
+
   // Load professor-hosted appointments from backend
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -70,6 +77,29 @@ export default function ProfessorDashboard() {
 
   // ─────────────────────────────────────────────────────────────
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadHeatmaps() {
+      try {
+        const data = await getHeatmaps({ created_by: userId });
+        if (!active) return;
+        setHeatmaps(data);
+      } catch (err) {
+        if (!active) return;
+        setError((prev) => prev || err.message);
+      }
+    }
+
+    loadHeatmaps();
+    return () => {
+      active = false;
+    };
+  }, [userId]);
+
+
+  // Derive current user display info from loaded appointment data
+  // Fallback to generic values if nothing is found yet
   // ─────────────────────────────────────────────────────────────
   const currentUser = useMemo(() => {
     if (!user) {
@@ -111,7 +141,7 @@ export default function ProfessorDashboard() {
       .slice(0, 5);
   }, [appointments]);
 
-  // ─────────────────────────────────────────────────────────────
+  
   // Cancel appointment, create + delete availabilities
   // ─────────────────────────────────────────────────────────────
   async function handleDelete() {
@@ -161,130 +191,57 @@ export default function ProfessorDashboard() {
     }
   }
 
-  // ─────────────────────────────────────────────────────────────
+ 
   // Avatar initials
   // ─────────────────────────────────────────────────────────────
   const initials = `${currentUser.firstName?.[0] || 'U'}${currentUser.lastName?.[0] || ''}`;
 
   return (
     <>
-      <div className="dash-root">
-        {/* ───────────────────────────────────────────────────── */}
+      <div className="dashboard-page">
+      
         {/* Top Navbar */}
         {/* ───────────────────────────────────────────────────── */}
-        <nav className="dash-nav">
-          <div className="dash-nav-left">
-            <button
-              onClick={() => navigate('/')}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-              }}
-            >
-              <img
-                src={logo}
-                alt="LGTM"
-                className="dash-nav-logo"
-                style={{ height: '100px', width: '100px', objectFit: 'contain' }}
-              />
-            </button>
-            <span className="dash-nav-title">Dashboard</span>
-          </div>
+        <Navbar
+          logo={logo}
+          title="Dashboard"
+          onLeftClick={() => navigate('/')}
+          user={{
+            displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
+            role: 'professor',
+            initials,
+          }}
+          actions={[
+            { label: '+ New heatmap', onClick: () => navigate(`/heatmap/professor/new/${userId}`) },
+            { label: rightPanelOpen ? 'Hide panel' : 'Show panel', onClick: () => setRightPanelOpen((open) => !open) },
+            { label: 'Back to home', onClick: () => navigate('/') },
+          ]}
+        />
 
-          <div className="dash-nav-right">
-            <span className="dash-nav-name">
-              {currentUser.lastName}, {currentUser.firstName}
-            </span>
-            <span className="dash-nav-role professor">Professor</span>
-            <div className="dash-nav-avatar">{initials}</div>
-
-            {/* Restored heatmap button */}
-            <button
-              className="dash-logout"
-              style={{ marginRight: 8 }}
-              onClick={() => navigate('/heatmap/1')}
-            >
-              + New heatmap
-            </button>
-
-            <button
-              className="dash-logout"
-              style={{ marginRight: 8 }}
-              onClick={() => setRightPanelOpen((open) => !open)}
-            >
-              {rightPanelOpen ? 'Hide panel' : 'Show panel'}
-            </button>
-
-            <button className="dash-logout" onClick={() => navigate('/')}>
-              Back to home
-            </button>
-          </div>
-        </nav>
-
-        <div className="dash-body">
+        <div className="dashboard-layout">
+       
+          {/* Sidebar                                           */}
+          {/* [MODIFIED] replaced inline <aside> with the      */}
+          {/* reusable <Sidebar> component.                    */}
+          {/* 'create' uses iconText='+' (no image asset).     */}
           {/* ─────────────────────────────────────────────────── */}
-          {/* Sidebar */}
-          {/* ─────────────────────────────────────────────────── */}
-          <aside className="dash-sidebar">
-            {[
-              { id: 'calendar', icon: calendarIcon, label: 'Calendar' },
-              { id: 'courses', icon: coursesIcon, label: 'Courses' },
-              { id: 'search', icon: searchIcon, label: 'Search' },
-            ].map((item) => (
-              <button
-                key={item.id}
-                className={`dash-sidebar-btn${sideTab === item.id ? ' active' : ''}`}
-                onClick={() => setSideTab(item.id)}
-              >
-                <img
-                  src={item.icon}
-                  alt={item.label}
-                  style={{ width: 40, height: 40, objectFit: 'contain' }}
-                />
-                <span className="dash-sidebar-label">{item.label}</span>
-              </button>
-            ))}
+          <Sidebar
+            activeId={sideTab}
+            items={[
+              { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => setSideTab('calendar') },
+              { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => setSideTab('courses') },
+              { id: 'search', icon: searchIcon, label: 'Search', onClick: () => setSideTab('search') },
+              { id: 'create', iconText: '+', label: 'Create availability', onClick: () => setModal('createAvailability') },
+            ]}
+            bottomItems={[
+              { id: 'help', icon: InfoIcon, label: 'Help' },
+            ]}
+          />
 
-            <button
-              className="dash-sidebar-btn"
-              onClick={() => setModal('createAvailability')}
-            >
-              <span
-                style={{
-                  width: 40,
-                  height: 40,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 28,
-                  fontWeight: 500,
-                  lineHeight: 1,
-                }}
-              >
-                +
-              </span>
-              <span className="dash-sidebar-label">Create availability</span>
-            </button>
-
-            <div className="dash-sidebar-spacer" />
-
-            <button className="dash-sidebar-btn">
-              <img
-                src={InfoIcon}
-                alt="Help"
-                style={{ width: 40, height: 40, objectFit: 'contain' }}
-              />
-            </button>
-          </aside>
-
-          {/* ─────────────────────────────────────────────────── */}
+         
           {/* Main dashboard content */}
           {/* ─────────────────────────────────────────────────── */}
-          <div className="dash-main">
+          <div className="main-content">
             {/* Calendar area */}
             {loading && <p style={{ padding: 16 }}>Loading appointments...</p>}
             {error && <p style={{ padding: 16, color: 'red' }}>{error}</p>}
@@ -300,14 +257,14 @@ export default function ProfessorDashboard() {
               />
             )}
 
-            {/* ─────────────────────────────────────────────── */}
+           
             {/* Right panel */}
             {/* ─────────────────────────────────────────────── */}
             {rightPanelOpen && (
-              <aside className="dash-right-panel">
+              <aside className="side-panel">
                 {/* Upcoming appointments */}
               <div>
-                <div className="dash-panel-section-title">Upcoming appointments</div>
+                <div className="side-panel-title">Upcoming appointments</div>
                 {upcomingAppts.length === 0 ? (
                   <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
                 ) : (
@@ -317,33 +274,33 @@ export default function ProfessorDashboard() {
                     return (
                       <div
                         key={appt.id}
-                        className="dash-appt-card"
+                        className="appointment-item"
                         onClick={() => {
                           setActiveAppt(appt);
                           setModal('detail');
                         }}
                       >
-                        <div className="dash-appt-dot" style={{ background: appt.color }} />
-                        <div className="dash-appt-info">
+                        <div className="appointment-color-dot" style={{ background: appt.color }} />
+                        <div className="">
                           <h4>{appt.title || 'Untitled appointment'}</h4>
                           <h6>{appt.ownerName}</h6>
                           <p>{formatDate(appt.startTime)}</p>
                           <p>{appt.location}</p>
                         </div>
-                        <span className={`dash-appt-status ${cls}`}>{label}</span>
+                        <span className={`appointment-status-pill ${cls}`}>{label}</span>
                       </div>
                     );
                   })
                 )}
               </div>
 
-              <div className="dash-divider" />
+              <div className="side-panel-divider" />
 
-              {/* Heatmap tools - restored intact */}
+              {/* Heatmap tools */}
               <div>
-                <div className="dash-panel-section-title">Heatmap tools</div>
+                <div className="side-panel-title">Heatmap tools</div>
                 <button
-                  className="dash-logout"
+                  className="top-bar-button"
                   style={{
                     width: '100%',
                     padding: 10,
@@ -352,7 +309,7 @@ export default function ProfessorDashboard() {
                     marginBottom: 8,
                     textAlign: 'center',
                   }}
-                  onClick={() => navigate('/heatmap/1')}
+                  onClick={() => navigate(`/heatmap/professor/new/${userId}`)}
                 >
                   + Create new heatmap
                 </button>
@@ -360,6 +317,38 @@ export default function ProfessorDashboard() {
                   Create a heatmap, share the link with students, and approve their
                   submissions from the heatmap page.
                 </p>
+
+                {/* REUSABLE SIDEBAR*/}
+                <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
+                  {heatmaps.length === 0 ? (
+                    <p style={{ fontSize: 12, color: '#888', margin: 0 }}>No heatmaps created yet.</p>
+                  ) : (
+                    heatmaps.slice(0, 4).map((heatmap) => (
+                      <div key={heatmap.id} className="invite-item">
+                        <div className={`invite-dot${heatmap.pendingCount > 0 ? '' : ' responded'}`} />
+                        <div className="">
+                          <h4>{heatmap.title}</h4>
+                          <p>
+                            {heatmap.pendingCount} pending · {heatmap.submissionCount} submission{heatmap.submissionCount !== 1 ? 's' : ''}
+                          </p>
+                          <p style={{ color: '#888' }}>
+                            Created {new Date(heatmap.createdAt).toLocaleDateString('en-CA', {
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </p>
+                        </div>
+                        <button
+                          className="invite-action-button"
+                          onClick={() => navigate(`/heatmap/professor/${heatmap.id}/${userId}`)}
+                          title="Open heatmap"
+                        >
+                          &gt;
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </aside>
           )}
@@ -367,7 +356,6 @@ export default function ProfessorDashboard() {
         </div>
       </div>
 
-      {/* ───────────────────────────────────────────────────── */}
       {/* Create availability modal and appointment detail modal */}
       {/* ───────────────────────────────────────────────────── */}
       {modal === 'createAvailability' && (
@@ -402,7 +390,7 @@ export default function ProfessorDashboard() {
         />
       )}
 
-      {/* ───────────────────────────────────────────────────── */}
+    
       {/* Delete/cancel confirmation modal */}
       {/* ───────────────────────────────────────────────────── */}
       {modal === 'delete' && activeAppt && (

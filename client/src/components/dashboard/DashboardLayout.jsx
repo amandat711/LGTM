@@ -57,7 +57,7 @@ export default function DashboardLayout({
             <button
               className="dash-logout"
               style={{ marginRight: 8 }}
-              onClick={() => navigate('/heatmap/1')}
+              onClick={() => navigate(user?.id ? `/heatmap/professor/new/${user.id}` : '/')}
             >
               + New heatmap
             </button>

@@ -9,6 +9,8 @@ const db = require('./config/db');
 const availabilitiesRouter = require('./routes/availabilities');
 const appointmentsRouter = require('./routes/appointments');
 const authRouter = require('./routes/auth');
+const heatmapsRouter = require('./routes/heatmaps');
+const usersRouter = require('./routes/users');
 
 /** Must be explicit origins (not *) when credentials: true. localhost vs 127.0.0.1 are different origins. */
 app.use(
@@ -41,6 +43,8 @@ app.use('/auth', authRouter);
 app.use('/api/auth', authRouter);
 app.use('/availabilities', availabilitiesRouter);
 app.use('/appointments', appointmentsRouter);
+app.use('/heatmaps', heatmapsRouter);
+app.use('/users', usersRouter);
 
 db.get("SELECT 1", (err, row) => {
   if (err) {

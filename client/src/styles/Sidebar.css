@@ -1,0 +1,113 @@
+/**
+ * Sidebar.css — styles for the reusable Sidebar component.
+ *
+ * Naming convention: side-menu-*
+ *   side-menu          → the <aside> container
+ *   side-menu-button   → each nav button
+ *   side-menu-icon     → img-based icon inside a button
+ *   side-menu-icon-text → text/symbol icon (e.g. "+") inside a button
+ *   side-menu-label    → small label below the icon
+ *   side-menu-spacer   → flex spacer that pushes bottom items down
+ */
+
+/* ─── CONTAINER ──────────────────────────────────────────── */
+
+.side-menu {
+  width: 72px;
+  background: #fff;
+  border-right: 1px solid #e4e4e4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0;
+  gap: 40px;
+  flex-shrink: 0;
+}
+
+/* ─── BUTTON ─────────────────────────────────────────────── */
+
+.side-menu-button {
+  width: 55px;
+  height: 55px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  font-family: Arial;
+  transition: background 0.15s;
+}
+
+.side-menu-button:hover {
+  background: #f5f5f5;
+}
+
+.side-menu-button.active {
+  background: #fff0f1;
+}
+
+/* ─── IMAGE ICON ─────────────────────────────────────────── */
+
+.side-menu-button.active .side-menu-icon {
+  color: #E31429;
+}
+
+.side-menu-icon {
+  font-size: 20px;
+  color: #888;
+  line-height: 1;
+  padding: 20px;
+  transition: color 0.15s;
+}
+
+/* ─── TEXT ICON (e.g. the "+" button) ───────────────────── */
+
+.side-menu-icon-text {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1;
+  color: #888;
+  transition: color 0.15s;
+}
+
+.side-menu-button.active .side-menu-icon-text {
+  color: #E31429;
+}
+
+/* ─── LABEL ──────────────────────────────────────────────── */
+
+.side-menu-label {
+  font-size: 9px;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: color 0.15s;
+}
+
+.side-menu-button.active .side-menu-label {
+  color: #E31429;
+}
+
+/* ─── SPACER ─────────────────────────────────────────────── */
+
+.side-menu-spacer {
+  flex: 1;
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────── */
+
+@media (max-width: 700px) {
+  .side-menu {
+    width: 56px;
+  }
+}
