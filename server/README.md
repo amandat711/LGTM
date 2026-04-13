@@ -3,7 +3,7 @@
 This file documents the currently implemented backend endpoints in `server/`.
 
 ## Base URL
-- Default server port: `5000`
+- Default server port: `4000`
 - Health check: `GET /api/health`
 
 ## Auth
