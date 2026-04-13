@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { getAvailableProfessors } from '../api/availabilities';
+import useAppShellSession from '../hooks/useAppShellSession';
+import { resolvePath } from '../auth/authUtils';
 import Navbar from '../components/Navbar';
 
 function mapOwnerToProfessor(owner) {
@@ -17,7 +19,7 @@ function mapOwnerToProfessor(owner) {
 
 export default function BookingDiscovery() {
   const navigate = useNavigate();
-  const { userId } = useParams();
+  const { user } = useAppShellSession();
   const [query, setQuery] = useState('');
   const [professors, setProfessors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,7 +66,7 @@ export default function BookingDiscovery() {
     <div className="dashboard-page">
       <Navbar
         title="Back to dashboard"
-        onLeftClick={() => navigate(`/dashboard/student/${userId}`)}
+        onLeftClick={() => navigate(resolvePath('dashboard', user))}
         user={{ displayName: 'Booking discovery' }}
       />
 
@@ -99,7 +101,7 @@ export default function BookingDiscovery() {
                 </div>
                 <button
                   className="professor-card-button"
-                  onClick={() => navigate(`/booking/professor/${prof.id}?student=${userId}`)}
+                  onClick={() => navigate(`/booking/professor/${prof.id}`)}
                 >
                   View availability
                 </button>

@@ -1,7 +1,8 @@
 //AMANDA TRAN
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import useAppShellSession from '../hooks/useAppShellSession';
 import logo from '../assets/logo1.png';
 import Navbar from '../components/Navbar';
 import calendarIcon from '../assets/calendarIcon.png';
@@ -18,6 +19,7 @@ import {
 } from '../components/calendar/calendarUtils';
 import { getMyAppointments, cancelAppointment } from '../api/appointments';
 import { getHeatmaps } from '../api/heatmaps';
+import { logout } from '../api/auth';
 
 // [MODIFIED] replaced inline <aside> with reusable Sidebar component
 import Sidebar from '../components/Sidebar'; 
@@ -25,7 +27,14 @@ import '../styles/Dashboard.css';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
-  const { userId } = useParams();
+  const { user, userId } = useAppShellSession();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/', { replace: true });
+    }
+  };
 
   // ─────────────────────────────────────────────────────────────
   // State
@@ -43,6 +52,8 @@ export default function StudentDashboard() {
   // Load student appointments from backend
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (!userId) return;
+
     async function loadAppointments() {
       try {
         setLoading(true);
@@ -65,25 +76,17 @@ export default function StudentDashboard() {
   }, [userId]);
 
   // ─────────────────────────────────────────────────────────────
-  // Derive current user display info from loaded appointment data
-  // Fallback to generic values if nothing is found yet
+  // Display name from session (AppShellLayout variant="student")
   // ─────────────────────────────────────────────────────────────
   const currentUser = useMemo(() => {
-    for (const appt of appointments) {
-      const me = appt.participants?.find((p) => Number(p.user_id) === Number(userId));
-      if (me) {
-        return {
-          firstName: me.first_name || 'User',
-          lastName: me.last_name || String(userId),
-        };
-      }
+    if (!user) {
+      return { firstName: 'User', lastName: String(userId ?? '') };
     }
-
     return {
-      firstName: 'User',
-      lastName: String(userId),
+      firstName: user.first_name || 'User',
+      lastName: user.last_name || String(userId ?? ''),
     };
-  }, [appointments, userId]);
+  }, [user, userId]);
 
   // ─────────────────────────────────────────────────────────────
   // Get up to 5 upcoming non-cancelled appointments
@@ -155,7 +158,7 @@ export default function StudentDashboard() {
           }}
           actions={[
             { label: rightPanelOpen ? 'Hide panel' : 'Show panel', onClick: () => setRightPanelOpen((open) => !open) },
-            { label: 'Back to home', onClick: () => navigate('/') },
+            { label: 'Log Out', onClick: handleLogout },
           ]}
         />
 
@@ -170,7 +173,7 @@ export default function StudentDashboard() {
             items={[
               { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => setSideTab('calendar') },
               { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => setSideTab('courses') },
-              { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate(`/booking/search/${userId}`) },
+              { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
             ]}
             bottomItems={[
               { id: 'help', icon: InfoIcon, label: 'Help' },
@@ -262,7 +265,7 @@ export default function StudentDashboard() {
                       </div>
                       <button
                         className="invite-action-button"
-                        onClick={() => navigate(`/heatmap/student/${inv.id}/${userId}`)}
+                        onClick={() => navigate(`/heatmap/student/${inv.id}`)}
                         title={inv.responded ? 'View heatmap' : 'Respond to heatmap'}
                       >
                         {inv.responded ? '>' : '+'}

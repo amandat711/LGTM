@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { logout } from '../../api/auth';
 import logo from '../../assets/logo1.png';
 import calendarIcon from '../../assets/calendarIcon.png';
 import coursesIcon from '../../assets/courseIcon.png';
@@ -18,6 +19,13 @@ export default function DashboardLayout({
 }) {
   const navigate = useNavigate();
   const initials = `${user.firstName?.[0] || 'U'}${user.lastName?.[0] || ''}`;
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/', { replace: true });
+    }
+  };
 
   return (
     <div className="dash-root">
@@ -57,14 +65,14 @@ export default function DashboardLayout({
             <button
               className="dash-logout"
               style={{ marginRight: 8 }}
-              onClick={() => navigate(user?.id ? `/heatmap/professor/new/${user.id}` : '/')}
+              onClick={() => navigate('/heatmap/professor/new')}
             >
               + New heatmap
             </button>
           )}
 
-          <button className="dash-logout" onClick={() => navigate('/')}>
-            Back to home
+          <button className="dash-logout" onClick={handleLogout}>
+            Log Out
           </button>
         </div>
       </nav>

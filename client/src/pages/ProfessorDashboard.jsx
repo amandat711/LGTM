@@ -1,7 +1,8 @@
 //AMANDA TRAN
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import useAppShellSession from '../hooks/useAppShellSession';
 import logo from '../assets/logo1.png';
 import Navbar from '../components/Navbar';
 import calendarIcon from '../assets/calendarIcon.png';
@@ -29,10 +30,18 @@ import CreateAvailabilityModal from '../components/CreateAvailabilityModal';
 //replaced inline <aside> with reusable Sidebar component
 import Sidebar from '../components/Sidebar'; 
 import '../styles/Dashboard.css';
+import { logout } from '../api/auth';
 
 export default function ProfessorDashboard() {
   const navigate = useNavigate();
-  const { userId } = useParams();
+  const { user, userId } = useAppShellSession();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/', { replace: true });
+    }
+  };
 
   // State
   // ─────────────────────────────────────────────────────────────
@@ -49,28 +58,32 @@ export default function ProfessorDashboard() {
 
   // Load professor-hosted appointments from backend
   // ─────────────────────────────────────────────────────────────
-useEffect(() => {
-  async function loadDashboardData() {
-    try {
-      setLoading(true);
+  useEffect(() => {
+    if (!userId) return;
 
-      const [appointmentData, availabilityData] = await Promise.all([
-        getHostingAppointments(userId),
-        getProfessorAvailabilities(userId),
-      ]);
+    async function loadDashboardData() {
+      try {
+        setLoading(true);
 
-      setAppointments(appointmentData.map(mapAppointmentToCalendarEvent));
-      setAvailabilities(availabilityData);
-      setError('');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+        const [appointmentData, availabilityData] = await Promise.all([
+          getHostingAppointments(userId),
+          getProfessorAvailabilities(userId),
+        ]);
+
+        setAppointments(appointmentData.map(mapAppointmentToCalendarEvent));
+        setAvailabilities(availabilityData);
+        setError('');
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     }
-  }
 
-  loadDashboardData();
-}, [userId]);
+    loadDashboardData();
+  }, [userId]);
+
+  // ─────────────────────────────────────────────────────────────
 
   useEffect(() => {
     let active = true;
@@ -97,23 +110,13 @@ useEffect(() => {
   // Fallback to generic values if nothing is found yet
   // ─────────────────────────────────────────────────────────────
   const currentUser = useMemo(() => {
-    for (const appt of appointments) {
-      const me = appt.participants?.find((p) => Number(p.user_id) === Number(userId));
-      if (me) {
-        return {
-          firstName: me.first_name || 'User',
-          lastName: me.last_name || String(userId),
-        };
-      }
+    if (!user) {
+      return { firstName: 'User', lastName: String(userId ?? '') };
     }
+    return { firstName: user.first_name || 'User', lastName: user.last_name || String(userId ?? '') };
+  }, [userId, user]);
 
-    return {
-      firstName: 'User',
-      lastName: String(userId),
-    };
-  }, [appointments, userId]);
-
-
+  // ─────────────────────────────────────────────────────────────
   // Get up to 5 upcoming non-cancelled appointments
   // ─────────────────────────────────────────────────────────────
   const calendarEvents = useMemo(() => {
@@ -217,9 +220,9 @@ useEffect(() => {
             initials,
           }}
           actions={[
-            { label: '+ New heatmap', onClick: () => navigate(`/heatmap/professor/new/${userId}`) },
+            { label: '+ New heatmap', onClick: () => navigate('/heatmap/professor/new') },
             { label: rightPanelOpen ? 'Hide panel' : 'Show panel', onClick: () => setRightPanelOpen((open) => !open) },
-            { label: 'Back to home', onClick: () => navigate('/') },
+            { label: 'Log Out', onClick: handleLogout },
           ]}
         />
 
@@ -314,7 +317,7 @@ useEffect(() => {
                     marginBottom: 8,
                     textAlign: 'center',
                   }}
-                  onClick={() => navigate(`/heatmap/professor/new/${userId}`)}
+                  onClick={() => navigate('/heatmap/professor/new')}
                 >
                   + Create new heatmap
                 </button>
@@ -345,7 +348,7 @@ useEffect(() => {
                         </div>
                         <button
                           className="invite-action-button"
-                          onClick={() => navigate(`/heatmap/professor/${heatmap.id}/${userId}`)}
+                          onClick={() => navigate(`/heatmap/professor/${heatmap.id}`)}
                           title="Open heatmap"
                         >
                           &gt;

@@ -89,12 +89,10 @@ export default function LandingPage() {
 
   // Builds safe paths for the landing page buttons.
   // If demo data is missing, these fall back to routes that will not crash the page.
-  const studentDashboardPath = demoUsers.student ? `/dashboard/student/${demoUsers.student.id}` : "/";
-  const professorDashboardPath = demoUsers.professor ? `/dashboard/professor/${demoUsers.professor.id}` : "/";
+  const studentDashboardPath = '/dashboard/student';
+  const professorDashboardPath = '/dashboard/professor';
   const heatmapPath = featuredHeatmapId
-    ? demoUsers.student
-      ? `/heatmap/student/${featuredHeatmapId}/${demoUsers.student.id}`
-      : `/heatmap/${featuredHeatmapId}?role=student`
+    ? `/heatmap/${featuredHeatmapId}?role=student`
     : studentDashboardPath;
 
 
@@ -110,7 +108,7 @@ export default function LandingPage() {
           </div>
           <div className="landing-top-bar-actions">
             {/* Currently goes to the demo student dashboard. */}
-            <button className="login-button" onClick={() => navigate(studentDashboardPath)}>
+            <button className="login-button" onClick={() => navigate("/login")}>
               Login
             </button>
 
@@ -133,7 +131,7 @@ export default function LandingPage() {
         <div className="hero-content">
           <p className="hero-subtitle">McGill University</p>
           <h1 className="hero-title">Your McGill Booking Hub<br /></h1>
-          <button className="hero-button" onClick={() => navigate(studentDashboardPath)}>
+          <button className="hero-button" onClick={() => navigate("/login")}>
             Find availabilities
           </button>
         </div>
@@ -157,7 +155,7 @@ export default function LandingPage() {
               LGTM keeps meetings, office hours, and upcoming bookings organized in one clear dashboard. 
               Students can quickly check what is coming up, while professors can manage schedules without digging through scattered emails or calendars.
             </p>
-            <button className="feature-button" onClick={() => navigate(professorDashboardPath)}>
+            <button className="feature-button" onClick={() => navigate("/login")}>
               Get started
             </button>
           </div>

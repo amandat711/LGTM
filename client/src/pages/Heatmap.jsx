@@ -4,6 +4,8 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import '../styles/Heatmap.css';
 import logo from '../assets/logo1.png';
 import Navbar from '../components/Navbar';
+import useAppShellSession from '../hooks/useAppShellSession';
+import { sessionUserToNavUser } from '../auth/authUtils';
 import { PersonalGrid, ProfAvailGrid, GroupGrid, HeatmapLegend, makeKey } from '../components/HeatmapGrid';
 import {
   ConfirmSlotModal,
@@ -18,6 +20,24 @@ import { generateDays, generateTimes } from '../utils/generateDays';
 
 const PARTICIPANT_COLORS = ['#E31429', '#c0842a', '#2a8c5f', '#5a4ab0', '#1565a8', '#cc4b37'];
 
+const SAMPLE_SUBMISSIONS = [
+  { id: 1, studentName: 'Jocelyn',  studentEmail: 'jocelyn@mail.mcgill.ca',  slotCount: 6,  submittedAt: 'Today, 9:14 AM',  status: 'pending' },
+  { id: 2, studentName: 'Rita',  studentEmail: 'rita@mail.mcgill.ca',  slotCount: 4,  submittedAt: 'Today, 10:32 AM', status: 'pending' },
+  { id: 3, studentName: 'Shirley',   studentEmail: 'shirley@mail.mcgill.ca',   slotCount: 8,  submittedAt: 'Yesterday',       status: 'approved' },
+];
+
+/** Demo mailto target until the heatmap host is returned by the API */
+const HEATMAP_ORGANIZER_FALLBACK_EMAIL = 'organizer@mcgill.ca';
+
+// ─────────────────────────────────────────────────────────────
+// expandRecurring
+//   Takes a Set of "iso:ti" keys selected on a specific week,
+//   plus the number of weeks to repeat, and returns a new Set
+//   that includes the original week + all future occurrences.
+//
+//   e.g. "2026-04-07:3" recurring for 4 weeks also generates
+//        "2026-04-14:3", "2026-04-21:3", "2026-04-28:3"
+// ─────────────────────────────────────────────────────────────
 function expandRecurring(selectedKeys, recurringWeeks) {
   const expanded = new Set(selectedKeys);
   selectedKeys.forEach((key) => {
@@ -120,29 +140,48 @@ function mapSubmissionSlotsToKeys(submission, startHour, endHour) {
   );
 }
 
-function buildHeatmapPath(role, heatmapId, userId) {
-  return `/heatmap/${role}/${heatmapId}/${userId}`;
+function buildHeatmapPath(role, heatmapId) {
+  return `/heatmap/${role}/${heatmapId}`;
 }
 
 function buildDashboardPath(user) {
-  if (!user?.id || !user?.role) return '/';
+  if (!user?.role) return '/';
   return user.role === 'professor'
-    ? `/dashboard/professor/${user.id}`
-    : `/dashboard/student/${user.id}`;
+    ? '/dashboard/professor'
+    : '/dashboard/student';
 }
 
-export default function Heatmap({ forcedRole = null }) {
+export default function Heatmap() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { eventId, userId: routeUserId } = useParams();
+  const { eventId } = useParams();
   const searchParams = new URLSearchParams(location.search);
-  const requestedUserId = routeUserId || searchParams.get('userId');
-  const requestedRole = forcedRole || searchParams.get('role');
+  const requestedUserId = searchParams.get('userId');
+  const roleFromQuery = searchParams.get('role');
+
+  const isShellStudentHeatmap = location.pathname.startsWith('/heatmap/student/');
+  const isShellProfessorHeatmap = location.pathname.startsWith('/heatmap/professor/');
+
+  const { user: sessionUser } = useAppShellSession();
+  const sessionNav = useMemo(() => sessionUserToNavUser(sessionUser), [sessionUser]);
+
+  const requestedRole = useMemo(() => {
+    if (isShellStudentHeatmap) return 'student';
+    if (isShellProfessorHeatmap) return 'professor';
+    return roleFromQuery;
+  }, [isShellStudentHeatmap, isShellProfessorHeatmap, roleFromQuery]);
+
   const isNewHeatmapRoute = eventId === 'new';
+  const hideDemoRoleSwitcher = isShellStudentHeatmap || isShellProfessorHeatmap;
 
   const [availableUsers, setAvailableUsers] = useState({ professor: null, student: null });
   const [user, setUser] = useState(null);
-  const isProfessor = user?.role === 'professor';
+  const isProfessor = useMemo(() => {
+    if (hideDemoRoleSwitcher) {
+      return sessionNav?.role === 'professor';
+    }
+    return user?.role === 'professor';
+  }, [hideDemoRoleSwitcher, sessionNav?.role, user?.role]);
   const userInitials = user?.name
     ? user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
     : '';
@@ -275,8 +314,7 @@ export default function Heatmap({ forcedRole = null }) {
           });
 
           const nextRole = 'professor';
-          const nextUserId = requestedUserId || creatorId;
-          navigate(buildHeatmapPath(nextRole, bundle.heatmap.id, nextUserId), { replace: true });
+          navigate(buildHeatmapPath(nextRole, bundle.heatmap.id), { replace: true });
         } else {
           bundle = await getHeatmap(eventId);
         }
@@ -398,7 +436,7 @@ export default function Heatmap({ forcedRole = null }) {
       setHeatmapBundle(response.heatmap);
       setModal(null);
       setActiveSub(null);
-      navigate(`/dashboard/professor/${heatmap.createdBy}`);
+      navigate('/dashboard/professor');
     } catch (err) {
       setError(err.message || 'Unable to approve submission.');
     }
@@ -437,7 +475,7 @@ export default function Heatmap({ forcedRole = null }) {
       setGroupKey(null);
       setGroupMeta(null);
       setModal(null);
-      navigate(`/dashboard/professor/${heatmap.createdBy}`);
+      navigate('/dashboard/professor');
     } catch (err) {
       setError(err.message || 'Unable to confirm group booking.');
     }
@@ -455,7 +493,7 @@ export default function Heatmap({ forcedRole = null }) {
       />
 
       <div className="heatmap-page">
-        {!forcedRole && (
+        {!hideDemoRoleSwitcher && (
           <div style={{ marginBottom: '0.5rem' }}>
             <span style={{ fontSize: 11, color: 'var(--text-faint)', marginRight: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Demo — viewing as:
