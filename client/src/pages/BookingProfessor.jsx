@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { getAvailableProfessors, getProfessorPublicAvailabilities } from '../api/availabilities';
 import { createAppointment } from '../api/appointments';
+import useAppShellSession from '../hooks/useAppShellSession';
+import { resolvePath } from '../auth/authUtils';
 
 
 function formatSlotTime(value) {
@@ -32,6 +34,11 @@ function groupSlotsByDate(slots) {
   }, {});
 }
 
+function professorMailtoHref(professor) {
+  const subject = encodeURIComponent(`Booking — ${professor.name}`);
+  return `mailto:${encodeURIComponent(professor.email)}?subject=${subject}`;
+}
+
 function mapOwnerToProfessor(owner) {
   return {
     id: owner.user_id?.toString() ?? `${owner.first_name?.toLowerCase()}.${owner.last_name?.toLowerCase()}`,
@@ -46,9 +53,8 @@ function mapOwnerToProfessor(owner) {
 
 export default function BookingProfessor() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { professorId } = useParams();
-  const studentId = new URLSearchParams(location.search).get('student') || '1';
+  const { user, userId: bookerId } = useAppShellSession();
 
   const [professor, setProfessor] = useState(null);
   const [slots, setSlots] = useState([]);
@@ -59,8 +65,7 @@ export default function BookingProfessor() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    let active = true;
-
+    //TODO: this works but is not efficient, we should make an API call to get the professor by id instead of getting all professors and then filtering
     async function loadProfessor() {
       setLoading(true);
       setError('');
@@ -82,9 +87,6 @@ export default function BookingProfessor() {
     }
 
     loadProfessor();
-    return () => {
-      active = false;
-    };
   }, [professorId]);
 
   useEffect(() => {
@@ -129,7 +131,7 @@ export default function BookingProfessor() {
 
 
     try {
-      await createAppointment(selectedSlot.availability_id, studentId);
+      await createAppointment(selectedSlot.availability_id, bookerId);
       setStatus('success');
       setMessage('Your booking is confirmed! It will appear on your dashboard shortly.');
     } catch (err) {
@@ -138,12 +140,39 @@ export default function BookingProfessor() {
     }
   };
 
+  if (loading && !professor) {
+    return (
+      <div className="dash-root">
+        <nav className="dash-nav">
+          <div className="dash-nav-left">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
+              }}
+            >
+              Back
+            </button>
+          </div>
+        </nav>
+        <div className="booking-page-content">
+          <p>Loading…</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!professor) {
     return (
       <div className="dash-root">
         <nav className="dash-nav">
           <div className="dash-nav-left">
             <button
+              type="button"
               onClick={() => navigate(-1)}
               style={{
                 background: 'none',
@@ -193,9 +222,17 @@ export default function BookingProfessor() {
               <h1>{professor.name}</h1>
               <p className="booking-card-subtitle">{professor.department}</p>
               <p className="booking-card-bio">{professor.bio}</p>
-              <p className="booking-card-email" style={{ marginTop: 4 }}>{professor.email}</p>
+              <div className="booking-header-email-actions">
+                <p className="booking-card-email">{professor.email}</p>
+                <a
+                  href={professorMailtoHref(professor)}
+                  className="booking-card-button booking-card-button-secondary booking-header-email-btn"
+                >
+                  Email professor
+                </a>
+              </div>
             </div>
-            <div className="booking-meta-pill">Student ID {studentId}</div>
+            {/* <div className="booking-meta-pill">Student ID {studentId}</div> */}
           </div>
 
           {message && <div className="booking-status-banner success">{message}</div>}
@@ -269,7 +306,7 @@ export default function BookingProfessor() {
               </button>
               <button
                 className="booking-card-button booking-card-button-secondary"
-                onClick={() => navigate(`/dashboard/student/${studentId}`)}
+                onClick={() => navigate(resolvePath('dashboard', user))}
               >
                 Back to dashboard
               </button>

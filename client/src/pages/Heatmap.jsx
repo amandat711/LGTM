@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import '../styles/Heatmap.css';
 import Navbar from '../components/Navbar';
+import useAppShellSession from '../hooks/useAppShellSession';
+import { sessionUserToNavUser } from '../auth/authUtils';
 import { PersonalGrid, ProfAvailGrid, GroupGrid, HeatmapLegend, makeKey } from '../components/HeatmapGrid';
 import {
   ConfirmSlotModal,
@@ -25,8 +27,8 @@ const SAMPLE_SUBMISSIONS = [
   { id: 3, studentName: 'Shirley',   studentEmail: 'shirley@mail.mcgill.ca',   slotCount: 8,  submittedAt: 'Yesterday',       status: 'approved' },
 ];
 
-const PROFESSOR = { name: 'Prof. Vybihal', email: 'joseph.vybihal@mcgill.ca', role: 'professor' };
-const STUDENT   = { name: 'Amanda',  email: 'amanda@mail.mcgill.ca', role: 'student' };
+/** Demo mailto target until the heatmap host is returned by the API */
+const HEATMAP_ORGANIZER_FALLBACK_EMAIL = 'organizer@mcgill.ca';
 
 // ─────────────────────────────────────────────────────────────
 // expandRecurring
@@ -52,8 +54,9 @@ function expandRecurring(selectedKeys, recurringWeeks) {
 
 // ─────────────────────────────────────────────────────────────
 export default function Heatmap() {
-  const [user, setUser]       = useState(PROFESSOR);
-  const isProfessor           = user.role === 'professor';
+  const { user: sessionUser } = useAppShellSession();
+  const user = useMemo(() => sessionUserToNavUser(sessionUser), [sessionUser]);
+  const isProfessor = user?.role === 'professor';
 
   // ── Date range ─────────────────────────────────────────────
   const [startDate,  setStartDate]  = useState('2026-04-07');
@@ -114,8 +117,8 @@ export default function Heatmap() {
     const body    = encodeURIComponent(
       `${user.name} has submitted their availability.\n\nLog in to review and approve.`
     );
-    window.open(`mailto:${PROFESSOR.email}?subject=${subject}&body=${body}`);
-    alert('Availability submitted! Prof. Vybihal has been notified.');
+    window.open(`mailto:${user.email}?subject=${subject}&body=${body}`);
+    alert('Availability submitted! ${user.name} has been notified (demo).');
   }
 
   function approveSubmission(sub) {
@@ -146,27 +149,6 @@ export default function Heatmap() {
 
       <div className="heatmap-page">
 
-        {/* ── Demo role switcher ─────────────────────────── */}
-        <div style={{ marginBottom: '0.5rem' }}>
-          <span style={{ fontSize: 11, color: 'var(--text-faint)', marginRight: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            Demo — viewing as:
-          </span>
-          <div className="role-switcher" style={{ display: 'inline-flex' }}>
-            <button
-              className={`role-btn${isProfessor ? ' active' : ''}`}
-              onClick={() => { setUser(PROFESSOR); setTab('personal'); }}
-            >
-              Professor
-            </button>
-            <button
-              className={`role-btn${!isProfessor ? ' active' : ''}`}
-              onClick={() => { setUser(STUDENT); setTab('personal'); }}
-            >
-              Student
-            </button>
-          </div>
-        </div>
-
         {/* ── Page header ───────────────────────────────── */}
         <div className="page-header">
           <div className="page-eyebrow">
@@ -178,7 +160,7 @@ export default function Heatmap() {
           <p className="page-subtitle">
             {isProfessor
               ? "Mark when you're free. Choose whether slots repeat weekly."
-              : "Select times that work for you from Prof. Vybihal's available slots."}
+              : "Select times that work for you from the organizer's available slots."}
           </p>
         </div>
 
@@ -592,7 +574,12 @@ export default function Heatmap() {
 
         {modal === 'delete' && activeAppt && (
           <DeleteConfirmModal
-            appointment={{ ...activeAppt, notifyEmail: isProfessor ? activeAppt.ownerEmail : PROFESSOR.email }}
+            appointment={{
+              ...activeAppt,
+              notifyEmail: isProfessor
+                ? activeAppt.ownerEmail
+                : activeAppt.ownerEmail || HEATMAP_ORGANIZER_FALLBACK_EMAIL,
+            }}
             onConfirm={() => setActiveAppt(null)}
             onClose={() => setModal('detail')}
           />
@@ -601,7 +588,7 @@ export default function Heatmap() {
         {modal === 'invite' && (
           <InviteURLModal
             ownerEmail={user.email}
-            eventTitle="Office Hours — Prof. Vybihal"
+            eventTitle={`Office Hours — ${user.name}`}
             onClose={() => setModal(null)}
           />
         )}

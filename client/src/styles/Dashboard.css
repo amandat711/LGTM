@@ -476,6 +476,29 @@
   margin-bottom: 22px;
 }
 
+.booking-header-email-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.booking-header-email-actions .booking-card-email {
+  margin: 0;
+}
+
+a.booking-card-button {
+  text-decoration: none;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+.booking-header-email-btn {
+  padding: 10px 18px;
+  font-size: 13px;
+}
+
 .booking-meta-pill {
   border-radius: 999px;
   background: #f1f5f9;

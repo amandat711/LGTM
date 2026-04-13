@@ -1,14 +1,15 @@
 import './App.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/landingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import Heatmap from './pages/Heatmap';
-import StudentDashboard   from './pages/StudentDashboard';
+import StudentDashboard from './pages/StudentDashboard';
 import ProfessorDashboard from './pages/ProfessorDashboard';
 import BookingDiscovery from './pages/BookingDiscovery';
 import BookingProfessor from './pages/BookingProfessor';
+import AppShellLayout from './layouts/AppShellLayout';
 
 function App() {
   return (
@@ -18,11 +19,24 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/dashboard/student/:userId" element={<StudentDashboard />} />
-        <Route path="/dashboard/professor/:userId" element={<ProfessorDashboard />} />
-        <Route path="/booking/search/:userId" element={<BookingDiscovery />} />
-        <Route path="/booking/professor/:professorId" element={<BookingProfessor />} />
-        <Route path="/heatmap/:eventId" element={<Heatmap />} />
+
+        <Route element={<AppShellLayout variant="student" />}>
+          <Route path="/dashboard/student/:userId" element={<StudentDashboard />} />
+          <Route path="/booking/search" element={<BookingDiscovery />} />
+          <Route
+            path="/booking/search/:userId"
+            element={<Navigate to="/booking/search" replace />}
+          />
+          <Route path="/booking/professor/:professorId" element={<BookingProfessor />} />
+        </Route>
+
+        <Route element={<AppShellLayout variant="professor" />}>
+          <Route path="/dashboard/professor/:userId" element={<ProfessorDashboard />} />
+        </Route>
+
+        <Route element={<AppShellLayout variant="any" />}>
+          <Route path="/heatmap/:eventId" element={<Heatmap />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

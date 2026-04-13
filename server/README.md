@@ -17,7 +17,8 @@ Create a new user (does not log them in).
   - `email`
   - `password` (minimum 8 characters)
 - Email must be `@mail.mcgill.ca` or `@mcgill.ca` (normalized to lowercase).
-- **`user_type`:** `@mail.mcgill.ca` → `student`; `@mcgill.ca` (faculty/staff) → `general_admin`.
+- **`user_type` on self-registration:** `@mail.mcgill.ca` → `student`; `@mcgill.ca` → `general_admin` (faculty).
+- **`course_admin`** is not set by this endpoint: it represents a student with extra admin rights in specific courses only, and would be assigned in the database (or a future admin API) after registration as `student`.
 
 ### `POST /auth/login`
 Log in and attach the session cookie.

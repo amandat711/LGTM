@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthShell from '../components/AuthShell';
 import { login } from '../api/auth';
+import { resolvePath } from '../auth/authUtils';
 import {
   authCardClass,
   authInputClass,
@@ -9,13 +10,6 @@ import {
   authPrimaryBtnClass,
   isAllowedMcGillEmail,
 } from '../auth/authUi';
-
-function dashboardPath(userType, userId) {
-  if (userType === 'student') {
-    return `/dashboard/student/${userId}`;
-  }
-  return `/dashboard/professor/${userId}`;
-}
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -40,7 +34,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       const { user } = await login(email, password);
-      navigate(dashboardPath(user.user_type, user.user_id));
+      navigate(resolvePath('dashboard', user));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed.');
     } finally {

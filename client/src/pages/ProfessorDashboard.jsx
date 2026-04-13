@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import useAppShellSession from '../hooks/useAppShellSession';
 import logo from '../assets/logo1.png';
 import calendarIcon from '../assets/calendarIcon.png';
 import coursesIcon from '../assets/courseIcon.png';
@@ -25,7 +26,7 @@ import '../styles/Dashboard.css';
 
 export default function ProfessorDashboard() {
   const navigate = useNavigate();
-  const { userId } = useParams();
+  const { user, userId } = useAppShellSession();
 
   // ─────────────────────────────────────────────────────────────
   // State
@@ -42,49 +43,40 @@ export default function ProfessorDashboard() {
   // ─────────────────────────────────────────────────────────────
   // Load professor-hosted appointments from backend
   // ─────────────────────────────────────────────────────────────
-useEffect(() => {
-  async function loadDashboardData() {
-    try {
-      setLoading(true);
+  useEffect(() => {
+    if (!userId) return;
 
-      const [appointmentData, availabilityData] = await Promise.all([
-        getHostingAppointments(userId),
-        getProfessorAvailabilities(userId),
-      ]);
+    async function loadDashboardData() {
+      try {
+        setLoading(true);
 
-      setAppointments(appointmentData.map(mapAppointmentToCalendarEvent));
-      setAvailabilities(availabilityData);
-      setError('');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }
+        const [appointmentData, availabilityData] = await Promise.all([
+          getHostingAppointments(userId),
+          getProfessorAvailabilities(userId),
+        ]);
 
-  loadDashboardData();
-}, [userId]);
-
-  // ─────────────────────────────────────────────────────────────
-  // Derive current user display info from loaded appointment data
-  // Fallback to generic values if nothing is found yet
-  // ─────────────────────────────────────────────────────────────
-  const currentUser = useMemo(() => {
-    for (const appt of appointments) {
-      const me = appt.participants?.find((p) => Number(p.user_id) === Number(userId));
-      if (me) {
-        return {
-          firstName: me.first_name || 'User',
-          lastName: me.last_name || String(userId),
-        };
+        setAppointments(appointmentData.map(mapAppointmentToCalendarEvent));
+        setAvailabilities(availabilityData);
+        setError('');
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
       }
     }
 
-    return {
-      firstName: 'User',
-      lastName: String(userId),
-    };
-  }, [appointments, userId]);
+    loadDashboardData();
+  }, [userId]);
+
+  // ─────────────────────────────────────────────────────────────
+
+  // ─────────────────────────────────────────────────────────────
+  const currentUser = useMemo(() => {
+    if (!user) {
+      return { firstName: 'User', lastName: String(userId ?? '') };
+    }
+    return { firstName: user.first_name || 'User', lastName: user.last_name || String(userId ?? '') };
+  }, [userId, user]);
 
   // ─────────────────────────────────────────────────────────────
   // Get up to 5 upcoming non-cancelled appointments

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import useAppShellSession from '../hooks/useAppShellSession';
 import logo from '../assets/logo1.png';
 import calendarIcon from '../assets/calendarIcon.png';
 import coursesIcon from '../assets/courseIcon.png';
@@ -41,7 +42,7 @@ const SAMPLE_INVITES = [
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
-  const { userId } = useParams();
+  const { user, userId } = useAppShellSession();
 
   // ─────────────────────────────────────────────────────────────
   // State
@@ -58,6 +59,8 @@ export default function StudentDashboard() {
   // Load student appointments from backend
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (!userId) return;
+
     async function loadAppointments() {
       try {
         setLoading(true);
@@ -75,25 +78,17 @@ export default function StudentDashboard() {
   }, [userId]);
 
   // ─────────────────────────────────────────────────────────────
-  // Derive current user display info from loaded appointment data
-  // Fallback to generic values if nothing is found yet
+  // Display name from session (AppShellLayout variant="student")
   // ─────────────────────────────────────────────────────────────
   const currentUser = useMemo(() => {
-    for (const appt of appointments) {
-      const me = appt.participants?.find((p) => Number(p.user_id) === Number(userId));
-      if (me) {
-        return {
-          firstName: me.first_name || 'User',
-          lastName: me.last_name || String(userId),
-        };
-      }
+    if (!user) {
+      return { firstName: 'User', lastName: String(userId ?? '') };
     }
-
     return {
-      firstName: 'User',
-      lastName: String(userId),
+      firstName: user.first_name || 'User',
+      lastName: user.last_name || String(userId ?? ''),
     };
-  }, [appointments, userId]);
+  }, [user, userId]);
 
   // ─────────────────────────────────────────────────────────────
   // Get up to 5 upcoming non-cancelled appointments
@@ -200,7 +195,7 @@ export default function StudentDashboard() {
                 className={`dash-sidebar-btn${sideTab === item.id ? ' active' : ''}`}
                 onClick={() => {
                   if (item.id === 'search') {
-                    navigate(`/booking/search/${userId}`);
+                    navigate('/booking/search');
                   } else {
                     setSideTab(item.id);
                   }
