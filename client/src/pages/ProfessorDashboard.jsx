@@ -30,10 +30,18 @@ import CreateAvailabilityModal from '../components/CreateAvailabilityModal';
 //replaced inline <aside> with reusable Sidebar component
 import Sidebar from '../components/Sidebar'; 
 import '../styles/Dashboard.css';
+import { logout } from '../api/auth';
 
 export default function ProfessorDashboard() {
   const navigate = useNavigate();
   const { user, userId } = useAppShellSession();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/', { replace: true });
+    }
+  };
 
   // State
   // ─────────────────────────────────────────────────────────────
@@ -212,9 +220,9 @@ export default function ProfessorDashboard() {
             initials,
           }}
           actions={[
-            { label: '+ New heatmap', onClick: () => navigate(`/heatmap/professor/new/${userId}`) },
+            { label: '+ New heatmap', onClick: () => navigate('/heatmap/professor/new') },
             { label: rightPanelOpen ? 'Hide panel' : 'Show panel', onClick: () => setRightPanelOpen((open) => !open) },
-            { label: 'Back to home', onClick: () => navigate('/') },
+            { label: 'Log Out', onClick: handleLogout },
           ]}
         />
 
@@ -309,7 +317,7 @@ export default function ProfessorDashboard() {
                     marginBottom: 8,
                     textAlign: 'center',
                   }}
-                  onClick={() => navigate(`/heatmap/professor/new/${userId}`)}
+                  onClick={() => navigate('/heatmap/professor/new')}
                 >
                   + Create new heatmap
                 </button>
@@ -340,7 +348,7 @@ export default function ProfessorDashboard() {
                         </div>
                         <button
                           className="invite-action-button"
-                          onClick={() => navigate(`/heatmap/professor/${heatmap.id}/${userId}`)}
+                          onClick={() => navigate(`/heatmap/professor/${heatmap.id}`)}
                           title="Open heatmap"
                         >
                           &gt;

@@ -19,6 +19,7 @@ import {
 } from '../components/calendar/calendarUtils';
 import { getMyAppointments, cancelAppointment } from '../api/appointments';
 import { getHeatmaps } from '../api/heatmaps';
+import { logout } from '../api/auth';
 
 // [MODIFIED] replaced inline <aside> with reusable Sidebar component
 import Sidebar from '../components/Sidebar'; 
@@ -27,6 +28,13 @@ import '../styles/Dashboard.css';
 export default function StudentDashboard() {
   const navigate = useNavigate();
   const { user, userId } = useAppShellSession();
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate('/', { replace: true });
+    }
+  };
 
   // ─────────────────────────────────────────────────────────────
   // State
@@ -150,7 +158,7 @@ export default function StudentDashboard() {
           }}
           actions={[
             { label: rightPanelOpen ? 'Hide panel' : 'Show panel', onClick: () => setRightPanelOpen((open) => !open) },
-            { label: 'Back to home', onClick: () => navigate('/') },
+            { label: 'Log Out', onClick: handleLogout },
           ]}
         />
 
@@ -257,7 +265,7 @@ export default function StudentDashboard() {
                       </div>
                       <button
                         className="invite-action-button"
-                        onClick={() => navigate(`/heatmap/student/${inv.id}/${userId}`)}
+                        onClick={() => navigate(`/heatmap/student/${inv.id}`)}
                         title={inv.responded ? 'View heatmap' : 'Respond to heatmap'}
                       >
                         {inv.responded ? '>' : '+'}

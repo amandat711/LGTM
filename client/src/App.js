@@ -21,19 +21,16 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         <Route element={<AppShellLayout variant="student" />}>
-          <Route path="/dashboard/student/:userId" element={<StudentDashboard />} />
+          <Route path="/dashboard/student" element={<StudentDashboard />} />
           <Route path="/booking/search" element={<BookingDiscovery />} />
-          <Route
-            path="/booking/search/:userId"
-            element={<Navigate to="/booking/search" replace />}
-          />
+          <Route path="/booking/search/:userId" element={<Navigate to="/booking/search" replace />} />
           <Route path="/booking/professor/:professorId" element={<BookingProfessor />} />
-          <Route path="/heatmap/student/:eventId/:userId" element={<Heatmap />} />
+          <Route path="/heatmap/student/:eventId" element={<Heatmap />} />
         </Route>
 
         <Route element={<AppShellLayout variant="professor" />}>
-          <Route path="/dashboard/professor/:userId" element={<ProfessorDashboard />} />
-          <Route path="/heatmap/professor/:eventId/:userId" element={<Heatmap />} />
+          <Route path="/dashboard/professor" element={<ProfessorDashboard />} />
+          <Route path="/heatmap/professor/:eventId" element={<Heatmap />} />
         </Route>
 
         <Route element={<AppShellLayout variant="any" />}>

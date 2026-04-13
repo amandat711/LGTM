@@ -89,12 +89,10 @@ export default function LandingPage() {
 
   // Builds safe paths for the landing page buttons.
   // If demo data is missing, these fall back to routes that will not crash the page.
-  const studentDashboardPath = demoUsers.student ? `/dashboard/student/${demoUsers.student.id}` : "/";
-  const professorDashboardPath = demoUsers.professor ? `/dashboard/professor/${demoUsers.professor.id}` : "/";
+  const studentDashboardPath = '/dashboard/student';
+  const professorDashboardPath = '/dashboard/professor';
   const heatmapPath = featuredHeatmapId
-    ? demoUsers.student
-      ? `/heatmap/student/${featuredHeatmapId}/${demoUsers.student.id}`
-      : `/heatmap/${featuredHeatmapId}?role=student`
+    ? `/heatmap/${featuredHeatmapId}?role=student`
     : studentDashboardPath;
 
 

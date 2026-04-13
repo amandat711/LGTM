@@ -140,23 +140,23 @@ function mapSubmissionSlotsToKeys(submission, startHour, endHour) {
   );
 }
 
-function buildHeatmapPath(role, heatmapId, userId) {
-  return `/heatmap/${role}/${heatmapId}/${userId}`;
+function buildHeatmapPath(role, heatmapId) {
+  return `/heatmap/${role}/${heatmapId}`;
 }
 
 function buildDashboardPath(user) {
-  if (!user?.id || !user?.role) return '/';
+  if (!user?.role) return '/';
   return user.role === 'professor'
-    ? `/dashboard/professor/${user.id}`
-    : `/dashboard/student/${user.id}`;
+    ? '/dashboard/professor'
+    : '/dashboard/student';
 }
 
 export default function Heatmap() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { eventId, userId: routeUserId } = useParams();
+  const { eventId } = useParams();
   const searchParams = new URLSearchParams(location.search);
-  const requestedUserId = routeUserId || searchParams.get('userId');
+  const requestedUserId = searchParams.get('userId');
   const roleFromQuery = searchParams.get('role');
 
   const isShellStudentHeatmap = location.pathname.startsWith('/heatmap/student/');
@@ -314,8 +314,7 @@ export default function Heatmap() {
           });
 
           const nextRole = 'professor';
-          const nextUserId = requestedUserId || creatorId;
-          navigate(buildHeatmapPath(nextRole, bundle.heatmap.id, nextUserId), { replace: true });
+          navigate(buildHeatmapPath(nextRole, bundle.heatmap.id), { replace: true });
         } else {
           bundle = await getHeatmap(eventId);
         }
@@ -437,7 +436,7 @@ export default function Heatmap() {
       setHeatmapBundle(response.heatmap);
       setModal(null);
       setActiveSub(null);
-      navigate(`/dashboard/professor/${heatmap.createdBy}`);
+      navigate('/dashboard/professor');
     } catch (err) {
       setError(err.message || 'Unable to approve submission.');
     }
@@ -476,7 +475,7 @@ export default function Heatmap() {
       setGroupKey(null);
       setGroupMeta(null);
       setModal(null);
-      navigate(`/dashboard/professor/${heatmap.createdBy}`);
+      navigate('/dashboard/professor');
     } catch (err) {
       setError(err.message || 'Unable to confirm group booking.');
     }

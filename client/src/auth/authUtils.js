@@ -9,12 +9,11 @@ export function userPageVariant(userType) {
  * Resolve the path for a given key and session user.
  */
 export function resolvePath(key, sessionUser) {
-  const uid = sessionUser.user_id;
   if (key === 'dashboard') {
     if (sessionUser.user_type === 'general_admin') {
-      return `/dashboard/professor/${uid}`;
+      return '/dashboard/professor';
     }
-    return `/dashboard/student/${uid}`;
+    return '/dashboard/student';
   }
   throw new Error(`resolvePath: unknown key "${key}"`);
 }
