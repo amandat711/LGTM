@@ -25,6 +25,9 @@ function App() {
           <Route path="/booking/search" element={<BookingDiscovery />} />
           <Route path="/booking/search/:userId" element={<Navigate to="/booking/search" replace />} />
           <Route path="/booking/professor/:professorId" element={<BookingProfessor />} />
+        </Route>
+
+        <Route element={<AppShellLayout variant="any" />}>
           <Route path="/heatmap/student/:eventId" element={<Heatmap />} />
         </Route>
 
@@ -33,9 +36,6 @@ function App() {
           <Route path="/heatmap/professor/:eventId" element={<Heatmap />} />
         </Route>
 
-        <Route element={<AppShellLayout variant="any" />}>
-          <Route path="/heatmap/:eventId" element={<Heatmap />} />
-        </Route>
       </Routes>
     </BrowserRouter>
   );

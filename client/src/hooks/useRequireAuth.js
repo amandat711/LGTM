@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSession } from '../api/auth';
 
-/** Any logged-in user. Redirects to /login if unauthenticated. */
+/** Any logged-in user. Redirects to /login if unauthenticated, preserving the current URL. */
 export default function useRequireAuth() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -16,12 +16,16 @@ export default function useRequireAuth() {
         const { user: sessionUser } = await getSession();
         if (cancelled) return;
         if (!sessionUser) {
-          navigate('/login', { replace: true });
+          const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+          navigate(`/login?redirect=${redirect}`, { replace: true });
           return;
         }
         setUser(sessionUser);
       } catch {
-        if (!cancelled) navigate('/login', { replace: true });
+        if (!cancelled) {
+          const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+          navigate(`/login?redirect=${redirect}`, { replace: true });
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }

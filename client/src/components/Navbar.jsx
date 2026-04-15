@@ -64,17 +64,19 @@ export default function Navbar({ logo, title, onLeftClick, user, actions = [] })
       {/* ── Right: user info  +  action buttons ────────────── */}
       <div className="top-bar-right">
         {user && (
-          <>
-            {user.displayName && (
-              <span className="top-bar-user-name">{user.displayName}</span>
-            )}
-            {badgeLabel && (
-              <span className={`top-bar-user-role ${badgeClass}`}>{badgeLabel}</span>
-            )}
+          <div className="top-bar-user">
+            <div className="top-bar-user-info">
+              {user.displayName && (
+                <span className="top-bar-user-name">{user.displayName}</span>
+              )}
+              {badgeLabel && (
+                <span className={`top-bar-user-role ${badgeClass}`}>{badgeLabel}</span>
+              )}
+            </div>
             {user.initials && (
               <div className="top-bar-user-avatar">{user.initials}</div>
             )}
-          </>
+          </div>
         )}
 
         {actions.map(({ label, onClick }, i) => (

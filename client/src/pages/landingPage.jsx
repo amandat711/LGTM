@@ -1,6 +1,6 @@
 //AMANDA TRAN
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import logo1 from "../assets/logo1.png";
 import header from "../assets/header.png";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +25,12 @@ export default function LandingPage() {
 
   // Stores the featured heatmap id for the "Learn more" button.
   const [featuredHeatmapId, setFeaturedHeatmapId] = useState(null);
+
+  // Controls visibility of the heatmap explainer section.
+  const [showHeatmapDetail, setShowHeatmapDetail] = useState(false);
+
+  // Ref for scrolling to the heatmap explainer section.
+  const heatmapSectionRef = useRef(null);
 
   // Updates the top bar style after the user scrolls.
   useEffect(() => {
@@ -174,14 +180,46 @@ export default function LandingPage() {
               With heatmaps and shared availability, LGTM makes it easier to spot the times that work best for everyone. 
               Instead of endless back-and-forth, students and professors can make decisions quickly and book with confidence.
             </p>
-            <button className="feature-button" onClick={() => navigate(heatmapPath)}>
+            {/* "Learn more" = the trigger*/}
+            <button
+              className="feature-button"
+              onClick={() => {
+                setShowHeatmapDetail(true);
+                heatmapSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+              }}
+            >
               Learn more
             </button>
           </div>
         </div>
       </section>
 
-      <div style={{ height: 60 }} />
+      {/* Accordion  — always in the DOM, shown/hidden via display */}
+      <section
+        className="accordion-section"
+        ref={heatmapSectionRef}
+        style={{ display: showHeatmapDetail ? "block" : "none" }}
+      >
+        {/* close the "panel by clicking the link" 0 usually users dont bother with it */}
+        <button
+          className="accordion-trigger"
+          onClick={() => setShowHeatmapDetail(!showHeatmapDetail)}
+          aria-expanded={showHeatmapDetail}
+        >
+
+          <span>How does shared availability work?</span>
+         
+        </button>
+        <div className="accordion-body">
+          <p>
+            Professors publish their available office-hour slots. Students mark the times that work for them.
+            LGTM overlays those responses on a single heatmap grid so that both sides always see an up-to-date
+            picture of when a meeting can actually happen — no back-and-forth emails, no guessing.
+          </p>
+        </div>
+      </section>
+
+      <div />
 
 
       {/* PERSONAL STYLES COUPLED WITH PRE-EXISTING DESIGN VISUAL ELEMENTS*/}

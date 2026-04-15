@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import AuthShell from '../components/AuthShell';
 import { login } from '../api/auth';
 import { resolvePath } from '../auth/authUtils';
@@ -13,6 +13,8 @@ import {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectTo = new URLSearchParams(location.search).get('redirect');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -34,7 +36,7 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       const { user } = await login(email, password);
-      navigate(resolvePath('dashboard', user));
+      navigate(redirectTo ? decodeURIComponent(redirectTo) : resolvePath('dashboard', user));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed.');
     } finally {
