@@ -1,12 +1,16 @@
 /*AMANDA TRAN*/
+// Main React hooks plus router helpers for route-based heatmap pages.
 import React, { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import '../styles/Heatmap.css';
+// Shared top nav and session helpers.
 import logo from '../assets/logo1.png';
 import Navbar from '../components/Navbar';
 import useAppShellSession from '../hooks/useAppShellSession';
 import { sessionUserToNavUser } from '../auth/authUtils';
+// Different grid views depending on whether we are showing professor, student, or group mode.
 import { PersonalGrid, ProfAvailGrid, GroupGrid, HeatmapLegend, makeKey } from '../components/HeatmapGrid';
+// Reusable popups used for confirming, reviewing, and sharing heatmap actions.
 import {
   ConfirmSlotModal,
   SlotDetailModal,
@@ -14,30 +18,17 @@ import {
   InviteURLModal,
   ApproveSubmissionModal,
 } from '../components/Modals';
+// Backend calls for creating, loading, saving, and approving heatmap data.
 import { createHeatmap, createHeatmapAppointment, getHeatmap, saveHeatmapSubmission, updateHeatmapSubmissionStatus } from '../api/heatmaps';
-import { getUser, getUsers } from '../api/users';
+// Small utilities that generate the visible days/hours for the grid.
 import { generateDays, generateTimes } from '../utils/generateDays';
 
+// Participant colors only matter in group mode, where each student gets a color.
 const PARTICIPANT_COLORS = ['#E31429', '#c0842a', '#2a8c5f', '#5a4ab0', '#1565a8', '#cc4b37'];
 
-const SAMPLE_SUBMISSIONS = [
-  { id: 1, studentName: 'Jocelyn',  studentEmail: 'jocelyn@mail.mcgill.ca',  slotCount: 6,  submittedAt: 'Today, 9:14 AM',  status: 'pending' },
-  { id: 2, studentName: 'Rita',  studentEmail: 'rita@mail.mcgill.ca',  slotCount: 4,  submittedAt: 'Today, 10:32 AM', status: 'pending' },
-  { id: 3, studentName: 'Shirley',   studentEmail: 'shirley@mail.mcgill.ca',   slotCount: 8,  submittedAt: 'Yesterday',       status: 'approved' },
-];
 
-/** Demo mailto target until the heatmap host is returned by the API */
-const HEATMAP_ORGANIZER_FALLBACK_EMAIL = 'organizer@mcgill.ca';
-
-// ─────────────────────────────────────────────────────────────
-// expandRecurring
-//   Takes a Set of "iso:ti" keys selected on a specific week,
-//   plus the number of weeks to repeat, and returns a new Set
-//   that includes the original week + all future occurrences.
-//
-//   e.g. "2026-04-07:3" recurring for 4 weeks also generates
-//        "2026-04-14:3", "2026-04-21:3", "2026-04-28:3"
-// ─────────────────────────────────────────────────────────────
+// If the professor chooses recurring availability, this copies the same selected
+// slots into future weeks by generating new grid keys for each 7-day jump.
 function expandRecurring(selectedKeys, recurringWeeks) {
   const expanded = new Set(selectedKeys);
   selectedKeys.forEach((key) => {
@@ -51,10 +42,12 @@ function expandRecurring(selectedKeys, recurringWeeks) {
   return expanded;
 }
 
+// SQLite sometimes stores date-times with a space, so this normalizes them into a JS-friendly format.
 function parseSqliteDateTime(value) {
   return new Date(String(value).replace(' ', 'T'));
 }
 
+// Converts a JS Date into a local YYYY-MM-DD string, which is the format used by the grid keys.
 function toLocalIsoDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -62,6 +55,7 @@ function toLocalIsoDate(date) {
   return `${year}-${month}-${day}`;
 }
 
+// Same idea as above, but keeps the time portion too.
 function toLocalDateTime(date) {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
@@ -70,6 +64,7 @@ function toLocalDateTime(date) {
   return `${toLocalIsoDate(date)}T${hours}:${minutes}:${seconds}`;
 }
 
+// Turns a real Date into a grid cell key like "2026-04-07:3" if it falls inside the visible range.
 function buildGridKeyFromDate(date, startHour, endHour) {
   const hour = date.getHours();
   const minute = date.getMinutes();
@@ -80,6 +75,7 @@ function buildGridKeyFromDate(date, startHour, endHour) {
   return makeKey(toLocalIsoDate(date), slotIndex);
 }
 
+// Converts selected grid keys back into real slot objects that can be sent to the backend.
 function keysToSlots(keys, startHour) {
   return Array.from(keys).map((key) => {
     const [iso, timeIndexString] = key.split(':');
@@ -95,6 +91,7 @@ function keysToSlots(keys, startHour) {
   });
 }
 
+// Used when a group slot is confirmed so we can turn the selected key back into real start/end times.
 function keyToDateRange(key, startHour) {
   const [iso, timeIndexString] = key.split(':');
   const timeIndex = Number(timeIndexString);
@@ -105,6 +102,7 @@ function keyToDateRange(key, startHour) {
   return { start, end };
 }
 
+// Looks at the saved slots and figures out the best visible date range for the current heatmap.
 function deriveRangeFromSlots(slotRows) {
   if (!slotRows.length) return null;
 
@@ -132,6 +130,7 @@ function deriveRangeFromSlots(slotRows) {
   };
 }
 
+// Submission slot rows from the server are converted into the same key format used by the grids.
 function mapSubmissionSlotsToKeys(submission, startHour, endHour) {
   return new Set(
     (submission?.slots || [])
@@ -140,10 +139,12 @@ function mapSubmissionSlotsToKeys(submission, startHour, endHour) {
   );
 }
 
+// Helper to keep route building in one place.
 function buildHeatmapPath(role, heatmapId) {
   return `/heatmap/${role}/${heatmapId}`;
 }
 
+// Sends the user back to the right dashboard depending on who is currently logged in.
 function buildDashboardPath(user) {
   if (!user?.role) return '/';
   return user.role === 'professor'
@@ -152,49 +153,54 @@ function buildDashboardPath(user) {
 }
 
 export default function Heatmap() {
+  // Router + session setup for deciding which heatmap page is being shown.
   const navigate = useNavigate();
   const location = useLocation();
   const { eventId } = useParams();
-  const searchParams = new URLSearchParams(location.search);
-  const requestedUserId = searchParams.get('userId');
-  const roleFromQuery = searchParams.get('role');
-
-  const isShellStudentHeatmap = location.pathname.startsWith('/heatmap/student/');
-  const isShellProfessorHeatmap = location.pathname.startsWith('/heatmap/professor/');
-
   const { user: sessionUser } = useAppShellSession();
   const sessionNav = useMemo(() => sessionUserToNavUser(sessionUser), [sessionUser]);
 
-  const requestedRole = useMemo(() => {
-    if (isShellStudentHeatmap) return 'student';
-    if (isShellProfessorHeatmap) return 'professor';
-    return roleFromQuery;
-  }, [isShellStudentHeatmap, isShellProfessorHeatmap, roleFromQuery]);
-
+  // `new` means this route should create a heatmap first, then redirect to the real ID.
   const isNewHeatmapRoute = eventId === 'new';
-  const hideDemoRoleSwitcher = isShellStudentHeatmap || isShellProfessorHeatmap;
+  // Student links use a different path from the professor version.
+  const isStudentPath = location.pathname.startsWith('/heatmap/student/');
 
-  const [availableUsers, setAvailableUsers] = useState({ professor: null, student: null });
-  const [user, setUser] = useState(null);
-  const isProfessor = useMemo(() => {
-    if (hideDemoRoleSwitcher) {
-      return sessionNav?.role === 'professor';
+  // Build the user object this page actually needs from the session data.
+  const user = useMemo(() => {
+    if (!sessionUser) return null;
+    return {
+      id: sessionUser.user_id,
+      name: sessionNav?.name || '',
+      email: sessionUser.mcgill_email,
+      role: sessionNav?.role || 'student',
+    };
+  }, [sessionUser, sessionNav]);
+
+  // Small convenience flag used all over the UI.
+  const isProfessor = sessionNav?.role === 'professor';
+
+  // If a professor accidentally opens the student share link, redirect them to the professor view.
+  useEffect(() => {
+    if (isStudentPath && isProfessor && eventId && !isNewHeatmapRoute) {
+      navigate(`/heatmap/professor/${eventId}`, { replace: true });
     }
-    return user?.role === 'professor';
-  }, [hideDemoRoleSwitcher, sessionNav?.role, user?.role]);
+  }, [isStudentPath, isProfessor, eventId, isNewHeatmapRoute, navigate]);
   const userInitials = user?.name
     ? user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
     : '';
 
+  // These values control which week/hours the grid shows.
   const [startDate, setStartDate] = useState('2026-04-07');
   const [startHour, setStartHour] = useState(8);
   const [endHour, setEndHour] = useState(17);
   const [numDays, setNumDays] = useState(5);
   const [setupDone, setSetupDone] = useState(false);
 
+  // Derived display helpers for rendering the grid.
   const days = useMemo(() => generateDays(startDate, numDays), [startDate, numDays]);
   const times = useMemo(() => generateTimes(startHour, endHour), [startHour, endHour]);
 
+  // Core state for professor selections, student selections, tabs, modals, and loaded data.
   const [profSelected, setProfSelected] = useState(new Set());
   const [profSaved, setProfSaved] = useState(new Set());
   const [isRecurring, setIsRecurring] = useState(false);
@@ -212,6 +218,7 @@ export default function Heatmap() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Main bundle pieces pulled apart for easier use below.
   const heatmap = heatmapBundle?.heatmap;
   const allSubmissions = useMemo(() => heatmapBundle?.submissions || [], [heatmapBundle]);
   const currentHeatmapId = heatmap?.id || (isNewHeatmapRoute ? null : Number(eventId));
@@ -226,6 +233,7 @@ export default function Heatmap() {
   );
   const pendingCount = pendingSubmissions.length;
 
+  // Group mode needs a compact list of participants with colors and slot keys.
   const participants = useMemo(
     () =>
       pendingSubmissions.map((submission, index) => ({
@@ -239,56 +247,9 @@ export default function Heatmap() {
     [pendingSubmissions, startHour, endHour]
   );
 
-  useEffect(() => {
-    let active = true;
 
-    async function loadUsers() {
-      try {
-        const [professors, students] = await Promise.all([
-          getUsers('professor'),
-          getUsers('student'),
-        ]);
-
-        if (!active) return;
-
-        const professorUser = professors[0] || null;
-        const studentUser = students[0] || null;
-
-        setAvailableUsers({ professor: professorUser, student: studentUser });
-
-        if (requestedUserId) {
-          const currentUser = await getUser(requestedUserId);
-          if (!active) return;
-          setUser({
-            id: currentUser.id,
-            name: currentUser.name,
-            email: currentUser.email,
-            role: requestedRole || currentUser.role,
-          });
-          return;
-        }
-
-        const defaultUser = (requestedRole === 'student' ? studentUser : professorUser) || professorUser || studentUser;
-        if (!defaultUser) return;
-
-        setUser({
-          id: defaultUser.id,
-          name: defaultUser.name,
-          email: defaultUser.email,
-          role: requestedRole || defaultUser.role,
-        });
-      } catch (err) {
-        if (!active) return;
-        setError(err.message || 'Unable to load user information.');
-      }
-    }
-
-    loadUsers();
-    return () => {
-      active = false;
-    };
-  }, [requestedRole, requestedUserId]);
-
+  // Main data load for the page.
+  // Either create a brand new heatmap or fetch an existing one from the backend.
   useEffect(() => {
     let active = true;
 
@@ -300,13 +261,11 @@ export default function Heatmap() {
         let bundle = null;
 
         if (isNewHeatmapRoute) {
-          const creatorId = availableUsers.professor?.id || user?.id;
-          if (!creatorId) {
-            return;
-          }
+          if (!user?.id) return;
 
+          // New professor heatmaps start with default metadata, then we redirect to the real route.
           bundle = await createHeatmap({
-            created_by: creatorId,
+            created_by: user.id,
             hm_title: 'Office Hours Heatmap',
             hm_description: 'Shared availability collection for bookings',
             visibility: 'public',
@@ -326,6 +285,7 @@ export default function Heatmap() {
         const allSlots = bundle.submissions.flatMap((submission) => submission.slots);
         const derivedRange = deriveRangeFromSlots(allSlots);
         if (derivedRange) {
+          // If existing data already has slots, fit the grid to that range automatically.
           setStartDate(derivedRange.startDate);
           setStartHour(derivedRange.startHour);
           setEndHour(Math.max(derivedRange.endHour, derivedRange.startHour + 1));
@@ -344,8 +304,9 @@ export default function Heatmap() {
     return () => {
       active = false;
     };
-  }, [availableUsers.professor?.id, eventId, isNewHeatmapRoute, navigate, requestedUserId, user?.id]);
+  }, [eventId, isNewHeatmapRoute, navigate, user?.id]);
 
+  // When submission participants change, default group mode to showing everyone.
   useEffect(() => {
     if (participants.length > 0) {
       setActive(new Set(participants.map((participant) => participant.name)));
@@ -354,6 +315,7 @@ export default function Heatmap() {
     }
   }, [participants]);
 
+  // Keep the professor grid in sync with whatever the saved host submission currently is.
   useEffect(() => {
     if (!hostSubmission) {
       setProfSelected(new Set());
@@ -366,19 +328,21 @@ export default function Heatmap() {
     setProfSaved(new Set(hostKeys));
   }, [hostSubmission, startHour, endHour]);
 
+  // Keep the student grid in sync with the current student's saved submission, if one exists.
   useEffect(() => {
     if (!user) return;
     const mySubmission = allSubmissions.find((submission) => submission.userId === user.id && submission.participantRole !== 'host');
     setStudSelected(mapSubmissionSlotsToKeys(mySubmission, startHour, endHour));
   }, [allSubmissions, user, startHour, endHour]);
 
+  // Saves the professor's chosen availability back to the backend.
   async function saveProfAvailability() {
-    if (!availableUsers.professor) return;
+    if (!user?.id) return;
     const savedKeys = isRecurring ? expandRecurring(profSelected, recurringWeeks) : new Set(profSelected);
 
     try {
       const bundle = await saveHeatmapSubmission(currentHeatmapId, {
-        user_id: availableUsers.professor.id,
+        user_id: user.id,
         participant_role: 'host',
         status: 'approved',
         slots: keysToSlots(savedKeys, startHour),
@@ -387,6 +351,7 @@ export default function Heatmap() {
       setHeatmapBundle(bundle);
       setProfSaved(savedKeys);
 
+      // Quick user feedback after save.
       alert(
         isRecurring
           ? `${profSelected.size} slots saved and repeated for ${recurringWeeks} week(s).`
@@ -397,6 +362,7 @@ export default function Heatmap() {
     }
   }
 
+  // Students use this to submit their selected times for professor review.
   async function submitStudentAvailability() {
     if (!user) return;
     try {
@@ -408,12 +374,13 @@ export default function Heatmap() {
       });
 
       setHeatmapBundle(bundle);
-      alert(`Availability submitted! ${heatmap?.hostName || availableUsers.professor?.name || 'The professor'} can now review it.`);
+      alert(`Availability submitted! ${heatmap?.hostName || 'The professor'} can now review it.`);
     } catch (err) {
       setError(err.message || 'Unable to submit availability.');
     }
   }
 
+  // Approving a submission creates a real appointment and marks that submission as handled.
   async function approveSubmission(sub, selectedSlot) {
     try {
       if (!selectedSlot) {
@@ -442,6 +409,7 @@ export default function Heatmap() {
     }
   }
 
+  // Declining just updates the submission status without creating a booking.
   async function declineSubmission(sub) {
     try {
       const bundle = await updateHeatmapSubmissionStatus(sub.id, 'declined');
@@ -456,6 +424,7 @@ export default function Heatmap() {
     setGroupMeta(meta);
   }
 
+  // Group confirmation creates one shared appointment for everyone selected in the overlap cell.
   async function handleConfirmSlot() {
     try {
       const startEnd = keyToDateRange(groupKey, startHour);
@@ -483,6 +452,7 @@ export default function Heatmap() {
 
   return (
     <>
+      {/* Shared top nav for the heatmap page. */}
       <Navbar
         logo={logo}
         title="Heatmap Booking"
@@ -493,47 +463,7 @@ export default function Heatmap() {
       />
 
       <div className="heatmap-page">
-        {!hideDemoRoleSwitcher && (
-          <div style={{ marginBottom: '0.5rem' }}>
-            <span style={{ fontSize: 11, color: 'var(--text-faint)', marginRight: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-              Demo — viewing as:
-            </span>
-            <div className="role-switcher" style={{ display: 'inline-flex' }}>
-              <button
-                className={`role-button${isProfessor ? ' active' : ''}`}
-                onClick={() => {
-                  if (!availableUsers.professor) return;
-                  setUser({
-                    id: availableUsers.professor.id,
-                    name: availableUsers.professor.name,
-                    email: availableUsers.professor.email,
-                    role: 'professor',
-                  });
-                  setTab('personal');
-                }}
-              >
-                Professor
-              </button>
-              <button
-                className={`role-button${!isProfessor ? ' active' : ''}`}
-                onClick={() => {
-                  if (!availableUsers.student) return;
-                  setUser({
-                    id: availableUsers.student.id,
-                    name: availableUsers.student.name,
-                    email: availableUsers.student.email,
-                    role: 'student',
-                  });
-                  setTab('personal');
-                }}
-                disabled={!availableUsers.student}
-              >
-                Student
-              </button>
-            </div>
-          </div>
-        )}
-
+        {/* Intro copy changes slightly depending on whether this is professor or student view. */}
         <div className="page-header">
           <div className="page-label">
             {isProfessor ? 'Professor Dashboard' : 'Student View'}
@@ -548,9 +478,11 @@ export default function Heatmap() {
           </p>
         </div>
 
+        {/* Basic loading/error feedback. */}
         {loading && <p style={{ color: '#666', marginBottom: 16 }}>Loading heatmap...</p>}
         {error && <p style={{ color: '#cc2222', marginBottom: 16 }}>{error}</p>}
 
+        {/* Professors get a notification banner when there are pending student submissions to review. */}
         {isProfessor && pendingCount > 0 && !notifDismissed && (
           <div className="notification-banner">
             <span>📬</span>
@@ -566,10 +498,11 @@ export default function Heatmap() {
           </div>
         )}
 
+        {/* These cards switch between the major modes of the page. */}
         <div className="mode-cards">
           <div className={`mode-card${tab === 'personal' ? ' active' : ''}`} onClick={() => setTab('personal')}>
             <div className={`mode-card-icon ${isProfessor ? 'professor' : 'student'}`}>
-              {isProfessor ? '📅' : '✋'}
+              {isProfessor ? '' : ''}
             </div>
             <h4>{isProfessor ? 'My availability' : 'Select your slots'}</h4>
             <p>
@@ -596,13 +529,14 @@ export default function Heatmap() {
 
           {isProfessor && (
             <div className={`mode-card${tab === 'group' ? ' active' : ''}`} onClick={() => setTab('group')}>
-              <div className="mode-card-icon professor">👥</div>
+              <div className="mode-card-icon professor"></div>
               <h4>Group view</h4>
               <p>See shared overlap and confirm one slot for multiple students at once.</p>
             </div>
           )}
         </div>
 
+        {/* Before using the grid, the user can choose which week and hours should be visible. */}
         {!setupDone && (
           <div className="setup-banner">
             <div className="setup-banner-left">
@@ -645,6 +579,7 @@ export default function Heatmap() {
           </div>
         )}
 
+        {/* Once setup is applied, show a short summary of the current visible range. */}
         {setupDone && (
           <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
@@ -656,6 +591,7 @@ export default function Heatmap() {
           </div>
         )}
 
+        {/* Professor personal mode: mark and save available times. */}
         {isProfessor && tab === 'personal' && (
           <>
             <p className="section-label">Click or drag to mark when you're free</p>
@@ -713,12 +649,13 @@ export default function Heatmap() {
           </>
         )}
 
+        {/* Professor submissions mode: review student responses one by one. */}
         {isProfessor && tab === 'submissions' && (
           <>
             <p className="section-label">Student submissions</p>
             {participantSubmissions.length === 0 ? (
               <div className="empty-state">
-                <div className="empty-state-icon">📭</div>
+                <div className="empty-state-icon"></div>
                 <h4>No submissions yet</h4>
                 <p>Students will appear here once they submit their availability.</p>
               </div>
@@ -754,6 +691,7 @@ export default function Heatmap() {
           </>
         )}
 
+        {/* Student mode: choose only from the professor's published slots. */}
         {!isProfessor && tab === 'personal' && (
           <>
             <div className="legend" style={{ marginBottom: '0.75rem' }}>
@@ -783,6 +721,7 @@ export default function Heatmap() {
           </>
         )}
 
+        {/* Group mode: compare overlap across multiple student submissions at once. */}
         {isProfessor && tab === 'group' && (
           <>
             <p className="section-label">Participants</p>
@@ -832,31 +771,37 @@ export default function Heatmap() {
           </>
         )}
 
+        {/* Group booking confirmation modal. */}
         {modal === 'confirm' && groupMeta && (
           <ConfirmSlotModal slot={groupMeta} attendees={groupMeta.who} onConfirm={handleConfirmSlot} onClose={() => setModal(null)} />
         )}
 
+        {/* General slot detail popup. */}
         {modal === 'detail' && activeAppt && (
           <SlotDetailModal appointment={activeAppt} isOwner={isProfessor} onDelete={() => setModal('delete')} onClose={() => setModal(null)} />
         )}
 
+        {/* Delete confirmation popup.
+            Right now this clears the selected appointment locally rather than deleting a heatmap slot from the backend. */}
         {modal === 'delete' && activeAppt && (
           <DeleteConfirmModal
-            appointment={{ ...activeAppt, notifyEmail: isProfessor ? activeAppt.ownerEmail : heatmap?.hostEmail || availableUsers.professor?.email || user?.email }}
+            appointment={{ ...activeAppt, notifyEmail: isProfessor ? activeAppt.ownerEmail : heatmap?.hostEmail || user?.email }}
             onConfirm={() => setActiveAppt(null)}
             onClose={() => setModal('detail')}
           />
         )}
 
+        {/* Shareable invite link for students. */}
         {modal === 'invite' && (
           <InviteURLModal
             ownerEmail={heatmap?.hostEmail || user.email}
             eventTitle={heatmap?.title || 'Heatmap Booking'}
-            inviteURL={`${window.location.origin}/heatmap/${currentHeatmapId}?role=student`}
+            inviteURL={`${window.location.origin}/heatmap/student/${currentHeatmapId}`}
             onClose={() => setModal(null)}
           />
         )}
 
+        {/* Professor review modal for approving or declining a student's submission. */}
         {modal === 'approve' && activeSub && (
           <ApproveSubmissionModal
             submission={{

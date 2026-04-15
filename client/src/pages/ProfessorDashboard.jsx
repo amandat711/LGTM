@@ -1,8 +1,14 @@
 //AMANDA TRAN
+/* Some structure here was originally assisted by AI, but the comments below
+   explain what each part is doing in plain project language. */
 
+// React hooks for state, effects, and memoized derived values.
 import React, { useEffect, useMemo, useState } from 'react';
+// Lets this page navigate to booking, heatmap, or landing routes.
 import { useNavigate } from 'react-router-dom';
+// Pulls the logged-in professor info from the shared app shell/session.
 import useAppShellSession from '../hooks/useAppShellSession';
+// Shared visuals and reusable components used by the dashboard UI.
 import logo from '../assets/logo1.png';
 import Navbar from '../components/Navbar';
 import calendarIcon from '../assets/calendarIcon.png';
@@ -18,23 +24,30 @@ import {
   mapAppointmentToCalendarEvent,
   mapAvailabilityToCalendarEvent,
 } from '../components/calendar/calendarUtils';
+// API helpers for professor-owned appointments.
 import { getHostingAppointments, cancelAppointment } from '../api/appointments';
+// API helpers for availability slots the professor can create or remove.
 import {
   createAvailability,
   deleteAvailability,
   getProfessorAvailabilities,
 } from '../api/availabilities';
+// Heatmap data is shown in the right panel for quick access.
 import { getHeatmaps } from '../api/heatmaps';
 import CreateAvailabilityModal from '../components/CreateAvailabilityModal';
 
-//replaced inline <aside> with reusable Sidebar component
+// Reusable sidebar component instead of hand-writing the menu here.
 import Sidebar from '../components/Sidebar'; 
 import '../styles/Dashboard.css';
 import { logout } from '../api/auth';
 
 export default function ProfessorDashboard() {
+  // Used any time the page needs to redirect somewhere else.
   const navigate = useNavigate();
+  // Current professor object plus their numeric ID from session state.
   const { user, userId } = useAppShellSession();
+
+  // Handles logout, then sends the professor back to the landing page.
   const handleLogout = async () => {
     try {
       await logout();
@@ -43,21 +56,25 @@ export default function ProfessorDashboard() {
     }
   };
 
-  // State
-  // ─────────────────────────────────────────────────────────────
+  // Hosted appointments that already exist as real bookings.
   const [appointments, setAppointments] = useState([]);
+  // Open slots the professor created but students may not have booked yet.
   const [availabilities, setAvailabilities] = useState([]);
+  // Only used to keep the sidebar highlight in sync with the last clicked item.
   const [sideTab, setSideTab] = useState('calendar');
+  // `modal` says which popup is open, and `activeAppt` says which item it is about.
   const [modal, setModal] = useState(null);
   const [activeAppt, setActiveAppt] = useState(null);
+  // Heatmaps created by this professor, shown in the right-side tools panel.
   const [heatmaps, setHeatmaps] = useState([]);
+  // Simple page status flags.
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
 
-  // Load professor-hosted appointments from backend
-  // ─────────────────────────────────────────────────────────────
+  // Main dashboard load:
+  // get the professor's booked appointments and open availability slots together.
   useEffect(() => {
     if (!userId) return;
 
@@ -65,27 +82,32 @@ export default function ProfessorDashboard() {
       try {
         setLoading(true);
 
+        // These are independent requests, so loading them together is faster.
         const [appointmentData, availabilityData] = await Promise.all([
           getHostingAppointments(userId),
           getProfessorAvailabilities(userId),
         ]);
 
+        // Appointment rows from the server are reshaped into calendar-friendly event objects.
         setAppointments(appointmentData.map(mapAppointmentToCalendarEvent));
         setAvailabilities(availabilityData);
         setError('');
       } catch (err) {
+        // Save the error so the page can show feedback instead of crashing.
         setError(err.message);
       } finally {
+        // Whether it worked or failed, stop showing the loading state.
         setLoading(false);
       }
     }
 
     loadDashboardData();
+    // Re-run if the logged-in professor changes.
   }, [userId]);
 
-  // ─────────────────────────────────────────────────────────────
-
+  // Heatmaps are loaded separately because they power the tools section in the side panel.
   useEffect(() => {
+    // This helps avoid setting state after unmount if the request finishes late.
     let active = true;
 
     async function loadHeatmaps() {
@@ -95,33 +117,35 @@ export default function ProfessorDashboard() {
         setHeatmaps(data);
       } catch (err) {
         if (!active) return;
+        // Keep the first error if one already exists, instead of overwriting it.
         setError((prev) => prev || err.message);
       }
     }
 
     loadHeatmaps();
+
+    // Cleanup function for React.
     return () => {
       active = false;
     };
   }, [userId]);
 
 
-  // Derive current user display info from loaded appointment data
-  // Fallback to generic values if nothing is found yet
-  // ─────────────────────────────────────────────────────────────
-  const currentUser = useMemo(() => {
-    if (!user) {
-      return { firstName: 'User', lastName: String(userId ?? '') };
-    }
-    return { firstName: user.first_name || 'User', lastName: user.last_name || String(userId ?? '') };
-  }, [userId, user]);
+  // Name shown in the navbar.
+  // If the session has not loaded fully yet, fall back to a generic label.
+  const currentUser = !user
+    ? { firstName: 'User', lastName: String(userId ?? '') }
+    : { firstName: user.first_name || 'User', lastName: user.last_name || String(userId ?? '') };
 
-  // ─────────────────────────────────────────────────────────────
-  // Get up to 5 upcoming non-cancelled appointments
-  // ─────────────────────────────────────────────────────────────
+  
+  // The calendar shows two kinds of blocks:
+  // 1. real appointments
+  // 2. availability slots that are still open
+  // We merge them here into one event list for the calendar component.
   const calendarEvents = useMemo(() => {
     const myName = `${currentUser.firstName} ${currentUser.lastName}`;
 
+    // Save appointment time ranges so we can hide availability slots that overlap them.
     const appointmentRanges = appointments.map((appt) => ({
       start: new Date(appt.startTime).getTime(),
       end: new Date(appt.endTime).getTime(),
@@ -132,15 +156,19 @@ export default function ProfessorDashboard() {
         const availabilityStart = new Date(slot.start_time).getTime();
         const availabilityEnd = new Date(slot.end_time).getTime();
 
+        // If a slot overlaps an actual appointment, do not show it as open time.
         return !appointmentRanges.some(
           ({ start, end }) => availabilityStart < end && availabilityEnd > start
         );
       })
+      // Convert availability rows into the same shape as other calendar events.
       .map((slot) => mapAvailabilityToCalendarEvent(slot, myName));
 
+    // Final calendar = booked appointments + still-visible availability blocks.
     return [...appointments, ...availabilityEvents];
   }, [appointments, availabilities, currentUser]);
 
+  // Short future-facing list for the right panel.
   const upcomingAppts = useMemo(() => {
     const now = new Date();
     return appointments
@@ -149,13 +177,22 @@ export default function ProfessorDashboard() {
       .slice(0, 5);
   }, [appointments]);
 
+  // History list so older appointments do not disappear completely.
+  const pastAppts = useMemo(() => {
+    const now = new Date();
+    return appointments
+      .filter((a) => new Date(a.startTime) < now && a.status !== 'cancelled')
+      .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+  }, [appointments]);
+
   
-  // Cancel appointment, create + delete availabilities
-  // ─────────────────────────────────────────────────────────────
+  // Handles both delete flows:
+  // deleting an open availability slot or cancelling a booked appointment.
   async function handleDelete() {
     if (!activeAppt) return;
 
     try {
+      // Availability slots and real appointments use different backend actions.
       if (activeAppt.type === 'availability') {
         await deleteAvailability(activeAppt.rawId, userId);
 
@@ -176,6 +213,7 @@ export default function ProfessorDashboard() {
         );
       }
 
+      // Close the modal and clear any previous error after a successful action.
       setActiveAppt(null);
       setModal(null);
       setError('');
@@ -184,6 +222,7 @@ export default function ProfessorDashboard() {
     }
   }
 
+  // Creates a new availability block from the modal form and adds it to local state.
   async function handleCreateAvailability(payload) {
     try {
       const result = await createAvailability({
@@ -199,17 +238,14 @@ export default function ProfessorDashboard() {
     }
   }
 
- 
-  // Avatar initials
-  // ─────────────────────────────────────────────────────────────
+  // Small initials badge shown in the navbar profile area.
   const initials = `${currentUser.firstName?.[0] || 'U'}${currentUser.lastName?.[0] || ''}`;
 
   return (
     <>
       <div className="dashboard-page">
-      
-        {/* Top Navbar */}
-        {/* ───────────────────────────────────────────────────── */}
+        {/* Top navbar:
+            page title, user identity, and quick actions like logout or new heatmap. */}
         <Navbar
           logo={logo}
           title="Dashboard"
@@ -227,12 +263,8 @@ export default function ProfessorDashboard() {
         />
 
         <div className="dashboard-layout">
-       
-          {/* Sidebar                                           */}
-          {/* [MODIFIED] replaced inline <aside> with the      */}
-          {/* reusable <Sidebar> component.                    */}
-          {/* 'create' uses iconText='+' (no image asset).     */}
-          {/* ─────────────────────────────────────────────────── */}
+          {/* Left sidebar for navigation.
+              The create button uses a text "+" instead of an image asset. */}
           <Sidebar
             activeId={sideTab}
             items={[
@@ -246,14 +278,14 @@ export default function ProfessorDashboard() {
             ]}
           />
 
-         
-          {/* Main dashboard content */}
-          {/* ─────────────────────────────────────────────────── */}
+          {/* Main content area:
+              the calendar sits in the middle and quick summaries stay on the right. */}
           <div className="main-content">
-            {/* Calendar area */}
+            {/* Basic loading/error feedback before the full calendar is ready. */}
             {loading && <p style={{ padding: 16 }}>Loading appointments...</p>}
             {error && <p style={{ padding: 16, color: 'red' }}>{error}</p>}
 
+            {/* Weekly calendar view for appointments and still-open availability slots. */}
             {!loading && (
               <Calendar
                 view="week"
@@ -265,12 +297,11 @@ export default function ProfessorDashboard() {
               />
             )}
 
-           
-            {/* Right panel */}
-            {/* ─────────────────────────────────────────────── */}
+            {/* Right panel:
+                upcoming bookings, history, and heatmap shortcuts. */}
             {rightPanelOpen && (
               <aside className="side-panel">
-                {/* Upcoming appointments */}
+                {/* Quick look at what is coming up soon. */}
               <div>
                 <div className="side-panel-title">Upcoming appointments</div>
                 {upcomingAppts.length === 0 ? (
@@ -289,7 +320,7 @@ export default function ProfessorDashboard() {
                         }}
                       >
                         <div className="appointment-color-dot" style={{ background: appt.color }} />
-                        <div className="">
+                        <div>
                           <h4>{appt.title || 'Untitled appointment'}</h4>
                           <h6>{appt.ownerName}</h6>
                           <p>{formatDate(appt.startTime)}</p>
@@ -304,7 +335,42 @@ export default function ProfessorDashboard() {
 
               <div className="side-panel-divider" />
 
-              {/* Heatmap tools */}
+              {/* Past bookings stay visible here as a lightweight history list. */}
+              <div>
+                <div className="side-panel-title">Past appointments</div>
+                {pastAppts.length === 0 ? (
+                  <p style={{ fontSize: 12, color: '#aaa' }}>No past appointments yet.</p>
+                ) : (
+                  pastAppts.map((appt) => {
+                    const { label, cls } = statusLabel(appt.status);
+
+                    return (
+                      <div
+                        key={appt.id}
+                        className="appointment-item"
+                        onClick={() => {
+                          setActiveAppt(appt);
+                          setModal('detail');
+                        }}
+                      >
+                        <div className="appointment-color-dot" style={{ background: appt.color }} />
+                        <div>
+                          <h4>{appt.title || 'Untitled appointment'}</h4>
+                          <h6>{appt.ownerName}</h6>
+                          <p>{formatDate(appt.startTime)}</p>
+                          <p>{appt.location}</p>
+                        </div>
+                        <span className={`appointment-status-pill ${cls}`}>{label}</span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <div className="side-panel-divider" />
+
+              {/* Heatmap section:
+                  create a new one fast or reopen a recent one. */}
               <div>
                 <div className="side-panel-title">Heatmap tools</div>
                 <button
@@ -326,7 +392,7 @@ export default function ProfessorDashboard() {
                   submissions from the heatmap page.
                 </p>
 
-                {/* REUSABLE SIDEBAR*/}
+                {/* Small preview list of recent heatmaps for quick access. */}
                 <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
                   {heatmaps.length === 0 ? (
                     <p style={{ fontSize: 12, color: '#888', margin: 0 }}>No heatmaps created yet.</p>
@@ -334,7 +400,7 @@ export default function ProfessorDashboard() {
                     heatmaps.slice(0, 4).map((heatmap) => (
                       <div key={heatmap.id} className="invite-item">
                         <div className={`invite-dot${heatmap.pendingCount > 0 ? '' : ' responded'}`} />
-                        <div className="">
+                        <div>
                           <h4>{heatmap.title}</h4>
                           <p>
                             {heatmap.pendingCount} pending · {heatmap.submissionCount} submission{heatmap.submissionCount !== 1 ? 's' : ''}
@@ -364,8 +430,7 @@ export default function ProfessorDashboard() {
         </div>
       </div>
 
-      {/* Create availability modal and appointment detail modal */}
-      {/* ───────────────────────────────────────────────────── */}
+      {/* Opens the form for creating a new availability slot. */}
       {modal === 'createAvailability' && (
         <CreateAvailabilityModal
           onClose={() => setModal(null)}
@@ -373,6 +438,7 @@ export default function ProfessorDashboard() {
         />
       )}
 
+      {/* Opens when the professor clicks an appointment or availability block for more detail. */}
       {modal === 'detail' && activeAppt && (
         <SlotDetailModal
           appointment={{
@@ -398,9 +464,7 @@ export default function ProfessorDashboard() {
         />
       )}
 
-    
-      {/* Delete/cancel confirmation modal */}
-      {/* ───────────────────────────────────────────────────── */}
+      {/* Final confirmation before deleting an availability or cancelling a booking. */}
       {modal === 'delete' && activeAppt && (
         <DeleteConfirmModal
           appointment={{

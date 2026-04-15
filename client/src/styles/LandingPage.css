@@ -331,6 +331,67 @@
   background: rgba(255,255,255,0.08);
 }
 
+/* Heatmap accordion explainer section */
+.accordion-section {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 64px 24px 56px;
+}
+
+
+.accordion-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid #e4e4e4;
+}
+
+.accordion-item {
+  border-bottom: 1px solid #e4e4e4;
+}
+
+.accordion-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: none;
+  border: none;
+  padding: 18px 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: 'DM Sans', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #0f0f0f;
+  transition: color 0.15s;
+}
+
+.accordion-trigger:hover { color: #E31429; }
+
+.accordion-chevron {
+  flex-shrink: 0;
+  color: #888;
+  transition: transform 0.2s;
+}
+
+.accordion-item-open .accordion-chevron {
+  transform: rotate(180deg);
+  color: #E31429;
+}
+
+.accordion-body {
+  padding: 0 0 18px;
+}
+
+.accordion-body p {
+  margin: 0;
+  font-size: 14px;
+  color: #555;
+  line-height: 1.8;
+}
+
 /* Tablet and small laptop adjustments */
 @media (max-width: 768px) {
   .landing-top-bar-content { padding: 0 16px; }

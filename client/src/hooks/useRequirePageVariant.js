@@ -30,7 +30,8 @@ export default function useRequirePageVariant({
         if (cancelled) return;
 
         if (!sessionUser) {
-          navigate('/login', { replace: true });
+          const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+          navigate(`/login?redirect=${redirect}`, { replace: true });
           return;
         }
 
@@ -56,7 +57,10 @@ export default function useRequirePageVariant({
 
         setUser(sessionUser);
       } catch {
-        if (!cancelled) navigate('/login', { replace: true });
+        if (!cancelled) {
+          const redirect = encodeURIComponent(window.location.pathname + window.location.search);
+          navigate(`/login?redirect=${redirect}`, { replace: true });
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }

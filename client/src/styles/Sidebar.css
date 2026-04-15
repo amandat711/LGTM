@@ -1,13 +1,6 @@
-/**
+/*
  * Sidebar.css — styles for the reusable Sidebar component.
- *
- * Naming convention: side-menu-*
- *   side-menu          → the <aside> container
- *   side-menu-button   → each nav button
- *   side-menu-icon     → img-based icon inside a button
- *   side-menu-icon-text → text/symbol icon (e.g. "+") inside a button
- *   side-menu-label    → small label below the icon
- *   side-menu-spacer   → flex spacer that pushes bottom items down
+ 
  */
 
 /* ─── CONTAINER ──────────────────────────────────────────── */

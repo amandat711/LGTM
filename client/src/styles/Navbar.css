@@ -1,17 +1,5 @@
-/**
+/*
  * Navbar.css — styles for the reusable Navbar component.
- *
- * Naming convention: top-bar-*
- *   top-bar              → the <nav> container
- *   top-bar-left         → left side (logo + title)
- *   top-bar-logo-button  → clickable logo wrapper
- *   top-bar-logo         → logo image
- *   top-bar-title        → page title text
- *   top-bar-right        → right side (user info + action buttons)
- *   top-bar-user-name    → displayed user name
- *   top-bar-user-avatar  → initials circle
- *   top-bar-user-role    → role badge
- *   top-bar-button       → action buttons on the right
  */
 
 /* ─── CONTAINER ──────────────────────────────────────────── */
@@ -64,45 +52,52 @@
   gap: 10px;
 }
 
+.top-bar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.top-bar-user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
 .top-bar-user-name {
   font-size: 13px;
-  color: #555;
+  font-weight: 500;
+  color: #0f0f0f;
+  white-space: nowrap;
 }
 
 .top-bar-user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #fff0f1;
-  border: 1.5px solid #E31429;
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  background: #E31429;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 12px;
   font-weight: 600;
-  color: #E31429;
+  color: #fff;
   flex-shrink: 0;
+  letter-spacing: 0.03em;
 }
 
 /* ─── ROLE BADGE ──────────────────────────────────────────── */
 
 .top-bar-user-role {
-  padding: 2px 8px;
-  border-radius: 20px;
   font-size: 11px;
   font-weight: 500;
+  letter-spacing: 0.03em;
 }
 
-.top-bar-user-role.role-tag-professor {
-  background: #fff3e0;
-  color: #b85c00;
-  border: 1px solid #f5c07a;
-}
-
+.top-bar-user-role.role-tag-professor,
 .top-bar-user-role.role-tag-student {
-  background: #e8f4fd;
-  color: #1565a8;
-  border: 1px solid #90c8f0;
+  color: #E31429;
 }
 
 /* ─── ACTION BUTTONS ──────────────────────────────────────── */
