@@ -386,7 +386,7 @@ body {
   position: relative;
 }
 
-.cell:hover { background: #d8d8d8; transform: scaleY(1.04); }
+.cell:hover { background: #d8d8d8; transform: scaleY(1.04); z-index: 50; }
 .cell.selected { background: #ffb8c0; border: 1.5px solid var(--red); }
 .cell.selected:hover { background: #ffa0aa; border-color: var(--red-dark); }
 .cell.prof-available { background: #ffe0e3; border-color: #f5b0b8; }
@@ -402,7 +402,7 @@ body {
   transition: opacity 0.1s, transform 0.08s;
 }
 
-.group-cell:hover { transform: scaleY(1.04); opacity: 0.85; }
+.group-cell:hover { transform: scaleY(1.04); opacity: 0.85; z-index: 50; }
 .group-cell.selected { border-color: var(--red) !important; box-shadow: 0 0 0 2px rgba(227,20,41,0.2); }
 
 /* ─── Tooltip ────────────────────────────────────────────── */
@@ -417,8 +417,11 @@ body {
   border-radius: var(--radius-sm);
   padding: 4px 8px;
   font-size: 11px;
-  white-space: nowrap;
-  z-index: 20;
+  white-space: normal;
+  max-width: 220px;
+  text-align: center;
+  line-height: 1.4;
+  z-index: 100;
   pointer-events: none;
 }
 
