@@ -45,10 +45,13 @@ export function PersonalGrid({ days, times, selected, setSelected }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// ProfAvailGrid — student view, only professor's slots are clickable
+// ProfAvailGrid — student view, only professor's slots are clickable.
+// If otherSlotCounts + totalOthers are provided the cells show a
+// when2meet-style heatmap: darker = more students already chose that slot.
 // ─────────────────────────────────────────────────────────────
-export function ProfAvailGrid({ days, times, profSlots, selected, setSelected }) {
+export function ProfAvailGrid({ days, times, profSlots, selected, setSelected, otherSlotCounts, totalOthers }) {
   const { onMouseDown, onMouseEnter } = useDragSelect(selected, setSelected);
+  const hasHeatmap = otherSlotCounts && totalOthers > 0;
 
   return (
     <div className="grid-wrap">
@@ -61,24 +64,33 @@ export function ProfAvailGrid({ days, times, profSlots, selected, setSelected })
               const key     = makeKey(day.iso, ti);
               const isAvail = profSlots.has(key);
               const isSel   = selected.has(key);
+              const count   = hasHeatmap ? (otherSlotCounts.get(key) || 0) : 0;
 
-              let cls = 'cell';
-              if (isAvail && isSel) cls += ' selected';
-              else if (isAvail)     cls += ' prof-available';
+              if (!isAvail) {
+                return <div key={ti} className="cell" style={{ cursor: 'default' }} />;
+              }
+
+              const bg = isSel
+                ? '#ffb8c0'
+                : hasHeatmap
+                  ? heatColor(count, totalOthers)
+                  : '#ffe0e3';
+
+              const tooltipText = isSel
+                ? `${timeLabel} — your selection`
+                : hasHeatmap
+                  ? `${count}/${totalOthers} student${totalOthers !== 1 ? 's' : ''} available — click to select`
+                  : `${timeLabel} — click to select`;
 
               return (
                 <div
                   key={ti}
-                  className={cls}
-                  style={{ cursor: isAvail ? 'pointer' : 'default' }}
-                  onMouseDown={isAvail ? onMouseDown(key) : undefined}
-                  onMouseEnter={isAvail ? onMouseEnter(key) : undefined}
+                  className={`cell prof-available${isSel ? ' selected' : ''}`}
+                  style={{ cursor: 'pointer', background: bg, border: isSel ? '1.5px solid var(--red)' : '1px solid transparent' }}
+                  onMouseDown={onMouseDown(key)}
+                  onMouseEnter={onMouseEnter(key)}
                 >
-                  {isAvail && (
-                    <div className="cell-tooltip">
-                      {isSel ? `${timeLabel} — selected` : `${timeLabel} — click to select`}
-                    </div>
-                  )}
+                  <div className="cell-tooltip">{tooltipText}</div>
                 </div>
               );
             })}
