@@ -1,8 +1,9 @@
 export function heatColor(count, max) {
   if (count === 0 || max === 0) return '#efefef';
   const t = count / max;
-  if (t <= 0.25) return '#ffc8cc';
-  if (t <= 0.5)  return '#f07080';
-  if (t <= 0.75) return '#d02030';
-  return '#E31429';
+  // Smooth RGB interpolation: very light pink → deep dark red (when2meet style)
+  const r = Math.round(255 + (130 - 255) * t);   // 255 → 130
+  const g = Math.round(220 + (  0 - 220) * t);   // 220 → 0
+  const b = Math.round(222 + ( 18 - 222) * t);   // 222 → 18
+  return `rgb(${r}, ${g}, ${b})`;
 }

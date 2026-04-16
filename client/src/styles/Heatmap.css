@@ -387,11 +387,11 @@ body {
 }
 
 .cell:hover { background: #d8d8d8; transform: scaleY(1.04); }
-.cell.selected { background: var(--red); }
-.cell.selected:hover { background: var(--red-dark); }
+.cell.selected { background: #ffb8c0; border: 1.5px solid var(--red); }
+.cell.selected:hover { background: #ffa0aa; border-color: var(--red-dark); }
 .cell.prof-available { background: #ffe0e3; border-color: #f5b0b8; }
 .cell.prof-available:hover { background: #ffccd1; }
-.cell.prof-available.selected { background: var(--red); border-color: var(--red); }
+.cell.prof-available.selected { background: #ffb8c0; border-color: var(--red); }
 
 .group-cell {
   height: 24px;

@@ -234,9 +234,11 @@ export default function Heatmap() {
   const pendingCount = pendingSubmissions.length;
 
   // Group mode needs a compact list of participants with colors and slot keys.
+  // All student submissions are included (not just pending) so the heatmap
+  // correctly reflects everyone who answered.
   const participants = useMemo(
     () =>
-      pendingSubmissions.map((submission, index) => ({
+      participantSubmissions.map((submission, index) => ({
         submissionId: submission.id,
         userId: submission.userId,
         name: submission.userName,
@@ -244,7 +246,7 @@ export default function Heatmap() {
         status: submission.status,
         slots: Array.from(mapSubmissionSlotsToKeys(submission, startHour, endHour)),
       })),
-    [pendingSubmissions, startHour, endHour]
+    [participantSubmissions, startHour, endHour]
   );
 
 
@@ -334,6 +336,18 @@ export default function Heatmap() {
     const mySubmission = allSubmissions.find((submission) => submission.userId === user.id && submission.participantRole !== 'host');
     setStudSelected(mapSubmissionSlotsToKeys(mySubmission, startHour, endHour));
   }, [allSubmissions, user, startHour, endHour]);
+
+  // For the student heatmap: count how many OTHER students picked each slot.
+  const otherStudentData = useMemo(() => {
+    const otherStudents = participantSubmissions.filter((s) => s.userId !== user?.id);
+    const counts = new Map();
+    otherStudents.forEach((sub) => {
+      mapSubmissionSlotsToKeys(sub, startHour, endHour).forEach((key) => {
+        counts.set(key, (counts.get(key) || 0) + 1);
+      });
+    });
+    return { counts, total: otherStudents.length };
+  }, [participantSubmissions, user?.id, startHour, endHour]);
 
   // Saves the professor's chosen availability back to the backend.
   async function saveProfAvailability() {
@@ -437,7 +451,10 @@ export default function Heatmap() {
         ap_description: `Created from heatmap group confirmation`,
         location: 'Heatmap group booking',
         changed_by: user?.id || heatmap.createdBy,
-        approved_submission_ids: groupMeta.who.map((participant) => participant.submissionId).filter(Boolean),
+        approved_submission_ids: groupMeta.who
+          .filter((participant) => participant.status === 'pending')
+          .map((participant) => participant.submissionId)
+          .filter(Boolean),
       });
 
       setHeatmapBundle(response.heatmap);
@@ -529,9 +546,9 @@ export default function Heatmap() {
 
           {isProfessor && (
             <div className={`mode-card${tab === 'group' ? ' active' : ''}`} onClick={() => setTab('group')}>
-              <div className="mode-card-icon professor"></div>
-              <h4>Group view</h4>
-              <p>See shared overlap and confirm one slot for multiple students at once.</p>
+              <div className="mode-card-icon professor">🌡️</div>
+              <h4>Availability heatmap</h4>
+              <p>See all students' availability at once. Darker cells = more students free.</p>
             </div>
           )}
         </div>
@@ -694,17 +711,43 @@ export default function Heatmap() {
         {/* Student mode: choose only from the professor's published slots. */}
         {!isProfessor && tab === 'personal' && (
           <>
-            <div className="legend" style={{ marginBottom: '0.75rem' }}>
-              <div className="color-swatch" style={{ background: '#ffe0e3', border: '1.5px solid #f5b0b8', borderRadius: 3 }} />
-              <span className="legend-label">Professor available</span>
-              <div className="color-swatch" style={{ background: 'var(--red)', borderRadius: 3, marginLeft: 12 }} />
-              <span className="legend-label">Your selection</span>
-              <div className="color-swatch" style={{ background: 'var(--cell-empty)', borderRadius: 3, marginLeft: 12 }} />
-              <span className="legend-label">Not available</span>
+            <div className="legend" style={{ marginBottom: '0.75rem', flexWrap: 'wrap', gap: '8px 16px' }}>
+              {otherStudentData.total > 0 ? (
+                <>
+                  <span className="legend-label">0 students free</span>
+                  <div className="legend-colors">
+                    {Array.from({ length: otherStudentData.total + 1 }, (_, i) => (
+                      <div key={i} className="color-swatch" style={{ background: i === 0 ? '#ffe0e3' : `rgba(227,20,41,${Math.max(0.12, i / otherStudentData.total)})` }} />
+                    ))}
+                  </div>
+                  <span className="legend-label">All {otherStudentData.total} free</span>
+                  <div className="color-swatch" style={{ background: 'var(--red)', borderRadius: 3, marginLeft: 8, outline: '2px solid var(--red)', outlineOffset: 1 }} />
+                  <span className="legend-label">Your selection</span>
+                  <div className="color-swatch" style={{ background: 'var(--cell-empty)', borderRadius: 3, marginLeft: 8 }} />
+                  <span className="legend-label">Prof unavailable</span>
+                </>
+              ) : (
+                <>
+                  <div className="color-swatch" style={{ background: '#ffe0e3', border: '1.5px solid #f5b0b8', borderRadius: 3 }} />
+                  <span className="legend-label">Professor available</span>
+                  <div className="color-swatch" style={{ background: 'var(--red)', borderRadius: 3, marginLeft: 12 }} />
+                  <span className="legend-label">Your selection</span>
+                  <div className="color-swatch" style={{ background: 'var(--cell-empty)', borderRadius: 3, marginLeft: 12 }} />
+                  <span className="legend-label">Not available</span>
+                </>
+              )}
             </div>
             <p className="section-label">Select from the professor's available slots</p>
             <div className="grid-outer">
-              <ProfAvailGrid days={days} times={times} profSlots={profSaved} selected={studSelected} setSelected={setStudSelected} />
+              <ProfAvailGrid
+                days={days}
+                times={times}
+                profSlots={profSaved}
+                selected={studSelected}
+                setSelected={setStudSelected}
+                otherSlotCounts={otherStudentData.counts}
+                totalOthers={otherStudentData.total}
+              />
             </div>
             <div className="confirm-bar">
               <button className="button button-primary" onClick={submitStudentAvailability} disabled={studSelected.size === 0}>
@@ -721,15 +764,15 @@ export default function Heatmap() {
           </>
         )}
 
-        {/* Group mode: compare overlap across multiple student submissions at once. */}
+        {/* Group mode: heatmap of all student submissions. */}
         {isProfessor && tab === 'group' && (
           <>
-            <p className="section-label">Participants</p>
+            <p className="section-label">All respondents ({participants.length})</p>
             {participants.length === 0 ? (
               <div className="empty-state">
-                <div className="empty-state-icon">👥</div>
-                <h4>No pending group submissions</h4>
-                <p>Once students submit availability, you can compare overlap here and confirm one shared meeting slot.</p>
+                <div className="empty-state-icon">🌡️</div>
+                <h4>No student submissions yet</h4>
+                <p>Once students submit their availability, you'll see a heatmap here. Darker cells mean more students are free at that time.</p>
               </div>
             ) : (
               <>
@@ -752,7 +795,7 @@ export default function Heatmap() {
                   ))}
                 </div>
                 <HeatmapLegend max={participants.filter((participant) => activeNames.has(participant.name)).length} />
-                <p className="section-label">Hover cells to see who's free</p>
+                <p className="section-label">Hover a cell to see who's free — click to select a booking slot</p>
                 <div className="grid-outer">
                   <GroupGrid days={days} times={times} participants={participants} activeNames={activeNames} selectedKey={groupKey} onSelectKey={handleGroupSelect} />
                 </div>
