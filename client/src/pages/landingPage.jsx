@@ -141,9 +141,12 @@ export default function LandingPage() {
         </button>
         <div className="accordion-body">
           <p>
-            Professors publish their available office-hour slots. Students mark the times that work for them.
-            LGTM overlays those responses on a single heatmap grid so that both sides always see an up-to-date
-            picture of when a meeting can actually happen — no back-and-forth emails, no guessing.
+            Instructors define their available office-hour windows directly within LGTM. Students then indicate
+            which of those time slots are compatible with their own schedules. The platform aggregates all
+            responses in real time and renders them as a unified availability heatmap — giving both instructors
+            and students an immediate, accurate view of the best times to meet. This eliminates the need for
+            manual coordination, repeated email exchanges, or reliance on scheduling tools outside the course
+            management workflow.
           </p>
         </div>
       </section>
