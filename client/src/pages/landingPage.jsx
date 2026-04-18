@@ -4,8 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import logo1 from "../assets/logo1.png";
 import header from "../assets/header.png";
 import { useNavigate } from "react-router-dom";
-import { getUsers } from "../api/users";
-import { getHeatmaps } from "../api/heatmaps";
 import "../styles/LandingPage.css";
 
 
@@ -19,13 +17,6 @@ export default function LandingPage() {
   // Tracks whether the user has scrolled down a little.
   const [scrolled, setScrolled] = useState(false);
 
-  // Stores one demo student and one demo professor
-  // so the landing page buttons can point somewhere useful.
-  const [demoUsers, setDemoUsers] = useState({ student: null, professor: null });
-
-  // Stores the featured heatmap id for the "Learn more" button.
-  const [featuredHeatmapId, setFeaturedHeatmapId] = useState(null);
-
   // Controls visibility of the heatmap explainer section.
   const [showHeatmapDetail, setShowHeatmapDetail] = useState(false);
 
@@ -38,69 +29,6 @@ export default function LandingPage() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  // Loads one public heatmap so the landing page can link to it.
-  useEffect(() => {
-    let active = true;
-
-    async function loadFeaturedHeatmap() {
-      try {
-        const heatmaps = await getHeatmaps({ include_public: 1, limit: 1 });
-        if (!active) return;
-        setFeaturedHeatmapId(heatmaps[0]?.id || null);
-      } catch (err) {
-        if (!active) return;
-        setFeaturedHeatmapId(null);
-      }
-    }
-
-    loadFeaturedHeatmap();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // Loads sample student and professor users from the backend.
-  useEffect(() => {
-    let active = true;
-
-    // Gets both user types at the same time to keep things faster.
-    async function loadDemoUsers() {
-      try {
-        const [students, professors] = await Promise.all([
-          getUsers("student"),
-          getUsers("professor"),
-        ]);
-
-        if (!active) return;
-
-        setDemoUsers({
-          student: students[0] || null,
-          professor: professors[0] || null,
-        });
-
-        // Uses the first student and professor returned so buttons
-        // can navigate to real dashboard routes.
-      } catch (err) {
-        if (!active) return;
-        setDemoUsers({ student: null, professor: null });
-      }
-    }
-
-    loadDemoUsers();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // Builds safe paths for the landing page buttons.
-  // If demo data is missing, these fall back to routes that will not crash the page.
-  const studentDashboardPath = '/dashboard/student';
-  const professorDashboardPath = '/dashboard/professor';
-  const heatmapPath = featuredHeatmapId
-    ? `/heatmap/${featuredHeatmapId}?role=student`
-    : studentDashboardPath;
-
 
   //START of the LANDING PAGE design
   //________________________________________________________________________________________________//

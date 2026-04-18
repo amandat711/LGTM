@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAvailableProfessors } from '../api/availabilities';
 import useAppShellSession from '../hooks/useAppShellSession';

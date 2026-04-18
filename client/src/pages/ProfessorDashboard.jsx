@@ -3,7 +3,7 @@
    explain what each part is doing in plain project language. */
 
 // React hooks for state, effects, and memoized derived values.
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 // Lets this page navigate to booking, heatmap, or landing routes.
 import { useNavigate } from 'react-router-dom';
 // Pulls the logged-in professor info from the shared app shell/session.
@@ -133,9 +133,12 @@ export default function ProfessorDashboard() {
 
   // Name shown in the navbar.
   // If the session has not loaded fully yet, fall back to a generic label.
-  const currentUser = !user
-    ? { firstName: 'User', lastName: String(userId ?? '') }
-    : { firstName: user.first_name || 'User', lastName: user.last_name || String(userId ?? '') };
+  const currentUser = useMemo(
+    () => !user
+      ? { firstName: 'User', lastName: String(userId ?? '') }
+      : { firstName: user.first_name || 'User', lastName: user.last_name || String(userId ?? '') },
+    [user, userId]
+  );
 
   
   // The calendar shows two kinds of blocks:

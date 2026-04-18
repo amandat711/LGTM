@@ -103,11 +103,6 @@
 .feature-button:hover { background: #E31429; color: #fff; }
 
 /* Placeholder for an image or graphic */
-.map-box {
-  width: 100%; height: 200px; border-radius: 8px;
-  position: relative; overflow: hidden; background: #e8eaed;
-}
-.map-box-dark { background: #111; }
 .image-placeholder { width: 100%; height: 200px; background: #d8d8d8; border-radius: 8px; }
 
 /* Footer base styles */
@@ -316,21 +311,6 @@
   margin-top: 0;
 }
 
-.eu-cookie-withdraw-button {
-  border: 1px solid rgba(255,255,255,0.8);
-  background: transparent;
-  color: #fff;
-  border-radius: 2px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-family: 'DM Sans', Arial, sans-serif;
-  cursor: pointer;
-}
-
-.eu-cookie-withdraw-button:hover {
-  background: rgba(255,255,255,0.08);
-}
-
 /* Heatmap accordion explainer section */
 .accordion-section {
   max-width: 720px;
@@ -338,17 +318,6 @@
   padding: 64px 24px 56px;
 }
 
-
-.accordion-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  border-top: 1px solid #e4e4e4;
-}
-
-.accordion-item {
-  border-bottom: 1px solid #e4e4e4;
-}
 
 .accordion-trigger {
   width: 100%;
@@ -369,17 +338,6 @@
 }
 
 .accordion-trigger:hover { color: #E31429; }
-
-.accordion-chevron {
-  flex-shrink: 0;
-  color: #888;
-  transition: transform 0.2s;
-}
-
-.accordion-item-open .accordion-chevron {
-  transform: rotate(180deg);
-  color: #E31429;
-}
 
 .accordion-body {
   padding: 0 0 18px;
