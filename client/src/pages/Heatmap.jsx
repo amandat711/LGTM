@@ -1,6 +1,6 @@
 /*AMANDA TRAN*/
 // Main React hooks plus router helpers for route-based heatmap pages.
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import '../styles/Heatmap.css';
 // Shared top nav and session helpers.

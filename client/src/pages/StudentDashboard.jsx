@@ -3,7 +3,7 @@
 This code was use to help showcase upcoming appointments - user friendly */
 
 // Core React hooks plus router navigation for moving between pages.
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAppShellSession from '../hooks/useAppShellSession';
 import logo from '../assets/logo1.png';

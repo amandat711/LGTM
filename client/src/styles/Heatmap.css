@@ -32,91 +32,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* ─── Navbar ─────────────────────────────────────────────── */
-.navbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 2rem;
-  height: 54px;
-}
-
-.navbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-}
-
-.navbar-logo-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 5px;
-  background: var(--red);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.navbar-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
-  letter-spacing: -0.01em;
-  font-family: var(--font);
-}
-
-.navbar-name span { color: var(--red); }
-
-.navbar-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.navbar-user {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--text-muted);
-}
-
-.navbar-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--red-light);
-  border: 1.5px solid var(--red);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--red);
-}
-
-.navbar-role-badge {
-  padding: 2px 8px;
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.role-professor { background: #fff3e0; color: #b85c00; border: 1px solid #f5c07a; }
-.role-student   { background: #e8f4fd; color: #1565a8; border: 1px solid #90c8f0; }
-
 /* ─── Page layout ────────────────────────────────────────── */
 .heatmap-page {
   max-width: 1100px;
@@ -155,36 +70,6 @@ body {
 .page-subtitle {
   font-size: 14px;
   color: var(--text-muted);
-}
-
-/* ─── Role switcher ──────────────────────────────────────── */
-.role-switcher {
-  display: inline-flex;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 3px;
-  margin-bottom: 1.5rem;
-  gap: 2px;
-}
-
-.role-button {
-  padding: 6px 16px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: transparent;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: var(--font);
-}
-
-.role-button.active {
-  background: #fff;
-  color: var(--text);
-  box-shadow: var(--shadow-sm);
 }
 
 /* ─── Setup banner ───────────────────────────────────────── */
@@ -519,60 +404,6 @@ body {
   margin-bottom: 10px;
 }
 
-/* ─── Search ─────────────────────────────────────────────── */
-.search-row { display: flex; gap: 8px; margin-bottom: 1rem; }
-
-.search-input {
-  flex: 1;
-  padding: 9px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-med);
-  background: var(--white);
-  color: var(--text);
-  font-size: 13px;
-  font-family: var(--font);
-}
-.search-input:focus { outline: none; border-color: var(--red); }
-
-.result-card {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 16px;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: box-shadow 0.15s, border-color 0.15s;
-}
-.result-card:hover { border-color: var(--border-med); box-shadow: var(--shadow-sm); }
-
-/* ─── Tabs ───────────────────────────────────────────────── */
-.tabs {
-  display: flex;
-  gap: 2px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 3px;
-}
-
-.tab {
-  padding: 7px 16px;
-  border-radius: var(--radius-sm);
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: var(--font);
-}
-
-.tab:hover { color: var(--text); }
-.tab.active { background: var(--white); color: var(--text); box-shadow: var(--shadow-sm); }
-
 /* ─── Modal ──────────────────────────────────────────────── */
 .modal-overlay {
   position: fixed;
@@ -693,16 +524,6 @@ body {
   background: #d4edda;
   color: #1a5c2a;
   font-size: 12px;
-  font-weight: 500;
-}
-
-.badge-pending {
-  padding: 2px 8px;
-  border-radius: 20px;
-  background: #fff8e1;
-  color: #7a5800;
-  border: 1px solid #f5c842;
-  font-size: 11px;
   font-weight: 500;
 }
 
