@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import logo1 from "../assets/logo1.png";
 import header from "../assets/header.png";
+import heatmapPreview from "../assets/HeatmapPreview.png";
 import { useNavigate } from "react-router-dom";
 import "../styles/LandingPage.css";
 
@@ -100,7 +101,7 @@ export default function LandingPage() {
       <section className="feature-section feature-section-light">
         <div className="feature-row feature-row-reversed">
           <div className="feature-image-area">
-            <div className="image-placeholder" />
+            <img src={heatmapPreview} alt="Heatmap preview" className="feature-preview-image" />
           </div>
           <div className="feature-text">
             <h2 className="feature-title">Other feature!</h2>
