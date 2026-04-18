@@ -118,7 +118,7 @@ router.post('/', (req, res) => {
                   db.run(
                     insertAppointment,
                     [
-                    null,
+                    availability.course_id ?? null,
                     availability.availability_id,
                     availability.capacity,
                     availability.location || null,

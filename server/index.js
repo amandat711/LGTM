@@ -11,6 +11,7 @@ const appointmentsRouter = require('./routes/appointments');
 const authRouter = require('./routes/auth');
 const heatmapsRouter = require('./routes/heatmaps');
 const usersRouter = require('./routes/users');
+const coursesRouter = require('./routes/courses');
 
 /** Must be explicit origins (not *) when credentials: true. localhost vs 127.0.0.1 are different origins. */
 app.use(
@@ -45,6 +46,7 @@ app.use('/availabilities', availabilitiesRouter);
 app.use('/appointments', appointmentsRouter);
 app.use('/heatmaps', heatmapsRouter);
 app.use('/users', usersRouter);
+app.use('/api/courses', coursesRouter);
 
 db.get("SELECT 1", (err, row) => {
   if (err) {

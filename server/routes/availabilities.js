@@ -11,6 +11,59 @@ function parseDate(value) {
   return isNaN(d.getTime()) ? null : d;
 }
 
+function normalizeCourseId(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const n = parseInt(value, 10);
+  if (Number.isNaN(n) || n < 1) return 'invalid';
+  return n;
+}
+
+function assertUserMayPostOfficeHours(courseId, userId, userType, callback) {
+  db.get('SELECT course_id FROM courses WHERE course_id = ?', [courseId], (err, course) => {
+    if (err) return callback(err);
+    if (!course) {
+      const e = new Error('Course not found');
+      e.statusCode = 404;
+      return callback(e);
+    }
+    if (userType === 'general_admin') {
+      return db.get(
+        `SELECT 1 AS ok FROM course_ownerships
+         WHERE course_id = ? AND general_admin_id = ? AND status = 'active'`,
+        [courseId, userId],
+        (e2, row) => {
+          if (e2) return callback(e2);
+          if (!row) {
+            const e = new Error('You are not an owner of this course.');
+            e.statusCode = 403;
+            return callback(e);
+          }
+          callback(null);
+        }
+      );
+    }
+    if (userType === 'course_admin') {
+      return db.get(
+        `SELECT 1 AS ok FROM course_admin_assignments
+         WHERE course_id = ? AND course_admin_id = ? AND status = 'active'`,
+        [courseId, userId],
+        (e2, row) => {
+          if (e2) return callback(e2);
+          if (!row) {
+            const e = new Error('You are not a course admin for this course.');
+            e.statusCode = 403;
+            return callback(e);
+          }
+          callback(null);
+        }
+      );
+    }
+    const e = new Error('Not allowed to create course-tied availability.');
+    e.statusCode = 403;
+    return callback(e);
+  });
+}
+
 function buildSlots(startDate, endDate, slotDurationMinutes) {
   const slots = [];
   let current = new Date(startDate);
@@ -41,8 +94,14 @@ router.post('/', (req, res) => {
     visibility,
     recurrence_rule,
     av_title,
-    av_description
+    av_description,
+    course_id: bodyCourseId,
   } = req.body;
+
+  const courseIdNorm = normalizeCourseId(bodyCourseId);
+  if (courseIdNorm === 'invalid') {
+    return res.status(400).json({ error: 'course_id must be a positive integer or null/omitted.' });
+  }
 
   if (!created_by || !start_time || !end_time) {
     return res.status(400).json({
@@ -120,10 +179,15 @@ router.post('/', (req, res) => {
         });
       }
 
+      const courseIdForRow = courseIdNorm;
+      const overlapCourseKey = courseIdForRow == null ? -1 : courseIdForRow;
+
+      const startCreateFlow = () => {
       const overlapQuery = `
         SELECT availability_id, start_time, end_time
         FROM availabilities
         WHERE created_by = ?
+          AND COALESCE(course_id, -1) = ?
           AND datetime(start_time) < datetime(?)
           AND datetime(end_time) > datetime(?)
         LIMIT 1
@@ -138,7 +202,7 @@ router.post('/', (req, res) => {
 
         db.get(
           overlapQuery,
-          [created_by, slot.end_time, slot.start_time],
+          [created_by, overlapCourseKey, slot.end_time, slot.start_time],
           (err, overlap) => {
             if (err) return res.status(500).json({ error: err.message });
 
@@ -162,6 +226,7 @@ router.post('/', (req, res) => {
           INSERT INTO availabilities
           (
             created_by,
+            course_id,
             location,
             capacity,
             start_time,
@@ -171,7 +236,7 @@ router.post('/', (req, res) => {
             av_title,
             av_description
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         const insertOne = (index) => {
@@ -202,6 +267,7 @@ router.post('/', (req, res) => {
             insertQuery,
             [
               created_by,
+              courseIdForRow,
               location || null,
               finalCapacity,
               slot.start_time,
@@ -226,6 +292,19 @@ router.post('/', (req, res) => {
       };
 
       checkOverlaps(0);
+      };
+
+      if (courseIdForRow == null) {
+        return startCreateFlow();
+      }
+
+      return assertUserMayPostOfficeHours(courseIdForRow, user.user_id, user.user_type, (courseErr) => {
+        if (courseErr) {
+          const code = courseErr.statusCode || 500;
+          return res.status(code).json({ error: courseErr.message });
+        }
+        startCreateFlow();
+      });
     }
   );
 });
