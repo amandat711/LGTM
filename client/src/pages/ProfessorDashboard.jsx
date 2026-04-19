@@ -24,6 +24,7 @@ import { getHostingAppointments, cancelAppointment } from '../api/appointments';
 import {
   createAvailability,
   deleteAvailability,
+  updateAvailability,
   getProfessorAvailabilities,
 } from '../api/availabilities';
 import { getHeatmaps } from '../api/heatmaps';
@@ -226,7 +227,46 @@ export default function ProfessorDashboard() {
     }
   }
 
-  // Little initials badge beside the professor's name.
+  async function handleUpdateAvailability(payload) {
+    if (!activeAppt || activeAppt.type !== 'availability') return;
+
+    try {
+      const result = await updateAvailability(activeAppt.rawId, {
+        updated_by: Number(userId),
+        ...payload,
+      });
+
+      const updatedAvailability = result.availability;
+
+      setAvailabilities((prev) =>
+        prev.map((slot) =>
+          Number(slot.availability_id) === Number(activeAppt.rawId)
+            ? updatedAvailability
+            : slot
+        )
+      );
+
+      setModal(null);
+      setActiveAppt((prev) =>
+        prev
+          ? {
+              ...prev,
+              title: updatedAvailability.av_title || prev.title,
+              location: updatedAvailability.location || prev.location,
+              startTime: updatedAvailability.start_time,
+              endTime: updatedAvailability.end_time,
+              visibility: updatedAvailability.visibility,
+              capacity: updatedAvailability.capacity,
+            }
+          : prev
+      );
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  // Small initials badge shown in the navbar profile area.
   const initials = `${currentUser.firstName?.[0] || 'U'}${currentUser.lastName?.[0] || ''}`;
 
   return (
@@ -421,7 +461,27 @@ export default function ProfessorDashboard() {
         />
       )}
 
-      {/* Details for whatever calendar block the professor clicked. */}
+      {modal === 'editAvailability' && activeAppt && (
+        <CreateAvailabilityModal
+          title="Edit availability"
+          submitLabel="Save changes"
+          initialData={{
+            av_title: activeAppt.title,
+            av_description: activeAppt.description,
+            location: activeAppt.location,
+            start_time: activeAppt.startTime,
+            end_time: activeAppt.endTime,
+            capacity: activeAppt.capacity,
+            visibility: activeAppt.visibility,
+            recurrence_rule: activeAppt.recurrence_rule || '',
+          }}
+          onClose={() => setModal('detail')}
+          onSubmit={handleUpdateAvailability}
+        />
+      )}
+
+      {/* Opens when the professor clicks an appointment or availability block for more detail. */}
+      {/* Opens when the professor clicks an appointment or availability block for more detail. */}
       {modal === 'detail' && activeAppt && (
         <SlotDetailModal
           appointment={{
@@ -437,8 +497,10 @@ export default function ProfessorDashboard() {
             bookedBy: activeAppt.attendeeName,
             location: activeAppt.location,
             status: activeAppt.status,
+            type: activeAppt.type,
           }}
           isOwner={true}
+          onEdit={activeAppt.type === 'availability' ? () => setModal('editAvailability') : undefined}
           onDelete={() => setModal('delete')}
           onClose={() => {
             setModal(null);
@@ -454,7 +516,7 @@ export default function ProfessorDashboard() {
             title: activeAppt.title,
             day: new Date(activeAppt.startTime).toLocaleDateString(),
             time: formatTime(activeAppt.startTime),
-            notifyEmail: activeAppt.ownerEmail,
+            notifyEmail: activeAppt.type === 'availability' ? '' : activeAppt.attendeeEmail,
           }}
           onConfirm={handleDelete}
           onClose={() => setModal('detail')}

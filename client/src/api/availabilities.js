@@ -34,6 +34,16 @@ export async function deleteAvailability(availabilityId, deletedBy) {
   return handleResponse(res);
 }
 
+export async function updateAvailability(availabilityId, payload) {
+  const res = await fetch(`${API_BASE}/availabilities/${availabilityId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(res);
+}
+
 export async function getProfessorAvailabilities(createdBy) {
   const res = await fetch(`${API_BASE}/availabilities/owner/${createdBy}`);
   return handleResponse(res);

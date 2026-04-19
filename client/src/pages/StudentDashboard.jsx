@@ -358,7 +358,7 @@ export default function StudentDashboard() {
             location: activeAppt.location,
             status: activeAppt.status,
           }}
-          isOwner={false}
+          isOwner={true}
           onDelete={() => setModal('delete')}
           onClose={() => {
             setModal(null);

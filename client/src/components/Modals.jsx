@@ -183,10 +183,9 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
   );
 }
 
-// Readable appointment detail view for calendar blocks.
-export function SlotDetailModal({ appointment, isOwner, onDelete, onClose }) {
-  // Default object keeps the JSX below from exploding while data is still settling.
+export function SlotDetailModal({ appointment, isOwner, onDelete, onEdit, onClose }) {
   const ap = appointment || {};
+  const isAvailability = ap.type === 'availability';
 
   return (
     <Modal
@@ -194,9 +193,14 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onClose }) {
       onClose={onClose}
       footer={
         <>
+          {isOwner && onEdit && (
+            <button className="button button-outline button-small" onClick={onEdit}>
+              Edit availability
+            </button>
+          )}
           {isOwner && (
             <button className="button button-danger button-small" onClick={onDelete}>
-              Cancel booking
+              {isAvailability ? 'Delete availability' : 'Cancel booking'}
             </button>
           )}
           <a
@@ -204,8 +208,7 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onClose }) {
             className="button button-outline button-small"
             style={{ textDecoration: 'none' }}
           >
-            {/* The same modal is used from owner and attendee perspectives. */}
-            Email {isOwner ? 'attendee' : 'owner'}
+            Email {isAvailability ? 'student' : isOwner ? 'attendee' : 'owner'}
           </a>
           <button className="button button-ghost" onClick={onClose}>Close</button>
         </>
@@ -220,8 +223,8 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onClose }) {
         <span className="modal-row-value">{ap.time}</span>
       </div>
       <div className="modal-row">
-        <span className="modal-row-label">{isOwner ? 'Booked by' : 'Owner'}</span>
-        <span className="modal-row-value">{isOwner ? ap.bookedBy : ap.owner}</span>
+        <span className="modal-row-label">{isAvailability ? 'Booked' : isOwner ? 'Booked by' : 'Owner'}</span>
+        <span className="modal-row-value">{isAvailability ? ap.bookedBy : isOwner ? ap.bookedBy : ap.owner}</span>
       </div>
       {ap.location && (
         <div className="modal-row">
@@ -246,47 +249,52 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onClose }) {
 // Final confirmation before cancelling a booking or removing an availability block.
 export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
   const ap = appointment || {};
+  const isAvailability = ap.type === 'availability';
 
   function handleDelete() {
-    // Open a prefilled email so the professor can notify the other person in their own words.
-    const subject = encodeURIComponent(`Booking cancelled: ${ap.title}`);
-    const body    = encodeURIComponent(
-      `Hi,\n\nYour booking "${ap.title}" on ${ap.day} at ${ap.time} has been cancelled.\n\nApologies for any inconvenience.`
-    );
-    window.open(`mailto:${ap.notifyEmail}?subject=${subject}&body=${body}`);
-    // TODO: DELETE /api/appointments/:id
+    if (!isAvailability && ap.notifyEmail) {
+      const subject = encodeURIComponent(`Booking cancelled: ${ap.title}`);
+      const body = encodeURIComponent(
+        `Hi,\n\nYour booking "${ap.title}" on ${ap.day} at ${ap.time} has been cancelled.\n\nApologies for any inconvenience.`
+      );
+      window.open(`mailto:${ap.notifyEmail}?subject=${subject}&body=${body}`);
+    }
     onConfirm();
     onClose();
   }
 
   return (
     <Modal
-      title="Cancel this booking?"
+      title={isAvailability ? 'Delete this availability?' : 'Cancel this booking?'}
       onClose={onClose}
       footer={
         <>
           <button className="button button-ghost" onClick={onClose}>Keep it</button>
           <button className="button button-danger" onClick={handleDelete}>
-            Yes, cancel &amp; notify
+            {isAvailability ? 'Yes, delete availability' : 'Yes, cancel & notify'}
           </button>
         </>
       }
     >
       <p style={{ fontSize: 14, color: '#555', marginBottom: 16, lineHeight: 1.6 }}>
-        This will permanently remove the booking and open your email client to notify the other party.
+        {isAvailability
+          ? 'This will permanently delete the availability slot from your calendar.'
+          : 'This will permanently remove the booking and open your email client to notify the other party.'}
       </p>
       <div className="modal-row">
-        <span className="modal-row-label">Appointment</span>
+        <span className="modal-row-label">{isAvailability ? 'Availability' : 'Appointment'}</span>
         <span className="modal-row-value">{ap.title}</span>
       </div>
       <div className="modal-row">
         <span className="modal-row-label">Date &amp; time</span>
         <span className="modal-row-value">{ap.day} at {ap.time}</span>
       </div>
-      <div className="modal-row">
-        <span className="modal-row-label">Notify</span>
-        <span className="modal-row-value">{ap.notifyEmail}</span>
-      </div>
+      {!isAvailability && (
+        <div className="modal-row">
+          <span className="modal-row-label">Notify</span>
+          <span className="modal-row-value">{ap.notifyEmail}</span>
+        </div>
+      )}
     </Modal>
   );
 }

@@ -6,20 +6,28 @@ function toIsoLocal(date, time) {
   return toIsoWithOffsetFromLocalParts(date, time);
 }
 
-export default function CreateAvailabilityModal({ onClose, onSubmit, defaultVisibility = 'private' }) {
+export default function CreateAvailabilityModal({
+  onClose,
+  onSubmit,
+  defaultVisibility = 'private',
+  title = 'Create availability',
+  submitLabel = 'Create slot',
+  initialData = null,
+}) {
   const today = toLocalDateInputValue(new Date());
+  const initialDate = initialData?.start_time ? toLocalDateInputValue(initialData.start_time) : today;
 
   const [form, setForm] = useState({
-    av_title: '',
-    av_description: '',
-    date: today,
-    start_time: '10:00',
-    end_time: '10:30',
-    location: '',
-    capacity: 1,
-    visibility: defaultVisibility,
-    recurrence_rule: '',
-    slot_duration_minutes: 30,
+    av_title: initialData?.av_title || '',
+    av_description: initialData?.av_description || '',
+    date: initialDate,
+    start_time: initialData?.start_time?.slice(11, 16) || '10:00',
+    end_time: initialData?.end_time?.slice(11, 16) || '10:30',
+    location: initialData?.location || '',
+    capacity: initialData?.capacity || 1,
+    visibility: initialData?.visibility || defaultVisibility,
+    recurrence_rule: initialData?.recurrence_rule || '',
+    slot_duration_minutes: initialData?.slot_duration_minutes ?? 30,
   });
 
   const [error, setError] = useState('');
@@ -81,7 +89,7 @@ export default function CreateAvailabilityModal({ onClose, onSubmit, defaultVisi
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="availability-modal-header">
-          <h2>Create availability</h2>
+          <h2>{title}</h2>
           <button
             type="button"
             className="availability-close-btn"
@@ -227,7 +235,7 @@ export default function CreateAvailabilityModal({ onClose, onSubmit, defaultVisi
               className="modal-btn primary"
               disabled={saving}
             >
-              {saving ? 'Creating...' : 'Create slot'}
+              {saving ? `${submitLabel}...` : submitLabel}
             </button>
           </div>
         </form>

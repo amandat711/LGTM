@@ -7,6 +7,43 @@ function toSqliteDateTime(date) {
   return toStoredIsoDateTime(date);
 }
 
+function normalizeCourseId(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const n = parseInt(value, 10);
+  if (Number.isNaN(n) || n < 1) return 'invalid';
+  return n;
+}
+
+/** Course owner or active course admin (any user_type) may add course-tied office hours. */
+function assertUserMayPostOfficeHours(courseId, userId, callback) {
+  db.get('SELECT course_id FROM courses WHERE course_id = ?', [courseId], (err, course) => {
+    if (err) return callback(err);
+    if (!course) {
+      const e = new Error('Course not found');
+      e.statusCode = 404;
+      return callback(e);
+    }
+    db.get(
+      `SELECT 1 AS ok FROM course_ownerships
+       WHERE course_id = ? AND general_admin_id = ? AND status = 'active'
+       UNION ALL
+       SELECT 1 AS ok FROM course_admin_assignments
+       WHERE course_id = ? AND course_admin_id = ? AND status = 'active'
+       LIMIT 1`,
+      [courseId, userId, courseId, userId],
+      (e2, row) => {
+        if (e2) return callback(e2);
+        if (!row) {
+          const e = new Error('You are not an owner or course admin for this course.');
+          e.statusCode = 403;
+          return callback(e);
+        }
+        callback(null);
+      }
+    );
+  });
+}
+
 function buildSlots(startDate, endDate, slotDurationMinutes) {
   const slots = [];
   let current = new Date(startDate);
@@ -417,6 +454,192 @@ router.get('/owner/:createdBy', (req, res) => {
 
     res.json(rows);
   });
+});
+
+router.patch('/:id', (req, res) => {
+  const availabilityId = req.params.id;
+  const {
+    updated_by,
+    location,
+    capacity,
+    visibility,
+    start_time,
+    end_time,
+    av_title,
+    av_description,
+    recurrence_rule
+  } = req.body;
+
+  if (!updated_by) {
+    return res.status(400).json({
+      error: 'updated_by is required'
+    });
+  }
+
+  db.get(
+    `SELECT * FROM availabilities WHERE availability_id = ?`,
+    [availabilityId],
+    (err, availability) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      if (!availability) {
+        return res.status(404).json({ error: 'Availability not found' });
+      }
+
+      db.get(
+        `SELECT user_id, user_type FROM users WHERE user_id = ?`,
+        [updated_by],
+        (err, user) => {
+          if (err) return res.status(500).json({ error: err.message });
+
+          if (!user) {
+            return res.status(404).json({ error: 'Updating user not found' });
+          }
+
+          const isOwner = Number(availability.created_by) === Number(updated_by);
+          const isAdmin = ['course_admin', 'general_admin'].includes(user.user_type);
+
+          if (!isOwner && !isAdmin) {
+            return res.status(403).json({
+              error: 'Not allowed to update this availability'
+            });
+          }
+
+          const fieldsToCheck = { location, capacity, visibility, start_time, end_time, recurrence_rule };
+          const hasScheduleChanges = Object.keys(fieldsToCheck).some(
+            (key) => fieldsToCheck[key] !== undefined
+          );
+
+          db.get(
+            `
+            SELECT COUNT(*) AS active_booking_count
+            FROM appointments
+            WHERE created_from_availability = ?
+              AND status != 'cancelled'
+            `,
+            [availabilityId],
+            (err, countRow) => {
+              if (err) return res.status(500).json({ error: err.message });
+
+              if (countRow.active_booking_count > 0 && hasScheduleChanges) {
+                return res.status(400).json({
+                  error: 'Cannot update schedule details for availability with active booking(s)'
+                });
+              }
+
+              const updateFields = [];
+              const params = [];
+
+              if (location !== undefined) {
+                updateFields.push('location = ?');
+                params.push(location || null);
+              }
+
+              if (capacity !== undefined) {
+                const finalCapacity = Number(capacity);
+                if (!Number.isInteger(finalCapacity) || finalCapacity < 1) {
+                  return res.status(400).json({
+                    error: 'capacity must be >= 1'
+                  });
+                }
+                updateFields.push('capacity = ?');
+                params.push(finalCapacity);
+              }
+
+              if (visibility !== undefined) {
+                if (!['public', 'private'].includes(visibility)) {
+                  return res.status(400).json({
+                    error: 'visibility must be public or private'
+                  });
+                }
+                updateFields.push('visibility = ?');
+                params.push(visibility);
+              }
+
+              let updatedStartTime = availability.start_time;
+              let updatedEndTime = availability.end_time;
+
+              if (start_time !== undefined) {
+                const parsedStart = parseDate(start_time);
+                if (!parsedStart) {
+                  return res.status(400).json({
+                    error: 'start_time must be a valid datetime'
+                  });
+                }
+                updatedStartTime = toSqliteDateTime(parsedStart);
+                updateFields.push('start_time = ?');
+                params.push(updatedStartTime);
+              }
+
+              if (end_time !== undefined) {
+                const parsedEnd = parseDate(end_time);
+                if (!parsedEnd) {
+                  return res.status(400).json({
+                    error: 'end_time must be a valid datetime'
+                  });
+                }
+                updatedEndTime = toSqliteDateTime(parsedEnd);
+                updateFields.push('end_time = ?');
+                params.push(updatedEndTime);
+              }
+
+              if (end_time !== undefined || start_time !== undefined) {
+                if (new Date(updatedEndTime) <= new Date(updatedStartTime)) {
+                  return res.status(400).json({
+                    error: 'end_time must be after start_time'
+                  });
+                }
+              }
+
+              if (av_title !== undefined) {
+                updateFields.push('av_title = ?');
+                params.push(av_title || null);
+              }
+
+              if (av_description !== undefined) {
+                updateFields.push('av_description = ?');
+                params.push(av_description || null);
+              }
+
+              if (recurrence_rule !== undefined) {
+                updateFields.push('recurrence_rule = ?');
+                params.push(recurrence_rule || null);
+              }
+
+              if (updateFields.length === 0) {
+                return res.status(400).json({
+                  error: 'No valid fields provided for update'
+                });
+              }
+
+              params.push(availabilityId);
+
+              db.run(
+                `UPDATE availabilities SET ${updateFields.join(', ')} WHERE availability_id = ?`,
+                params,
+                function (err) {
+                  if (err) return res.status(500).json({ error: err.message });
+
+                  db.get(
+                    `SELECT * FROM availabilities WHERE availability_id = ?`,
+                    [availabilityId],
+                    (err, updatedAvailability) => {
+                      if (err) return res.status(500).json({ error: err.message });
+
+                      res.json({
+                        message: 'Availability updated successfully',
+                        availability: updatedAvailability
+                      });
+                    }
+                  );
+                }
+              );
+            }
+          );
+        }
+      );
+    }
+  );
 });
 
 router.delete('/:id', (req, res) => {

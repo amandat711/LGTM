@@ -106,6 +106,7 @@ export function mapAvailabilityToCalendarEvent(slot, currentUserName = 'You') {
     visibility: slot.visibility,
     capacity,
     bookedCount,
+    recurrence_rule: slot.recurrence_rule,
     color: '#6B7280',
   };
 }
