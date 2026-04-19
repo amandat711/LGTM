@@ -10,13 +10,22 @@ async function handleResponse(res) {
   return data;
 }
 
-export async function getUsers(type = '') {
-  const query = type ? `?type=${encodeURIComponent(type)}` : '';
-  const res = await fetch(`${API_BASE}/users${query}`);
+export async function getUsers(typeOrOptions = '') {
+  const opts =
+    typeof typeOrOptions === 'string'
+      ? { type: typeOrOptions || undefined }
+      : typeOrOptions || {};
+  const params = new URLSearchParams();
+  if (opts.type) params.set('type', opts.type);
+  if (opts.q) params.set('q', opts.q);
+  const qs = params.toString();
+  const res = await fetch(`${API_BASE}/users${qs ? `?${qs}` : ''}`, {
+    credentials: 'include',
+  });
   return handleResponse(res);
 }
 
 export async function getUser(userId) {
-  const res = await fetch(`${API_BASE}/users/${userId}`);
+  const res = await fetch(`${API_BASE}/users/${userId}`, { credentials: 'include' });
   return handleResponse(res);
 }

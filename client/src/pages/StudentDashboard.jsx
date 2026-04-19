@@ -184,7 +184,7 @@ export default function StudentDashboard() {
             activeId={sideTab}
             items={[
               { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => setSideTab('calendar') },
-              { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => setSideTab('courses') },
+              { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
               { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
             ]}
             bottomItems={[
@@ -232,7 +232,7 @@ export default function StudentDashboard() {
                       >
                         <div className="appointment-color-dot" style={{ background: appt.color }} />
                         <div>
-                          <h4>{appt.title || 'Untitled appointment'}</h4>
+                          <h4>{appt.title || 'Untitled appointment'}</h4> 
                           <h6>{appt.ownerName}</h6>
                           <p>{formatDate(appt.startTime)}</p>
                           <p>{appt.location}</p>

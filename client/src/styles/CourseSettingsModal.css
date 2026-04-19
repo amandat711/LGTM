@@ -1,0 +1,259 @@
+.course-settings-modal.availability-modal {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.course-settings-section {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.course-settings-section-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f0f0f;
+}
+
+.course-settings-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+}
+
+.course-settings-staff-list {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.course-settings-staff-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #f8f8f8;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.course-settings-staff-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f0f0f;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.course-settings-staff-meta {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  word-break: break-all;
+}
+
+.course-settings-revoke-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #c62828;
+  background: #fff5f5;
+  color: #b71c1c;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.course-settings-revoke-btn:hover {
+  background: #ffecec;
+}
+
+.course-settings-revoke-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.course-settings-staff-row--pending-add {
+  border-style: dashed;
+  border-color: #1a56c4;
+  background: #f8fbff;
+}
+
+.course-settings-pending-add-note {
+  font-style: italic;
+  font-weight: 500;
+  color: #0d3b66;
+}
+
+.course-settings-staff-row--pending-revoke {
+  border-style: dashed;
+  opacity: 0.92;
+}
+
+.course-settings-staff-row--pending-revoke .course-settings-staff-name {
+  text-decoration: line-through;
+  text-decoration-color: #999;
+}
+
+.course-settings-pending-revoke-note {
+  font-style: italic;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.course-settings-undo-revoke-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #1a56c4;
+  background: #f5f8ff;
+  color: #0d3b66;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.course-settings-undo-revoke-btn:hover:not(:disabled) {
+  background: #e8f0ff;
+}
+
+.course-settings-undo-revoke-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.course-settings-empty {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: #888;
+}
+
+.course-settings-search-block {
+  margin-top: 4px;
+}
+
+.course-settings-search-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 6px;
+}
+
+.course-settings-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.course-settings-search-status {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #888;
+}
+
+.course-settings-search-results {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.course-settings-search-hit {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid #eee;
+  background: #fff;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.course-settings-search-hit:last-child {
+  border-bottom: none;
+}
+
+.course-settings-search-hit:hover:not(:disabled) {
+  background: #f5f8ff;
+}
+
+.course-settings-search-hit:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.course-settings-hit-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #0f0f0f;
+}
+
+.course-settings-hit-email {
+  font-size: 13px;
+  color: #555;
+  flex: 1;
+  min-width: 0;
+  word-break: break-all;
+}
+
+.course-settings-hit-note {
+  font-size: 12px;
+  color: #888;
+}
+
+.course-settings-hit-role {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef6ff;
+  color: #0d3b66;
+  flex-shrink: 0;
+}
+
+.course-settings-danger {
+  padding-bottom: 4px;
+}
+
+.course-settings-delete-btn {
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #c62828;
+  background: #fff;
+  color: #b71c1c;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.course-settings-delete-btn:hover:not(:disabled) {
+  background: #fff5f5;
+}
+
+.course-settings-delete-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

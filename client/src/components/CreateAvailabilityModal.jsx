@@ -5,7 +5,7 @@ function toIsoLocal(date, time) {
   return `${date}T${time}:00`;
 }
 
-export default function CreateAvailabilityModal({ onClose, onSubmit }) {
+export default function CreateAvailabilityModal({ onClose, onSubmit, defaultVisibility = 'private' }) {
   const today = new Date().toISOString().slice(0, 10);
 
   const [form, setForm] = useState({
@@ -16,7 +16,7 @@ export default function CreateAvailabilityModal({ onClose, onSubmit }) {
     end_time: '10:30',
     location: '',
     capacity: 1,
-    visibility: 'private',
+    visibility: defaultVisibility,
     recurrence_rule: '',
     slot_duration_minutes: 30,
   });

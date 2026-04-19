@@ -19,23 +19,34 @@ function mapUser(row) {
 }
 
 router.get('/', (req, res) => {
-  const { type } = req.query;
+  const { type, q } = req.query;
 
   let query = `
     SELECT user_id, first_name, last_name, mcgill_email, user_type, department, staff_title
     FROM users
   `;
-  let params = [];
+  const params = [];
+  const conditions = [];
 
   if (type === 'student') {
-    query += ` WHERE user_type = ?`;
-    params = ['student'];
+    conditions.push('user_type = ?');
+    params.push('student');
   } else if (type === 'professor') {
-    query += ` WHERE user_type IN (?, ?)`;
-    params = ['course_admin', 'general_admin'];
+    conditions.push('user_type IN (?, ?)');
+    params.push('course_admin', 'general_admin');
   }
 
-  query += ` ORDER BY user_id ASC`;
+  const qTrim = q != null && String(q).trim() ? String(q).trim() : '';
+  if (qTrim) {
+    conditions.push('LOWER(mcgill_email) LIKE ?');
+    params.push(`%${qTrim.toLowerCase()}%`);
+  }
+
+  if (conditions.length) {
+    query += ` WHERE ${conditions.join(' AND ')}`;
+  }
+
+  query += ` ORDER BY last_name ASC, first_name ASC LIMIT 80`;
 
   db.all(query, params, (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
