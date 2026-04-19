@@ -58,7 +58,7 @@ function requireCourseOwner(req, res, courseId, next) {
 }
 
 /**
- * POST /api/courses/:courseId/admins
+ * POST /courses/:courseId/admins
  * Body: { user_id } — target must exist.
  */
 router.post('/:courseId/admins', requireAuth, loadUser, (req, res) => {
@@ -76,6 +76,13 @@ router.post('/:courseId/admins', requireAuth, loadUser, (req, res) => {
       if (cErr) return res.status(500).json({ error: cErr.message });
       if (!course) return res.status(404).json({ error: 'Course not found.' });
 
+      db.get(
+        `SELECT user_id, first_name, last_name, mcgill_email, user_type FROM users WHERE user_id = ?`,
+        [targetId],
+        (uErr, target) => {
+          if (uErr) return res.status(500).json({ error: uErr.message });
+          if (!target) return res.status(404).json({ error: 'User not found.' });
+
           db.get(
             `SELECT assignment_id, status FROM course_admin_assignments
              WHERE course_id = ? AND course_admin_id = ?`,
@@ -86,6 +93,14 @@ router.post('/:courseId/admins', requireAuth, loadUser, (req, res) => {
               if (existing && existing.status === 'active') {
                 return res.status(409).json({ error: 'This user is already an active course admin for this course.' });
               }
+
+              const userPayload = {
+                user_id: target.user_id,
+                first_name: target.first_name,
+                last_name: target.last_name,
+                mcgill_email: target.mcgill_email,
+                user_type: target.user_type,
+              };
 
               if (existing && existing.status === 'revoked') {
                 return db.run(
@@ -98,13 +113,7 @@ router.post('/:courseId/admins', requireAuth, loadUser, (req, res) => {
                     return res.status(200).json({
                       message: 'Course admin reactivated.',
                       assignment_id: existing.assignment_id,
-                      user: {
-                        user_id: target.user_id,
-                        first_name: target.first_name,
-                        last_name: target.last_name,
-                        mcgill_email: target.mcgill_email,
-                        user_type: target.user_type,
-                      },
+                      user: userPayload,
                     });
                   }
                 );
@@ -119,13 +128,7 @@ router.post('/:courseId/admins', requireAuth, loadUser, (req, res) => {
                   res.status(201).json({
                     message: 'Course admin assigned.',
                     assignment_id: this.lastID,
-                    user: {
-                      user_id: target.user_id,
-                      first_name: target.first_name,
-                      last_name: target.last_name,
-                      mcgill_email: target.mcgill_email,
-                      user_type: target.user_type,
-                    },
+                    user: userPayload,
                   });
                 }
               );
@@ -135,9 +138,10 @@ router.post('/:courseId/admins', requireAuth, loadUser, (req, res) => {
       );
     });
   });
+});
 
 /**
- * DELETE /api/courses/:courseId/admins/:userId
+ * DELETE /courses/:courseId/admins/:userId
  * Revokes course_admin assignment (status = revoked).
  */
 router.delete('/:courseId/admins/:userId', requireAuth, loadUser, (req, res) => {
@@ -167,7 +171,7 @@ router.delete('/:courseId/admins/:userId', requireAuth, loadUser, (req, res) => 
 });
 
 /**
- * POST /api/courses/:courseId/invite/regenerate
+ * POST /courses/:courseId/invite/regenerate
  * New invitation token; previous invite links stop working.
  */
 router.post('/:courseId/invite/regenerate', requireAuth, loadUser, (req, res) => {
@@ -193,7 +197,7 @@ router.post('/:courseId/invite/regenerate', requireAuth, loadUser, (req, res) =>
 });
 
 /**
- * DELETE /api/courses/:courseId
+ * DELETE /courses/:courseId
  * Hard-delete course (cascades per schema: enrollments, staff, ownerships, course-tied availabilities;
  * appointments.course_id set NULL).
  */
@@ -211,7 +215,61 @@ router.delete('/:courseId', requireAuth, loadUser, (req, res) => {
 });
 
 /**
- * GET /api/courses
+ * PATCH /courses/:courseId
+ * Course owner (general_admin) only. Updates course_name and/or description.
+ */
+router.patch('/:courseId', requireAuth, loadUser, (req, res) => {
+  const courseId = parseCourseIdParam(req, res);
+  if (courseId == null) return;
+
+  requireCourseOwner(req, res, courseId, () => {
+    const { course_name, description } = req.body || {};
+    const updates = [];
+    const params = [];
+
+    if (course_name !== undefined) {
+      const n = String(course_name).trim();
+      if (!n) {
+        return res.status(400).json({ error: 'course_name cannot be empty.' });
+      }
+      updates.push('course_name = ?');
+      params.push(n);
+    }
+
+    if (description !== undefined) {
+      const d = description === null || description === '' ? null : String(description).trim();
+      updates.push('description = ?');
+      params.push(d);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ error: 'Provide course_name and/or description to update.' });
+    }
+
+    params.push(courseId);
+
+    db.run(
+      `UPDATE courses SET ${updates.join(', ')} WHERE course_id = ?`,
+      params,
+      function onPatch(err) {
+        if (err) return res.status(500).json({ error: err.message });
+        if (this.changes === 0) return res.status(404).json({ error: 'Course not found.' });
+        db.get(
+          `SELECT course_id, course_code, course_name, course_term, course_year, description
+           FROM courses WHERE course_id = ?`,
+          [courseId],
+          (gErr, row) => {
+            if (gErr) return res.status(500).json({ error: gErr.message });
+            res.json({ course: row });
+          }
+        );
+      }
+    );
+  });
+});
+
+/**
+ * GET /courses
  * Courses the viewer may see (active/completed enrollment, active staff assignment, or ownership).
  * Query: course_year, course_term (optional exact filters).
  * invitation_link omitted from list (use detail for staff/owner invite).
@@ -292,7 +350,7 @@ router.get('/', requireAuth, loadUser, (req, res) => {
 });
 
 /**
- * GET /api/courses/:courseId
+ * GET /courses/:courseId
  * Course detail, staff, office_hours, course appointments; invite_token / invite_url for staff or owners only.
  */
 router.get('/:courseId', requireAuth, loadUser, (req, res) => {
@@ -367,20 +425,48 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
     // Course-tied availabilities: public slots (e.g. office hours) for everyone;
     // private slots (e.g. small-group meetings) only for staff/owners.
     const ohSql = showPrivateCourseSlots
-      ? `SELECT * FROM availabilities WHERE course_id = ? ORDER BY datetime(start_time) ASC`
-      : `SELECT * FROM availabilities WHERE course_id = ? AND visibility = 'public'
-         ORDER BY datetime(start_time) ASC`;
+      ? `SELECT a.*,
+                cu.first_name AS creator_first_name,
+                cu.last_name AS creator_last_name
+         FROM availabilities a
+         JOIN users cu ON cu.user_id = a.created_by
+         WHERE a.course_id = ?
+         ORDER BY datetime(a.start_time) ASC`
+      : `SELECT a.*,
+                cu.first_name AS creator_first_name,
+                cu.last_name AS creator_last_name
+         FROM availabilities a
+         JOIN users cu ON cu.user_id = a.created_by
+         WHERE a.course_id = ? AND a.visibility = 'public'
+         ORDER BY datetime(a.start_time) ASC`;
+
+    const apFrom = `
+         FROM appointments a
+         LEFT JOIN availabilities av ON av.availability_id = a.created_from_availability
+         LEFT JOIN users cu ON cu.user_id = av.created_by
+         LEFT JOIN (
+           SELECT appointment_id, MIN(user_id) AS user_id
+           FROM appointment_participants
+           WHERE participant_role = 'host'
+           GROUP BY appointment_id
+         ) aph ON aph.appointment_id = a.appointment_id
+         LEFT JOIN users hu ON hu.user_id = aph.user_id`;
 
     const apSql = showPrivateCourseSlots
-      ? `SELECT appointment_id, course_id, capacity, location, start_time, end_time, visibility,
-                ap_title, ap_description, scheduling_mode, status, created_at
-         FROM appointments WHERE course_id = ? AND status != 'cancelled'
-         ORDER BY datetime(start_time) ASC`
-      : `SELECT appointment_id, course_id, capacity, location, start_time, end_time, visibility,
-                ap_title, ap_description, scheduling_mode, status, created_at
-         FROM appointments
-         WHERE course_id = ? AND status != 'cancelled' AND visibility = 'public'
-         ORDER BY datetime(start_time) ASC`;
+      ? `SELECT a.appointment_id, a.course_id, a.capacity, a.location, a.start_time, a.end_time, a.visibility,
+                a.ap_title, a.ap_description, a.scheduling_mode, a.status, a.created_at,
+                COALESCE(cu.first_name, hu.first_name) AS creator_first_name,
+                COALESCE(cu.last_name, hu.last_name) AS creator_last_name
+         ${apFrom}
+         WHERE a.course_id = ? AND a.status != 'cancelled'
+         ORDER BY datetime(a.start_time) ASC`
+      : `SELECT a.appointment_id, a.course_id, a.capacity, a.location, a.start_time, a.end_time, a.visibility,
+                a.ap_title, a.ap_description, a.scheduling_mode, a.status, a.created_at,
+                COALESCE(cu.first_name, hu.first_name) AS creator_first_name,
+                COALESCE(cu.last_name, hu.last_name) AS creator_last_name
+         ${apFrom}
+         WHERE a.course_id = ? AND a.status != 'cancelled' AND a.visibility = 'public'
+         ORDER BY datetime(a.start_time) ASC`;
 
     db.all(staffSql, [courseId], (sErr, staff) => {
       if (sErr) return res.status(500).json({ error: sErr.message });
@@ -425,7 +511,7 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
 });
 
 /**
- * POST /api/courses/join
+ * POST /courses/join
  * Body: { token: string } — must match courses.invitation_link (opaque token).
  * Students only; creates or reactivates enrollment.
  */
@@ -511,7 +597,7 @@ router.post('/join', requireAuth, loadUser, (req, res) => {
 });
 
 /**
- * POST /api/courses
+ * POST /courses
  * general_admin only. Sets invitation_link to a new opaque token; adds course_ownerships for creator.
  */
 router.post('/', requireAuth, loadUser, (req, res) => {

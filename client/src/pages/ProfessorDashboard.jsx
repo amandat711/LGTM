@@ -272,8 +272,8 @@ export default function ProfessorDashboard() {
             activeId={sideTab}
             items={[
               { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => setSideTab('calendar') },
-              { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => setSideTab('courses') },
-              { id: 'search', icon: searchIcon, label: 'Search', onClick: () => setSideTab('search') },
+              { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
+              { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
               { id: 'create', iconText: '+', label: 'Create availability', onClick: () => setModal('createAvailability') },
             ]}
             bottomItems={[

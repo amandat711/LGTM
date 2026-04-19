@@ -105,9 +105,9 @@ Book an appointment from an availability.
 
 ## Courses
 
-All course routes below are mounted at `app.use('/api/courses', coursesRouter)`.
+All course routes below are mounted at `app.use('/courses', coursesRouter)`.
 
-### `GET /api/courses`
+### `GET /courses`
 List courses visible to current session user.
 - Optional query:
   - `course_year`
@@ -121,7 +121,7 @@ List courses visible to current session user.
   - `is_staff`
   - `is_owner`
 
-### `GET /api/courses/:courseId`
+### `GET /courses/:courseId`
 Get course detail for an allowed user.
 - Requires login/session and membership/ownership/staff access.
 - Returns:
@@ -135,7 +135,7 @@ Get course detail for an allowed user.
   - others only see `visibility='public'` course slots
 - `invite_token` and `invite_url` are included only for staff/owners.
 
-### `POST /api/courses`
+### `POST /courses`
 Create a course.
 - Requires `general_admin`.
 - Body required:
@@ -151,7 +151,7 @@ Create a course.
   - creates active ownership row for creator in `course_ownerships`
 - Returns `course`, `invite_token`, and `invite_url` (if `FRONTEND_ORIGIN` is configured).
 
-### `POST /api/courses/join`
+### `POST /courses/join`
 Join a course by invite token.
 - Requires login/session.
 - Body required:
@@ -161,7 +161,7 @@ Join a course by invite token.
   - creates `course_enrollments` row with `active` status or re-activates revoked/completed enrollment
   - returns `409` if already actively enrolled
 
-### `POST /api/courses/:courseId/admins`
+### `POST /courses/:courseId/admins`
 Assign a course admin to a course.
 - Requires active course owner permission.
 - Body:
@@ -170,18 +170,18 @@ Assign a course admin to a course.
   - target user must exist and be `user_type='course_admin'`
   - creates active assignment, or re-activates revoked assignment
 
-### `DELETE /api/courses/:courseId/admins/:userId`
+### `DELETE /courses/:courseId/admins/:userId`
 Revoke a course admin assignment.
 - Requires active course owner permission.
 - Behavior: sets assignment `status='revoked'`.
 
-### `POST /api/courses/:courseId/invite/regenerate`
+### `POST /courses/:courseId/invite/regenerate`
 Regenerate invite token for a course.
 - Requires active course owner permission.
 - Returns new `invite_token` and `invite_url`.
 - Old invite links stop working.
 
-### `DELETE /api/courses/:courseId`
+### `DELETE /courses/:courseId`
 Hard-delete a course.
 - Requires active course owner permission.
 - Cascade behavior from schema:
@@ -222,7 +222,7 @@ Cancel an appointment.
   - `app.use('/auth', authRouter)` and `app.use('/api/auth', authRouter)`
   - `app.use('/availabilities', availabilitiesRouter)`
   - `app.use('/appointments', appointmentsRouter)`
-  - `app.use('/api/courses', coursesRouter)`
+  - `app.use('/courses', coursesRouter)`
 - Middleware order: CORS → `express.json()` → `express-session` → routes.
 - The app uses SQLite via `server/config/db.js`.
 - Session-based auth lives in `server/routes/auth.js`. Other routes may still accept `user_id` in the body or query until they are migrated to `requireAuth`.

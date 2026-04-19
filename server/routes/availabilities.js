@@ -18,7 +18,8 @@ function normalizeCourseId(value) {
   return n;
 }
 
-function assertUserMayPostOfficeHours(courseId, userId, userType, callback) {
+/** Course owner or active course admin (any user_type) may add course-tied office hours. */
+function assertUserMayPostOfficeHours(courseId, userId, callback) {
   db.get('SELECT course_id FROM courses WHERE course_id = ?', [courseId], (err, course) => {
     if (err) return callback(err);
     if (!course) {
@@ -26,41 +27,24 @@ function assertUserMayPostOfficeHours(courseId, userId, userType, callback) {
       e.statusCode = 404;
       return callback(e);
     }
-    if (userType === 'general_admin') {
-      return db.get(
-        `SELECT 1 AS ok FROM course_ownerships
-         WHERE course_id = ? AND general_admin_id = ? AND status = 'active'`,
-        [courseId, userId],
-        (e2, row) => {
-          if (e2) return callback(e2);
-          if (!row) {
-            const e = new Error('You are not an owner of this course.');
-            e.statusCode = 403;
-            return callback(e);
-          }
-          callback(null);
+    db.get(
+      `SELECT 1 AS ok FROM course_ownerships
+       WHERE course_id = ? AND general_admin_id = ? AND status = 'active'
+       UNION ALL
+       SELECT 1 AS ok FROM course_admin_assignments
+       WHERE course_id = ? AND course_admin_id = ? AND status = 'active'
+       LIMIT 1`,
+      [courseId, userId, courseId, userId],
+      (e2, row) => {
+        if (e2) return callback(e2);
+        if (!row) {
+          const e = new Error('You are not an owner or course admin for this course.');
+          e.statusCode = 403;
+          return callback(e);
         }
-      );
-    }
-    if (userType === 'course_admin') {
-      return db.get(
-        `SELECT 1 AS ok FROM course_admin_assignments
-         WHERE course_id = ? AND course_admin_id = ? AND status = 'active'`,
-        [courseId, userId],
-        (e2, row) => {
-          if (e2) return callback(e2);
-          if (!row) {
-            const e = new Error('You are not a course admin for this course.');
-            e.statusCode = 403;
-            return callback(e);
-          }
-          callback(null);
-        }
-      );
-    }
-    const e = new Error('Not allowed to create course-tied availability.');
-    e.statusCode = 403;
-    return callback(e);
+        callback(null);
+      }
+    );
   });
 }
 
@@ -172,14 +156,17 @@ router.post('/', (req, res) => {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      const allowed = ['course_admin', 'general_admin'];
-      if (!allowed.includes(user.user_type)) {
-        return res.status(403).json({
-          error: 'Not allowed to create availability'
-        });
+      const courseIdForRow = courseIdNorm;
+
+      if (courseIdForRow == null) {
+        const allowed = ['course_admin', 'general_admin'];
+        if (!allowed.includes(user.user_type)) {
+          return res.status(403).json({
+            error: 'Not allowed to create availability'
+          });
+        }
       }
 
-      const courseIdForRow = courseIdNorm;
       const overlapCourseKey = courseIdForRow == null ? -1 : courseIdForRow;
 
       const startCreateFlow = () => {
@@ -298,7 +285,7 @@ router.post('/', (req, res) => {
         return startCreateFlow();
       }
 
-      return assertUserMayPostOfficeHours(courseIdForRow, user.user_id, user.user_type, (courseErr) => {
+      return assertUserMayPostOfficeHours(courseIdForRow, user.user_id, (courseErr) => {
         if (courseErr) {
           const code = courseErr.statusCode || 500;
           return res.status(code).json({ error: courseErr.message });
@@ -532,46 +519,73 @@ router.delete('/:id', (req, res) => {
             return res.status(404).json({ error: 'Deleting user not found' });
           }
 
-          const isOwner = Number(availability.created_by) === Number(deleted_by);
-          const isAdmin = ['course_admin', 'general_admin'].includes(user.user_type);
+          const isCreator = Number(availability.created_by) === Number(deleted_by);
+          const isFacultyAdmin = ['course_admin', 'general_admin'].includes(user.user_type);
 
-          if (!isOwner && !isAdmin) {
-            return res.status(403).json({
-              error: 'Not allowed to delete this availability'
-            });
-          }
-
-          db.get(
-            `
+          const runDeleteAfterChecks = () => {
+            db.get(
+              `
             SELECT COUNT(*) AS active_booking_count
             FROM appointments
             WHERE created_from_availability = ?
               AND status != 'cancelled'
             `,
-            [availabilityId],
-            (err, countRow) => {
-              if (err) return res.status(500).json({ error: err.message });
+              [availabilityId],
+              (err, countRow) => {
+                if (err) return res.status(500).json({ error: err.message });
 
-              if (countRow.active_booking_count > 0) {
-                return res.status(400).json({
-                  error: 'Cannot delete availability with active booking(s)'
-                });
-              }
-
-              db.run(
-                `DELETE FROM availabilities WHERE availability_id = ?`,
-                [availabilityId],
-                function (err) {
-                  if (err) return res.status(500).json({ error: err.message });
-
-                  res.json({
-                    message: 'Availability deleted successfully',
-                    deleted_availability_id: Number(availabilityId)
+                if (countRow.active_booking_count > 0) {
+                  return res.status(400).json({
+                    error: 'Cannot delete availability with active booking(s)'
                   });
                 }
-              );
-            }
-          );
+
+                db.run(
+                  `DELETE FROM availabilities WHERE availability_id = ?`,
+                  [availabilityId],
+                  function (delErr) {
+                    if (delErr) return res.status(500).json({ error: delErr.message });
+
+                    res.json({
+                      message: 'Availability deleted successfully',
+                      deleted_availability_id: Number(availabilityId)
+                    });
+                  }
+                );
+              }
+            );
+          };
+
+          if (isCreator) {
+            return runDeleteAfterChecks();
+          }
+
+          if (availability.course_id) {
+            return db.get(
+              `SELECT 1 AS ok FROM course_ownerships
+               WHERE course_id = ? AND general_admin_id = ? AND status = 'active'
+               UNION ALL
+               SELECT 1 AS ok FROM course_admin_assignments
+               WHERE course_id = ? AND course_admin_id = ? AND status = 'active'
+               LIMIT 1`,
+              [availability.course_id, deleted_by, availability.course_id, deleted_by],
+              (e2, staffRow) => {
+                if (e2) return res.status(500).json({ error: e2.message });
+                if (staffRow) return runDeleteAfterChecks();
+                return res.status(403).json({
+                  error: 'Not allowed to delete this availability'
+                });
+              }
+            );
+          }
+
+          if (!isFacultyAdmin) {
+            return res.status(403).json({
+              error: 'Not allowed to delete this availability'
+            });
+          }
+
+          runDeleteAfterChecks();
         }
       );
     }

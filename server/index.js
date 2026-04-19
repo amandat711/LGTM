@@ -46,7 +46,7 @@ app.use('/availabilities', availabilitiesRouter);
 app.use('/appointments', appointmentsRouter);
 app.use('/heatmaps', heatmapsRouter);
 app.use('/users', usersRouter);
-app.use('/api/courses', coursesRouter);
+app.use('/courses', coursesRouter);
 
 db.get("SELECT 1", (err, row) => {
   if (err) {
