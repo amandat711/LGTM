@@ -55,7 +55,7 @@ function professorMailtoHref(professor) {
 function mapOwnerToProfessor(owner) {
   return {
     id: owner.user_id?.toString() ?? `${owner.first_name?.toLowerCase()}.${owner.last_name?.toLowerCase()}`,
-    name: owner.first_name && owner.last_name ? `Prof. ${owner.first_name} ${owner.last_name}` : owner.staff_title || 'Professor',
+    name: owner.first_name && owner.last_name ? `${owner.first_name} ${owner.last_name}` : owner.staff_title || 'Professor',
     department: owner.department || owner.staff_title || 'Faculty',
     email: owner.mcgill_email || 'noreply@mail.mcgill.ca',
     bio: owner.staff_title
@@ -250,7 +250,7 @@ export default function BookingProfessor() {
                   href={professorMailtoHref(professor)}
                   className="professor-card-button secondary-button booking-professor-email-btn"
                 >
-                  Email professor
+                  Contact
                 </a>
               </div>
             </div>

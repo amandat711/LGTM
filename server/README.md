@@ -31,6 +31,19 @@ End the session.
 ### `GET /auth/me`
 Return the current user from the session.
 
+### `POST /auth/forgot-password`
+Request a password reset email.
+- Body: `email`
+- Response is intentionally generic (does not reveal whether an account exists).
+- Sends an email with a reset link that contains a secure token.
+
+### `POST /auth/reset-password`
+Reset password using a forgot-password token.
+- Body:
+  - `token`
+  - `newPassword` (minimum 8 characters)
+- Token expires after 1 hour and can only be used once.
+
 ### Protecting other routes
 `server/routes/auth.js` exports **`requireAuth`** (middleware). Use it on routes that should only run for a logged-in user (`req.session.userId`).
 
@@ -43,6 +56,7 @@ Create availability slots.
   - `start_time` (ISO datetime)
   - `end_time` (ISO datetime)
 - Optional body:
+  - `course_id` (nullable integer; if set, availability is tied to that course)
   - `slot_duration_minutes` (default `30`)
   - `location`
   - `capacity` (default `1`)
@@ -52,8 +66,11 @@ Create availability slots.
   - `av_description`
 - Notes:
   - Only `course_admin` and `general_admin` users may create availabilities.
+  - If `course_id` is set, creator must be authorized for that course:
+    - `course_admin` with active `course_admin_assignments`, or
+    - `general_admin` with active `course_ownerships`.
   - Time range must divide evenly by `slot_duration_minutes`.
-  - New generated slots cannot overlap existing availabilities for the same creator.
+  - New generated slots cannot overlap existing availabilities for the same creator and same course scope (`course_id` lane).
 
 ### `GET /availabilities`
 List availabilities.
@@ -97,6 +114,93 @@ Book an appointment from an availability.
   - The slot must be future-starting.
   - Booking is blocked when capacity is full.
   - Same user cannot book the same availability twice.
+  - If the source availability has a `course_id`, the created appointment inherits that `course_id`.
+
+## Courses
+
+All course routes below are mounted at `app.use('/courses', coursesRouter)`.
+
+### `GET /courses`
+List courses visible to current session user.
+- Optional query:
+  - `course_year`
+  - `course_term`
+- Visibility is a union of:
+  - enrollments with `enrollment_status IN ('active', 'completed')`
+  - active `course_admin_assignments`
+  - active `course_ownerships`
+- Returns per-course role flags:
+  - `enrollment_status`
+  - `is_staff`
+  - `is_owner`
+
+### `GET /courses/:courseId`
+Get course detail for an allowed user.
+- Requires login/session and membership/ownership/staff access.
+- Returns:
+  - `course` metadata
+  - `staff` (active course admins)
+  - `owners` (active course owners)
+  - `office_hours` (course-tied availabilities)
+  - `appointments` (course-tied appointments, non-cancelled)
+- Visibility behavior:
+  - staff/owners can see private and public course slots
+  - others only see `visibility='public'` course slots
+- `invite_token` and `invite_url` are included only for staff/owners.
+
+### `POST /courses`
+Create a course.
+- Requires `general_admin`.
+- Body required:
+  - `course_code`
+  - `course_name`
+  - `course_term`
+  - `course_year`
+- Optional body:
+  - `description`
+- Behavior:
+  - inserts course
+  - generates/stores an invite token in `invitation_link`
+  - creates active ownership row for creator in `course_ownerships`
+- Returns `course`, `invite_token`, and `invite_url` (if `FRONTEND_ORIGIN` is configured).
+
+### `POST /courses/join`
+Join a course by invite token.
+- Requires login/session.
+- Body required:
+  - `token` (matches `courses.invitation_link`)
+- Notes:
+  - currently restricted to `student` users
+  - creates `course_enrollments` row with `active` status or re-activates revoked/completed enrollment
+  - returns `409` if already actively enrolled
+
+### `POST /courses/:courseId/admins`
+Assign a course admin to a course.
+- Requires active course owner permission.
+- Body:
+  - `user_id` (or `course_admin_id`)
+- Notes:
+  - target user must exist and be `user_type='course_admin'`
+  - creates active assignment, or re-activates revoked assignment
+
+### `DELETE /courses/:courseId/admins/:userId`
+Revoke a course admin assignment.
+- Requires active course owner permission.
+- Behavior: sets assignment `status='revoked'`.
+
+### `POST /courses/:courseId/invite/regenerate`
+Regenerate invite token for a course.
+- Requires active course owner permission.
+- Returns new `invite_token` and `invite_url`.
+- Old invite links stop working.
+
+### `DELETE /courses/:courseId`
+Hard-delete a course.
+- Requires active course owner permission.
+- Cascade behavior from schema:
+  - deletes related enrollments, admin assignments, ownerships
+  - deletes course-tied availabilities (`availabilities.course_id` has `ON DELETE CASCADE`)
+  - appointment rows remain, but `appointments.course_id` becomes `NULL` (`ON DELETE SET NULL`)
 
 ### `GET /appointments/my`
 List all appointments for a user.
@@ -131,6 +235,16 @@ Cancel an appointment.
   - `app.use('/auth', authRouter)` and `app.use('/api/auth', authRouter)`
   - `app.use('/availabilities', availabilitiesRouter)`
   - `app.use('/appointments', appointmentsRouter)`
+  - `app.use('/courses', coursesRouter)`
 - Middleware order: CORS → `express.json()` → `express-session` → routes.
 - The app uses SQLite via `server/config/db.js`.
 - Session-based auth lives in `server/routes/auth.js`. Other routes may still accept `user_id` in the body or query until they are migrated to `requireAuth`.
+
+## Email Configuration (Forgot Password)
+Set these environment variables in `server/.env` for Gmail:
+- `FRONTEND_URL` (example: `http://localhost:3000`) used to build reset links
+- `MAIL_FROM` (example: `LGTM <no-reply@lgtm.local>`)
+- `SMTP_USER` (your Gmail address)
+- `GOOGLE_APP_PASSWORD` (16-character App Password)
+
+If Gmail vars are missing, the server falls back to Nodemailer `jsonTransport` and logs the email content locally for development.

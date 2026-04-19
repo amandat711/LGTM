@@ -1,4 +1,6 @@
-const API_BASE = 'http://localhost:4000';
+import { API_BASE } from '../constants/config';
+
+const fetchOpts = { credentials: 'include' };
 
 async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
@@ -12,6 +14,7 @@ async function handleResponse(res) {
 
 export async function createAvailability(payload) {
   const res = await fetch(`${API_BASE}/availabilities`, {
+    ...fetchOpts,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -22,6 +25,7 @@ export async function createAvailability(payload) {
 
 export async function deleteAvailability(availabilityId, deletedBy) {
   const res = await fetch(`${API_BASE}/availabilities/${availabilityId}`, {
+    ...fetchOpts,
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ deleted_by: deletedBy }),

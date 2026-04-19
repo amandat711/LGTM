@@ -5,6 +5,7 @@ import logo1 from "../assets/logo1.png";
 import header from "../assets/header.png";
 import heatmapPreview from "../assets/HeatmapPreview.png";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
 import "../styles/LandingPage.css";
 
 
@@ -38,24 +39,13 @@ export default function LandingPage() {
       {/* Top navigation bar */}
       <nav className={`landing-top-bar${scrolled ? " landing-top-bar-scrolled" : ""}`}>
         <div className="landing-top-bar-content">
-          <div className="brand-area">
-            <img src={logo1} alt="McGill logo" className="brand-logo" />
-          </div>
-          <div className="landing-top-bar-actions">
-            {/* Currently goes to the demo student dashboard. */}
-            <button className="login-button" onClick={() => navigate("/login")}>
-              Login
-            </button>
-
-            {/* Profile button is visual only for now. */}
-            <button className="profile-button" aria-label="Profile">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="#333" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-            </button>
-          </div>
+          <Navbar
+            logo={logo1}
+            onLeftClick={() => navigate("/")}
+            actions={[
+              { label: "Login", onClick: () => navigate("/login") },
+            ]}
+          />
         </div>
       </nav>
 

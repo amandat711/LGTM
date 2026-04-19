@@ -189,9 +189,9 @@ export default function StudentDashboard() {
           <Sidebar
             activeId={sideTab}
             items={[
-              // Calendar and courses are local dashboard tabs.
+              // Calendar stays local; courses and search open their dedicated pages.
               { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => setSideTab('calendar') },
-              { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => setSideTab('courses') },
+              { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
               // Search opens the booking discovery flow where students find professors.
               { id: 'search', icon: searchIcon, iconClassName: 'side-menu-icon-img-search', label: 'Search', onClick: () => navigate('/booking/search') },
             ]}

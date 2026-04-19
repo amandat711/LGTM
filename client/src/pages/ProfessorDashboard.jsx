@@ -276,10 +276,10 @@ export default function ProfessorDashboard() {
           <Sidebar
             activeId={sideTab}
             items={[
-              // Calendar, courses, and search are local dashboard navigation options.
+              // Calendar stays local; courses and search open their dedicated pages.
               { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => setSideTab('calendar') },
-              { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => setSideTab('courses') },
-              { id: 'search', icon: searchIcon, iconClassName: 'side-menu-icon-img-search', label: 'Search', onClick: () => setSideTab('search') },
+              { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
+              { id: 'search', icon: searchIcon, iconClassName: 'side-menu-icon-img-search', label: 'Search', onClick: () => navigate('/booking/search') },
               // Create opens the same availability modal as the old plus button.
               { id: 'create', icon: createAvailabilityIcon, label: 'Create availability', onClick: () => setModal('createAvailability') },
             ]}
