@@ -289,6 +289,48 @@ async function getAppointmentWithParticipants(appointmentId) {
   };
 }
 
+async function deleteHeatmapForOwner(heatmapId, deletedBy) {
+  if (!deletedBy) {
+    const error = new Error('deleted_by is required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const heatmap = await dbGet(`SELECT * FROM heatmaps WHERE hm_id = ?`, [heatmapId]);
+  if (!heatmap) {
+    const error = new Error('Heatmap not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  if (Number(heatmap.created_by) !== Number(deletedBy)) {
+    const error = new Error('Only the heatmap owner can delete this heatmap');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const submissions = await dbAll(
+    `SELECT submission_id FROM hm_availability_submissions WHERE heatmap_id = ?`,
+    [heatmapId]
+  );
+  const submissionIds = submissions.map((submission) => submission.submission_id);
+
+  if (submissionIds.length > 0) {
+    await dbRun(
+      `DELETE FROM hm_submitted_time_slots WHERE submission_id IN (${submissionIds.map(() => '?').join(',')})`,
+      submissionIds
+    );
+  }
+
+  await dbRun(`DELETE FROM hm_availability_submissions WHERE heatmap_id = ?`, [heatmapId]);
+  await dbRun(`DELETE FROM heatmaps WHERE hm_id = ?`, [heatmapId]);
+
+  return {
+    message: 'Heatmap deleted successfully',
+    deletedHeatmapId: heatmapId,
+  };
+}
+
 router.get('/', async (req, res) => {
   try {
     await ensureSubmissionStatusColumn();
@@ -372,6 +414,102 @@ router.post('/', async (req, res) => {
     return res.status(201).json(bundle);
   } catch (err) {
     return res.status(500).json({ error: err.message });
+  }
+});
+
+router.patch('/:id', async (req, res) => {
+  try {
+    await ensureSubmissionStatusColumn();
+
+    const heatmapId = Number(req.params.id);
+    const {
+      hm_title,
+      hm_description,
+      visibility,
+      no_earlier_time,
+      no_later_time,
+      time_zone,
+      changed_by,
+    } = req.body;
+
+    if (!changed_by) {
+      return res.status(400).json({ error: 'changed_by is required' });
+    }
+
+    const heatmap = await dbGet(`SELECT * FROM heatmaps WHERE hm_id = ?`, [heatmapId]);
+    if (!heatmap) {
+      return res.status(404).json({ error: 'Heatmap not found' });
+    }
+
+    if (Number(heatmap.created_by) !== Number(changed_by)) {
+      return res.status(403).json({ error: 'Only the heatmap owner can edit this heatmap' });
+    }
+
+    const nextTitle = typeof hm_title === 'string' ? hm_title.trim() : heatmap.hm_title;
+    if (!nextTitle) {
+      return res.status(400).json({ error: 'hm_title cannot be empty' });
+    }
+
+    const nextVisibility = visibility || heatmap.visibility;
+    if (!['private', 'public'].includes(nextVisibility)) {
+      return res.status(400).json({ error: 'visibility must be private or public' });
+    }
+
+    await dbRun(
+      `
+        UPDATE heatmaps
+        SET
+          hm_title = ?,
+          hm_description = ?,
+          visibility = ?,
+          no_earlier_time = ?,
+          no_later_time = ?,
+          time_zone = ?
+        WHERE hm_id = ?
+      `,
+      [
+        nextTitle,
+        hm_description !== undefined ? hm_description || null : heatmap.hm_description,
+        nextVisibility,
+        no_earlier_time !== undefined ? no_earlier_time || null : heatmap.no_earlier_time,
+        no_later_time !== undefined ? no_later_time || null : heatmap.no_later_time,
+        time_zone || heatmap.time_zone,
+        heatmapId,
+      ]
+    );
+
+    const bundle = await getHeatmapBundle(heatmapId);
+    return res.json(bundle);
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    await ensureSubmissionStatusColumn();
+
+    const heatmapId = Number(req.params.id);
+    const deleted_by = req.body.deleted_by || req.query.deleted_by;
+    const result = await deleteHeatmapForOwner(heatmapId, deleted_by);
+
+    return res.json(result);
+  } catch (err) {
+    return res.status(err.statusCode || 500).json({ error: err.message });
+  }
+});
+
+router.post('/:id/delete', async (req, res) => {
+  try {
+    await ensureSubmissionStatusColumn();
+
+    const heatmapId = Number(req.params.id);
+    const deleted_by = req.body.deleted_by || req.query.deleted_by;
+    const result = await deleteHeatmapForOwner(heatmapId, deleted_by);
+
+    return res.json(result);
+  } catch (err) {
+    return res.status(err.statusCode || 500).json({ error: err.message });
   }
 });
 
