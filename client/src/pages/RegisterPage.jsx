@@ -182,7 +182,7 @@ export default function RegisterPage() {
           </div>
           <button
             type="submit"
-            className="mx-auto mt-2 h-[40px] min-w-[112px] rounded-full bg-black px-8 text-[16px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mx-auto mt-2 h-[40px] min-w-[112px] cursor-pointer rounded-full bg-black px-8 text-[16px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={submitting}
           >
             {submitting ? '...' : 'Register'}
