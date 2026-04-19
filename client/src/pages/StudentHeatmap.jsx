@@ -10,18 +10,35 @@ import Navbar from '../components/Navbar';
 import useAppShellSession from '../hooks/useAppShellSession';
 import { sessionUserToNavUser } from '../auth/authUtils';
 // Student view uses the professor-availability grid, where only professor slots are selectable.
-import { ProfAvailGrid } from '../components/HeatmapGrid';
+import { ProfAvailGrid, GridPager } from '../components/HeatmapGrid';
 // Backend helpers for loading a heatmap and saving the student's response.
 import { getHeatmap, saveHeatmapSubmission } from '../api/heatmaps';
 // Calendar-grid helpers that produce the visible day and time labels.
 import { generateDays, generateTimes } from '../utils/generateDays';
 // Shared conversion helpers used by both heatmap pages.
 import {
+  addDaysToIsoDate,
   buildDashboardPath,
+  compareIsoDates,
+  countInclusiveDays,
   deriveRangeFromSlots,
   keysToSlots,
   mapSubmissionSlotsToKeys,
+  maxIsoDate,
+  minIsoDate,
+  toLocalIsoDate,
 } from '../utils/heatmapPageUtils';
+
+const GRID_PAGE_SIZE = 5;
+
+function getDefaultHeatmapRange() {
+  const today = toLocalIsoDate(new Date());
+
+  return {
+    startDate: today,
+    endDate: addDaysToIsoDate(today, GRID_PAGE_SIZE - 1),
+  };
+}
 
 export default function StudentHeatmap() {
   // Router data: eventId is the heatmap ID from the invite link.
@@ -47,13 +64,28 @@ export default function StudentHeatmap() {
     : '';
 
   // Controls which dates and hours are visible in the heatmap grid.
-  const [startDate, setStartDate] = useState('2026-04-07');
+  const defaultRange = useMemo(() => getDefaultHeatmapRange(), []);
+  const [startDate, setStartDate] = useState(defaultRange.startDate);
+  const [endDate, setEndDate] = useState(defaultRange.endDate);
+  const [viewStartDate, setViewStartDate] = useState(defaultRange.startDate);
   const [startHour, setStartHour] = useState(8);
   const [endHour, setEndHour] = useState(17);
-  const [numDays, setNumDays] = useState(5);
   const [setupDone, setSetupDone] = useState(false);
-  const days = useMemo(() => generateDays(startDate, numDays), [startDate, numDays]);
+  const visibleDayCount = useMemo(
+    () => Math.min(GRID_PAGE_SIZE, countInclusiveDays(viewStartDate, endDate)),
+    [viewStartDate, endDate]
+  );
+  const days = useMemo(() => generateDays(viewStartDate, visibleDayCount), [viewStartDate, visibleDayCount]);
   const times = useMemo(() => generateTimes(startHour, endHour), [startHour, endHour]);
+  const latestPageStart = useMemo(
+    () => maxIsoDate(startDate, addDaysToIsoDate(endDate, -(GRID_PAGE_SIZE - 1))),
+    [startDate, endDate]
+  );
+  const canPageBack = compareIsoDates(viewStartDate, startDate) > 0;
+  const canPageForward = compareIsoDates(days[days.length - 1]?.iso || viewStartDate, endDate) < 0;
+  const gridRangeLabel = days.length > 0
+    ? `${days[0].date} - ${days[days.length - 1].date}`
+    : '';
 
   // Student selections, professor-published slots, loaded heatmap data, and page status.
   const [studSelected, setStudSelected] = useState(new Set());
@@ -98,9 +130,10 @@ export default function StudentHeatmap() {
         const derivedRange = deriveRangeFromSlots(allSlots);
         if (derivedRange) {
           setStartDate(derivedRange.startDate);
+          setEndDate(derivedRange.endDate);
+          setViewStartDate(derivedRange.startDate);
           setStartHour(derivedRange.startHour);
           setEndHour(Math.max(derivedRange.endHour, derivedRange.startHour + 1));
-          setNumDays(derivedRange.numDays);
           setSetupDone(true);
         }
       } catch (err) {
@@ -116,6 +149,28 @@ export default function StudentHeatmap() {
       active = false;
     };
   }, [eventId]);
+
+  // Apply the full heatmap date range and reset the grid window to the first page.
+  function handleApplyDateRange() {
+    if (compareIsoDates(endDate, startDate) < 0) {
+      setError('End date must be on or after the start date.');
+      return;
+    }
+
+    setError('');
+    setViewStartDate(startDate);
+    setSetupDone(true);
+  }
+
+  // Move the visible grid window backward through the selected date range.
+  function showPreviousDays() {
+    setViewStartDate((current) => maxIsoDate(startDate, addDaysToIsoDate(current, -GRID_PAGE_SIZE)));
+  }
+
+  // Move the visible grid window forward through the selected date range.
+  function showNextDays() {
+    setViewStartDate((current) => minIsoDate(addDaysToIsoDate(current, GRID_PAGE_SIZE), latestPageStart));
+  }
 
   // Keep the selectable professor slots synced with the host's saved availability.
   useEffect(() => {
@@ -207,15 +262,26 @@ export default function StudentHeatmap() {
             <div className="setup-controls">
               <div className="setup-field">
                 <label>Start date</label>
-                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => {
+                    const nextStart = e.target.value;
+                    setStartDate(nextStart);
+                    if (compareIsoDates(endDate, nextStart) < 0) {
+                      setEndDate(nextStart);
+                    }
+                  }}
+                />
               </div>
               <div className="setup-field">
-                <label>Days shown</label>
-                <select value={numDays} onChange={(e) => setNumDays(Number(e.target.value))}>
-                  <option value={3}>3 days</option>
-                  <option value={5}>5 days</option>
-                  <option value={7}>7 days</option>
-                </select>
+                <label>End date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  min={startDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
               </div>
               <div className="setup-field">
                 <label>From</label>
@@ -233,7 +299,7 @@ export default function StudentHeatmap() {
                   ))}
                 </select>
               </div>
-              <button className="button button-primary" style={{ alignSelf: 'flex-end' }} onClick={() => setSetupDone(true)}>
+              <button className="button button-primary" style={{ alignSelf: 'flex-end' }} onClick={handleApplyDateRange}>
                 Apply
               </button>
             </div>
@@ -244,7 +310,7 @@ export default function StudentHeatmap() {
         {setupDone && (
           <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-              Showing <strong style={{ color: 'var(--text)' }}>{days[0]?.date} – {days[days.length - 1]?.date}</strong>, {startHour <= 12 ? startHour : startHour - 12}:00 {startHour < 12 ? 'AM' : 'PM'} {' – '} {endHour <= 12 ? endHour : endHour - 12}:00 {endHour < 12 ? 'AM' : 'PM'}
+              Showing <strong style={{ color: 'var(--text)' }}>{days[0]?.date} – {days[days.length - 1]?.date}</strong> of {countInclusiveDays(startDate, endDate)} days, {startHour <= 12 ? startHour : startHour - 12}:00 {startHour < 12 ? 'AM' : 'PM'} {' – '} {endHour <= 12 ? endHour : endHour - 12}:00 {endHour < 12 ? 'AM' : 'PM'}
             </span>
             <button className="button button-ghost button-small" onClick={() => setSetupDone(false)}>
               Change
@@ -284,15 +350,23 @@ export default function StudentHeatmap() {
         {/* Main student grid: only professor-published slots can be clicked. */}
         <p className="section-label">Select from the professor's available slots</p>
         <div className="grid-outer">
-          <ProfAvailGrid
-            days={days}
-            times={times}
-            profSlots={profSaved}
-            selected={studSelected}
-            setSelected={setStudSelected}
-            otherSlotCounts={otherStudentData.counts}
-            totalOthers={otherStudentData.total}
-          />
+          <GridPager
+            rangeLabel={gridRangeLabel}
+            canGoBack={canPageBack}
+            canGoForward={canPageForward}
+            onPrev={showPreviousDays}
+            onNext={showNextDays}
+          >
+            <ProfAvailGrid
+              days={days}
+              times={times}
+              profSlots={profSaved}
+              selected={studSelected}
+              setSelected={setStudSelected}
+              otherSlotCounts={otherStudentData.counts}
+              totalOthers={otherStudentData.total}
+            />
+          </GridPager>
         </div>
         {/* Submit bar shows selected count and prevents empty submissions. */}
         <div className="confirm-bar">

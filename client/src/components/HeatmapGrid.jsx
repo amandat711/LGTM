@@ -1,6 +1,8 @@
 import React from 'react';
-import { heatColor } from '../utils/heatColor';
+import { heatColor, thresholdHeatColor } from '../utils/heatColor';
 import { useDragSelect } from '../hooks/useDragSelect';
+
+const GROUP_MEETING_THRESHOLD_RATIO = 1;
 
 // ─────────────────────────────────────────────────────────────
 // KEY FORMAT
@@ -105,9 +107,10 @@ export function ProfAvailGrid({ days, times, profSlots, selected, setSelected, o
 // GroupGrid — read-only heatmap of all participants
 // participants[].slots is string[] of "iso:ti" keys
 // ─────────────────────────────────────────────────────────────
-export function GroupGrid({ days, times, participants, activeNames, selectedKey, onSelectKey }) {
+export function GroupGrid({ days, times, participants, activeNames, selectedKeys, setSelectedKeys, onSelectKey }) {
   const active = participants.filter(p => activeNames.has(p.name));
   const max    = active.length || 1;
+  const { onMouseDown, onMouseEnter } = useDragSelect(selectedKeys, setSelectedKeys);
 
   return (
     <div className="grid-wrap">
@@ -120,18 +123,29 @@ export function GroupGrid({ days, times, participants, activeNames, selectedKey,
               const key   = makeKey(day.iso, ti);
               const who   = active.filter(p => p.slots.includes(key));
               const count = who.length;
+              const isSelected = selectedKeys.has(key);
+              const meta = { timeLabel, day, count, max, who };
 
               return (
                 <div
                   key={ti}
-                  className={`group-cell${selectedKey === key ? ' selected' : ''}`}
-                  style={{ background: heatColor(count, max) }}
-                  onClick={() => onSelectKey(key, { timeLabel, day, count, max, who })}
+                  className={`group-cell${isSelected ? ' selected' : ''}`}
+                  style={{ background: thresholdHeatColor(count, max, GROUP_MEETING_THRESHOLD_RATIO) }}
+                  onMouseDown={(event) => {
+                    onMouseDown(key)(event);
+                    onSelectKey(key, meta);
+                  }}
+                  onMouseEnter={() => {
+                    onMouseEnter(key)();
+                    onSelectKey(key, meta);
+                  }}
                 >
                   <div className="cell-tooltip">
                     {count === 0
                       ? 'Nobody free'
-                      : `${count}/${max}: ${who.map(p => p.name).join(', ')}`}
+                      : count >= Math.ceil(max * GROUP_MEETING_THRESHOLD_RATIO)
+                        ? `Threshold reached (${count}/${max}): ${who.map(p => p.name).join(', ')}`
+                        : `${count}/${max}: ${who.map(p => p.name).join(', ')}`}
                   </div>
                 </div>
               );
@@ -147,16 +161,49 @@ export function GroupGrid({ days, times, participants, activeNames, selectedKey,
 // HeatmapLegend
 // ─────────────────────────────────────────────────────────────
 export function HeatmapLegend({ max }) {
+  const thresholdCount = Math.ceil(max * GROUP_MEETING_THRESHOLD_RATIO);
+
   return (
     <div className="legend">
       <span className="legend-label">0 available</span>
       <div className="legend-colors">
         {Array.from({ length: max + 1 }, (_, i) => (
-          <div key={i} className="color-swatch" style={{ background: heatColor(i, max) }} />
+          <div key={i} className="color-swatch" style={{ background: thresholdHeatColor(i, max, GROUP_MEETING_THRESHOLD_RATIO) }} />
         ))}
       </div>
-      <span className="legend-label">All available</span>
+      <span className="legend-label">Threshold {thresholdCount}/{max || 1}</span>
     </div>
+  );
+}
+
+export function GridPager({ rangeLabel, canGoBack, canGoForward, onPrev, onNext, children }) {
+  return (
+    <>
+      <div className="grid-pager">
+        <button
+          className="grid-pager-button"
+          type="button"
+          onClick={onPrev}
+          disabled={!canGoBack}
+          aria-label="Show previous days"
+          title="Show previous days"
+        >
+          ‹
+        </button>
+        <span className="grid-pager-label">{rangeLabel}</span>
+        <button
+          className="grid-pager-button"
+          type="button"
+          onClick={onNext}
+          disabled={!canGoForward}
+          aria-label="Show next days"
+          title="Show next days"
+        >
+          ›
+        </button>
+      </div>
+      {children}
+    </>
   );
 }
 

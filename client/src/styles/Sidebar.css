@@ -68,6 +68,11 @@
   height: 60px;
 }
 
+.side-menu-icon-img-info {
+  width: 36px;
+  height: 36px;
+}
+
 /* ─── TEXT ICON (e.g. the "+" button) ───────────────────── */
 
 .side-menu-icon-text {

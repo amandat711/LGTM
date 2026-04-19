@@ -5,7 +5,7 @@ import { createAppointment } from '../api/appointments';
 import useAppShellSession from '../hooks/useAppShellSession';
 import { resolvePath } from '../auth/authUtils';
 import Navbar from '../components/Navbar';
-
+import BookingCalendar, { toCalendarDateKey } from '../components/BookingCalendar';
 
 function formatSlotTime(value) {
   return new Intl.DateTimeFormat('en-CA', {
@@ -22,13 +22,25 @@ function formatSlotDate(value) {
   }).format(new Date(value));
 }
 
+function formatSelectedDate(dateKey) {
+  return new Intl.DateTimeFormat('en-CA', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(`${dateKey}T00:00:00`));
+}
+
+function getSlotDateKey(slot) {
+  return toCalendarDateKey(new Date(slot.start_time));
+}
+
 function getSlotTitle(slot, professorName) {
   return slot?.av_title || `Meeting with ${professorName}`;
 }
 
 function groupSlotsByDate(slots) {
   return slots.reduce((groups, slot) => {
-    const dateKey = new Date(slot.start_time).toISOString().slice(0, 10);
+    const dateKey = getSlotDateKey(slot);
     if (!groups[dateKey]) groups[dateKey] = [];
     groups[dateKey].push(slot);
     return groups;
@@ -64,6 +76,11 @@ export default function BookingProfessor() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedDate, setSelectedDate] = useState(toCalendarDateKey(new Date()));
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
 
   useEffect(() => {
     //TODO: this works but is not efficient, we should make an API call to get the professor by id instead of getting all professors and then filtering
@@ -104,6 +121,7 @@ export default function BookingProfessor() {
 
         const upcoming = Array.isArray(data)
           ? data.filter((slot) => new Date(slot.end_time) > new Date())
+            .sort((first, second) => new Date(first.start_time) - new Date(second.start_time))
           : [];
 
         setSlots(upcoming);
@@ -123,6 +141,39 @@ export default function BookingProfessor() {
   }, [professorId]);
 
   const groupedSlots = useMemo(() => groupSlotsByDate(slots), [slots]);
+  const availableDateSet = useMemo(() => new Set(Object.keys(groupedSlots)), [groupedSlots]);
+  const selectedDaySlots = groupedSlots[selectedDate] || [];
+
+  useEffect(() => {
+    if (slots.length === 0) return;
+
+    const firstAvailableDate = getSlotDateKey(slots[0]);
+    setSelectedDate((currentDate) => (
+      groupedSlots[currentDate] ? currentDate : firstAvailableDate
+    ));
+    setCalendarMonth((currentMonth) => {
+      const currentMonthKey = `${currentMonth.getFullYear()}-${currentMonth.getMonth()}`;
+      const firstDate = new Date(`${firstAvailableDate}T00:00:00`);
+      const firstMonthKey = `${firstDate.getFullYear()}-${firstDate.getMonth()}`;
+
+      return currentMonthKey === firstMonthKey
+        ? currentMonth
+        : new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+    });
+  }, [groupedSlots, slots]);
+
+  function moveCalendarMonth(offset) {
+    setCalendarMonth((currentMonth) => (
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() + offset, 1)
+    ));
+  }
+
+  function handleDateSelect(dateKey) {
+    setSelectedDate(dateKey);
+    if (selectedSlot && getSlotDateKey(selectedSlot) !== dateKey) {
+      setSelectedSlot(null);
+    }
+  }
 
   const handleConfirm = async () => {
     if (!selectedSlot) return;
@@ -187,7 +238,7 @@ export default function BookingProfessor() {
       />
 
       <div className="booking-page">
-        <section className="booking-box">
+        <section className="booking-box booking-flow-box">
           <div className="booking-header">
             <div>
               <h1>{professor.name}</h1>
@@ -210,40 +261,47 @@ export default function BookingProfessor() {
           {error && <div className="booking-status-message error">{error}</div>}
 
           <div className="booking-layout">
+            <BookingCalendar
+              monthDate={calendarMonth}
+              selectedDate={selectedDate}
+              availableDates={availableDateSet}
+              onSelectDate={handleDateSelect}
+              onMonthChange={moveCalendarMonth}
+            />
+
             <div className="available-slots-panel">
-              <div className="booking-section-title">Available slots</div>
+              <div className="booking-section-title">{formatSelectedDate(selectedDate)}</div>
               {loading ? (
                 <p className="booking-empty-message">Loading available times...</p>
               ) : slots.length === 0 ? (
                 <p className="booking-empty-message">No slots are currently available.</p>
+              ) : selectedDaySlots.length === 0 ? (
+                <p className="booking-empty-message">No available slots for this date. Pick a highlighted date on the calendar.</p>
               ) : (
-                Object.entries(groupedSlots).map(([dateKey, daySlots]) => (
-                  <div key={dateKey} className="booking-day-block">
-                    <div className="booking-day-title">{formatSlotDate(daySlots[0].start_time)}</div>
-                    {daySlots.map((slot) => {
-                      const isFull = slot.booked_count >= slot.capacity;
-                      const isSelected = selectedSlot?.availability_id === slot.availability_id;
+                <div className="booking-day-block">
+                  {selectedDaySlots.map((slot) => {
+                    const isFull = slot.booked_count >= slot.capacity;
+                    const isSelected = selectedSlot?.availability_id === slot.availability_id;
 
-                      return (
-                        <button
-                          key={slot.availability_id}
-                          className={`available-slot-card${isSelected ? ' selected' : ''}${isFull ? ' disabled' : ''}`}
-                          disabled={isFull}
-                          onClick={() => setSelectedSlot(slot)}
-                        >
-                          <div>
-                            <strong>{formatSlotTime(slot.start_time)} – {formatSlotTime(slot.end_time)}</strong>
-                            <p className="available-slot-title">{getSlotTitle(slot, professor.name)}</p>
-                            <p className="available-slot-location">{slot.location || 'Online'}</p>
-                          </div>
-                          <span className={`available-slot-status${isFull ? ' full' : ''}`}>
-                            {isFull ? 'Full' : 'Open'}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))
+                    return (
+                      <button
+                        key={slot.availability_id}
+                        className={`available-slot-card${isSelected ? ' selected' : ''}${isFull ? ' disabled' : ''}`}
+                        disabled={isFull}
+                        onClick={() => setSelectedSlot(slot)}
+                      >
+                        <div>
+                          <strong>{formatSlotTime(slot.start_time)} – {formatSlotTime(slot.end_time)}</strong>
+                          <p className="available-slot-title">{getSlotTitle(slot, professor.name)}</p>
+                          <p className="available-slot-location">{slot.location || 'Online'}</p>
+                        </div>
+                        <span className={`available-slot-status${isFull ? ' full' : ''}`}>
+                          {isFull ? 'Full' : 'Open'}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
               )}
             </div>
 

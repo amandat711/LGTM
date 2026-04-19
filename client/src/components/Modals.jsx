@@ -76,6 +76,60 @@ export function HelpGuideModal({ guide, onClose }) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// ConfirmActionModal
+//    Small reusable confirmation popup for destructive or important actions.
+// ─────────────────────────────────────────────────────────────
+export function ConfirmActionModal({
+  title,
+  message,
+  details = [],
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  danger = false,
+  isWorking = false,
+  onConfirm,
+  onClose,
+}) {
+  return (
+    <Modal
+      title={title}
+      onClose={onClose}
+      footer={
+        <>
+          <button className="button button-ghost" onClick={onClose} disabled={isWorking}>
+            {cancelLabel}
+          </button>
+          <button
+            className={`button ${danger ? 'button-danger' : 'button-primary'}`}
+            onClick={onConfirm}
+            disabled={isWorking}
+          >
+            {isWorking ? 'Working...' : confirmLabel}
+          </button>
+        </>
+      }
+    >
+      {message && (
+        <p className="modal-description">
+          {message}
+        </p>
+      )}
+
+      {details.length > 0 && (
+        <div className="modal-detail-stack">
+          {details.map((detail) => (
+            <div className="modal-row" key={detail.label}>
+              <span className="modal-row-label">{detail.label}</span>
+              <span className="modal-row-value">{detail.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </Modal>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // 1. ConfirmSlotModal
 //    Owner confirms a selected time slot and sends notifications.
 // ─────────────────────────────────────────────────────────────

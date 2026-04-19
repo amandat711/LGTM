@@ -253,7 +253,7 @@ export default function ProfessorDashboard() {
       <div className="dashboard-page">
         {/* Whole dashboard shell: navbar on top, sidebar/calendar/panel underneath. */}
         {/* Top navbar:
-            page title, user identity, and quick actions like logout or new heatmap. */}
+            page title, user identity, and quick actions like panel visibility or logout. */}
         <Navbar
           logo={logo}
           title="Dashboard Calendar"
@@ -264,8 +264,6 @@ export default function ProfessorDashboard() {
             initials,
           }}
           actions={[
-            // Starts the professor heatmap creation flow.
-            { label: '+ New heatmap', onClick: () => navigate('/heatmap/professor/new') },
             // Lets the professor hide the summary panel when they need more calendar space.
             { label: rightPanelOpen ? 'Hide panel' : 'Show panel', onClick: () => setRightPanelOpen((open) => !open) },
             // Ends the current session and returns to the landing page.
@@ -287,7 +285,7 @@ export default function ProfessorDashboard() {
             ]}
             bottomItems={[
               // Help is kept at the bottom of the sidebar for consistent access.
-              { id: 'help', icon: InfoIcon, label: 'Help', onClick: () => setModal('help') },
+              { id: 'help', icon: InfoIcon, iconClassName: 'side-menu-icon-img-info', label: 'Help', onClick: () => setModal('help') },
             ]}
           />
 

@@ -106,7 +106,7 @@ export default function DashboardLayout({
             <img
               src={InfoIcon}
               alt="Help"
-              style={{ width: 68, height: 68, objectFit: 'contain' }}
+              style={{ width: 36, height: 36, objectFit: 'contain' }}
             />
           </button>
         </aside>

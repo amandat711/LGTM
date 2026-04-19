@@ -197,7 +197,7 @@ export default function StudentDashboard() {
             ]}
             bottomItems={[
               // Help is kept at the bottom of the sidebar for consistent access.
-              { id: 'help', icon: InfoIcon, label: 'Help', onClick: () => setModal('help') },
+              { id: 'help', icon: InfoIcon, iconClassName: 'side-menu-icon-img-info', label: 'Help', onClick: () => setModal('help') },
             ]}
           />
 

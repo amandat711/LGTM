@@ -1,10 +1,17 @@
 const API_BASE = 'http://localhost:4000';
 
 async function handleResponse(res) {
-  const data = await res.json().catch(() => ({}));
+  const text = await res.text();
+  let data = {};
+
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = {};
+  }
 
   if (!res.ok) {
-    throw new Error(data.error || 'Something went wrong');
+    throw new Error(data.error || data.message || text || 'Something went wrong');
   }
 
   return data;
@@ -34,6 +41,27 @@ export async function createHeatmap(payload) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+  });
+
+  return handleResponse(res);
+}
+
+export async function updateHeatmap(heatmapId, payload) {
+  const res = await fetch(`${API_BASE}/heatmaps/${heatmapId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse(res);
+}
+
+export async function deleteHeatmap(heatmapId, deletedBy) {
+  const search = new URLSearchParams({ deleted_by: String(deletedBy) });
+  const res = await fetch(`${API_BASE}/heatmaps/${heatmapId}/delete?${search.toString()}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ deleted_by: deletedBy }),
   });
 
   return handleResponse(res);

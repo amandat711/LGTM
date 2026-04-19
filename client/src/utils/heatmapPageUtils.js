@@ -79,6 +79,36 @@ export function toLocalDateTime(date) {
   return `${toLocalIsoDate(date)}T${hours}:${minutes}:${seconds}`;
 }
 
+// Moves an ISO date forward or backward by a number of calendar days.
+export function addDaysToIsoDate(isoDate, amount) {
+  const date = new Date(`${isoDate}T00:00:00`);
+  date.setDate(date.getDate() + amount);
+  return toLocalIsoDate(date);
+}
+
+// Compares two ISO dates without relying on browser locale formatting.
+export function compareIsoDates(firstIso, secondIso) {
+  return new Date(`${firstIso}T00:00:00`).getTime() - new Date(`${secondIso}T00:00:00`).getTime();
+}
+
+// Returns the earlier of two ISO dates.
+export function minIsoDate(firstIso, secondIso) {
+  return compareIsoDates(firstIso, secondIso) <= 0 ? firstIso : secondIso;
+}
+
+// Returns the later of two ISO dates.
+export function maxIsoDate(firstIso, secondIso) {
+  return compareIsoDates(firstIso, secondIso) >= 0 ? firstIso : secondIso;
+}
+
+// Counts calendar days inclusively, so Apr 7 through Apr 11 returns 5.
+export function countInclusiveDays(startIso, endIso) {
+  const start = new Date(`${startIso}T00:00:00`);
+  const end = new Date(`${endIso}T00:00:00`);
+  const diff = Math.floor((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
+  return Math.max(diff + 1, 1);
+}
+
 /**
  * Converts a real backend slot start time into the matching grid key.
  * Returns null if that slot is outside the current visible grid hours.
@@ -166,38 +196,25 @@ export function deriveRangeFromSlots(slotRows) {
   const earliest = new Date(Math.min(...starts.map((d) => d.getTime())));
   // Start the visible range at midnight on the earliest saved day.
   const rangeStart = new Date(`${toLocalIsoDate(earliest)}T00:00:00`);
-  // Copy the start date so we can calculate the end of the display week.
-  const rangeEnd = new Date(rangeStart);
-  // Show up to 7 days from the first saved slot.
-  rangeEnd.setDate(rangeEnd.getDate() + 6);
-
-  // Only use slots in that first visible week when calculating the grid range.
-  const visibleSlots = slotRows.filter((slot) => {
-    // Parse each slot start time before comparing it to the week window.
-    const start = parseSqliteDateTime(slot.startTime);
-    // Keep slots from rangeStart through rangeEnd.
-    return start >= rangeStart && start <= rangeEnd;
-  });
-
-  // Parse all visible start times.
-  const visibleStarts = visibleSlots.map((slot) => parseSqliteDateTime(slot.startTime));
-  // Parse all visible end times so the grid includes the full final slot.
-  const visibleEnds = visibleSlots.map((slot) => parseSqliteDateTime(slot.endTime));
+  // Parse all saved start times.
+  const visibleStarts = starts;
+  // Parse all saved end times so the grid includes the full final slot.
+  const visibleEnds = slotRows.map((slot) => parseSqliteDateTime(slot.endTime));
+  // Find the latest saved start date so the full heatmap range can be paged through.
+  const latestStart = new Date(Math.max(...visibleStarts.map((d) => d.getTime())));
   // Find the latest visible end time.
   const latestVisible = new Date(Math.max(...visibleEnds.map((d) => d.getTime())));
-  // Count unique days that actually have saved slots.
-  const visibleDaySet = new Set(visibleStarts.map((d) => toLocalIsoDate(d)));
 
   // Return the exact state values used by ProfessorHeatmap and StudentHeatmap.
   return {
     // First date shown in the grid.
     startDate: toLocalIsoDate(rangeStart),
+    // Last saved date in the range.
+    endDate: toLocalIsoDate(latestStart),
     // Earliest hour shown in the grid.
     startHour: Math.min(...visibleStarts.map((d) => d.getHours())),
     // If the latest slot ends at a half-hour, round up so the whole slot is visible.
     endHour: latestVisible.getMinutes() > 0 ? latestVisible.getHours() + 1 : latestVisible.getHours(),
-    // At least one day should be visible even if the set somehow comes back empty.
-    numDays: Math.max(visibleDaySet.size, 1),
   };
 }
 
