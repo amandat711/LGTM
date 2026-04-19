@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AuthShell from '../components/AuthShell';
 import { isAllowedMcGillEmail } from '../auth/authUi';
+import { requestPasswordReset } from '../api/auth';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError('');
 
@@ -21,8 +23,15 @@ export default function ForgotPasswordPage() {
       return;
     }
 
-    // Placeholder: replace with POST /api/auth/forgot-password when backend exists
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      await requestPasswordReset(email);
+      setSubmitted(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not send reset link.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -82,9 +91,10 @@ export default function ForgotPasswordPage() {
               </div>
               <button
                 type="submit"
-                className="mx-auto mt-2 h-[40px] min-w-[112px] rounded-full bg-black px-8 text-[16px] font-semibold text-white transition-opacity hover:opacity-90"
+                className="mx-auto mt-2 h-[40px] min-w-[112px] rounded-full bg-black px-8 text-[16px] font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={submitting}
               >
-                Send reset link
+                {submitting ? 'Sending...' : 'Send reset link'}
               </button>
             </form>
           </>

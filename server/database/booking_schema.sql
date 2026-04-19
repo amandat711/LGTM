@@ -12,6 +12,7 @@ DROP TABLE IF EXISTS course_ownerships;
 DROP TABLE IF EXISTS course_admin_assignments;
 DROP TABLE IF EXISTS course_enrollments;
 DROP TABLE IF EXISTS courses;
+DROP TABLE IF EXISTS password_reset_tokens;
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE users (
@@ -25,6 +26,16 @@ CREATE TABLE users (
     staff_title          TEXT,
     created_at           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_login_at        TEXT
+);
+
+CREATE TABLE password_reset_tokens (
+    token_id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id               INTEGER NOT NULL,
+    token_hash            TEXT NOT NULL UNIQUE,
+    expires_at            TEXT NOT NULL,
+    used_at               TEXT,
+    created_at            TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE courses (
@@ -205,3 +216,4 @@ CREATE INDEX idx_appointment_participants_user ON appointment_participants(user_
 CREATE INDEX idx_invitations_invitee ON invitations(invitee_user_id);
 CREATE INDEX idx_heatmap_submissions_heatmap ON hm_availability_submissions(heatmap_id);
 CREATE INDEX idx_heatmap_slots_submission ON hm_submitted_time_slots(submission_id);
+CREATE INDEX idx_password_reset_tokens_user ON password_reset_tokens(user_id);

@@ -3,8 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthShell from '../components/AuthShell';
 import { register } from '../api/auth';
 import { isAllowedMcGillEmail } from '../auth/authUi';
-
-const MIN_PASSWORD_LEN = 8;
+import { MIN_PASSWORD_LEN } from '../constants/config';
 
 export default function RegisterPage() {
   const navigate = useNavigate();

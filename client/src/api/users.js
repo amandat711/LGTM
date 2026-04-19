@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:4000';
+import { API_BASE } from '../constants/config';
 
 async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
