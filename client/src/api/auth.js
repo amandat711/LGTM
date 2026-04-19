@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:4000';
+import { API_BASE } from '../constants/config';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };
 
@@ -57,6 +57,36 @@ export async function getSession() {
   }
   if (!res.ok) {
     const msg = data.error || 'Could not load session.';
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export async function requestPasswordReset(email) {
+  const res = await fetch(`${API_BASE}/auth/forgot-password`, {
+    ...fetchOpts,
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data.error || 'Could not send reset link.';
+    throw new Error(msg);
+  }
+  return data;
+}
+
+export async function resetPassword(token, newPassword) {
+  const res = await fetch(`${API_BASE}/auth/reset-password`, {
+    ...fetchOpts,
+    method: 'POST',
+    headers: jsonHeaders,
+    body: JSON.stringify({ token, newPassword }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = data.error || 'Could not reset password.';
     throw new Error(msg);
   }
   return data;

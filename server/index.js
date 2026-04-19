@@ -1,9 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 const session = require("express-session");
+require('dotenv').config();
 
 const app = express();
-const PORT = process.env.PORT || 4000;
+const { DEFAULT_PORT } = require('./constants/config');
+const PORT = process.env.PORT || DEFAULT_PORT;
 
 const db = require('./config/db');
 const availabilitiesRouter = require('./routes/availabilities');

@@ -1,6 +1,10 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const db = require('../config/db');
+const { sendForgotPasswordEmail } = require('../lib/mailer');
+const { MIN_PASSWORD_LEN, RESET_TOKEN_TTL_MS } = require('../constants/auth');
+const { FRONTEND_URL } = require('../constants/config');
 
 const router = express.Router();
 
@@ -12,7 +16,18 @@ function sqliteNow() {
   return new Date().toISOString().slice(0, 19);
 }
 
-const MIN_PASSWORD_LEN = 8;
+function hashResetToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+function addMsToNowAsSqliteDate(ms) {
+  return new Date(Date.now() + ms).toISOString().slice(0, 19);
+}
+
+function buildResetLink(token) {
+  const base = FRONTEND_URL.replace(/\/+$/, '');
+  return `${base}/reset-password?token=${encodeURIComponent(token)}`;
+}
 
 function isAllowedMcGillEmail(email) {
   const e = normalizeEmail(email);
@@ -193,6 +208,131 @@ router.post('/logout', (req, res) => {
     }
     res.json({ ok: true });
   });
+});
+
+router.post('/forgot-password', (req, res) => {
+  const { email } = req.body || {};
+
+  if (!email || !isAllowedMcGillEmail(email)) {
+    return res.json({
+      ok: true,
+      message:
+        'If an account exists for that address, password reset instructions have been sent.',
+    });
+  }
+
+  const normalizedEmail = normalizeEmail(email);
+  db.get(
+    'SELECT user_id, mcgill_email FROM users WHERE mcgill_email = ?',
+    [normalizedEmail],
+    (err, user) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Could not process forgot-password request.' });
+      }
+
+      // Do not reveal whether the account exists.
+      if (!user) {
+        return res.json({
+          ok: true,
+          message:
+            'If an account exists for that address, password reset instructions have been sent.',
+        });
+      }
+
+      const rawToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = hashResetToken(rawToken);
+      const expiresAt = addMsToNowAsSqliteDate(RESET_TOKEN_TTL_MS);
+
+      db.run(
+        'INSERT INTO password_reset_tokens (user_id, token_hash, expires_at) VALUES (?, ?, ?)',
+        [user.user_id, tokenHash, expiresAt],
+        async (insertErr) => {
+          if (insertErr) {
+            console.error(insertErr);
+            return res.status(500).json({ error: 'Could not process forgot-password request.' });
+          }
+
+          try {
+            const resetLink = buildResetLink(rawToken);
+            await sendForgotPasswordEmail({ to: user.mcgill_email, resetLink });
+          } catch (emailErr) {
+            console.error(emailErr);
+            return res.status(500).json({ error: 'Could not send reset email.' });
+          }
+
+          return res.json({
+            ok: true,
+            message:
+              'If an account exists for that address, password reset instructions have been sent.',
+          });
+        }
+      );
+    }
+  );
+});
+
+router.post('/reset-password', (req, res) => {
+  const { token, newPassword } = req.body || {};
+
+  if (!token || typeof token !== 'string') {
+    return res.status(400).json({ error: 'Invalid reset token.' });
+  }
+  if (!newPassword || newPassword.length < MIN_PASSWORD_LEN) {
+    return res
+      .status(400)
+      .json({ error: `Password must be at least ${MIN_PASSWORD_LEN} characters.` });
+  }
+
+  const tokenHash = hashResetToken(token);
+  const now = sqliteNow();
+
+  db.get(
+    `SELECT token_id, user_id, expires_at, used_at
+     FROM password_reset_tokens
+     WHERE token_hash = ?`,
+    [tokenHash],
+    (err, tokenRow) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Could not reset password.' });
+      }
+      if (!tokenRow || tokenRow.used_at || tokenRow.expires_at <= now) {
+        return res.status(400).json({ error: 'Reset token is invalid or expired.' });
+      }
+
+      bcrypt
+        .hash(newPassword, 10)
+        .then((password_hash) => {
+          db.run(
+            'UPDATE users SET password_hash = ? WHERE user_id = ?',
+            [password_hash, tokenRow.user_id],
+            (updateUserErr) => {
+              if (updateUserErr) {
+                console.error(updateUserErr);
+                return res.status(500).json({ error: 'Could not reset password.' });
+              }
+
+              db.run(
+                'UPDATE password_reset_tokens SET used_at = ? WHERE token_id = ?',
+                [now, tokenRow.token_id],
+                (markUsedErr) => {
+                  if (markUsedErr) {
+                    console.error(markUsedErr);
+                    return res.status(500).json({ error: 'Could not reset password.' });
+                  }
+                  return res.json({ ok: true, message: 'Password reset successful.' });
+                }
+              );
+            }
+          );
+        })
+        .catch((hashErr) => {
+          console.error(hashErr);
+          return res.status(500).json({ error: 'Could not reset password.' });
+        });
+    }
+  );
 });
 
 router.get('/me', (req, res) => {

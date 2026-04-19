@@ -25,8 +25,12 @@
 
 /* Layout inside the top bar */
 .landing-top-bar-content {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 40px; max-width: 1100px; height: 54px; margin: 0 auto;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.landing-top-bar .top-bar {
+  border-bottom: none;
 }
 .brand-area { display: flex; align-items: center; }
 .brand-logo { height: 100px; width: 100px; object-fit: contain; display: block; }

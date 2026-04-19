@@ -31,6 +31,19 @@ End the session.
 ### `GET /auth/me`
 Return the current user from the session.
 
+### `POST /auth/forgot-password`
+Request a password reset email.
+- Body: `email`
+- Response is intentionally generic (does not reveal whether an account exists).
+- Sends an email with a reset link that contains a secure token.
+
+### `POST /auth/reset-password`
+Reset password using a forgot-password token.
+- Body:
+  - `token`
+  - `newPassword` (minimum 8 characters)
+- Token expires after 1 hour and can only be used once.
+
 ### Protecting other routes
 `server/routes/auth.js` exports **`requireAuth`** (middleware). Use it on routes that should only run for a logged-in user (`req.session.userId`).
 
@@ -226,3 +239,12 @@ Cancel an appointment.
 - Middleware order: CORS → `express.json()` → `express-session` → routes.
 - The app uses SQLite via `server/config/db.js`.
 - Session-based auth lives in `server/routes/auth.js`. Other routes may still accept `user_id` in the body or query until they are migrated to `requireAuth`.
+
+## Email Configuration (Forgot Password)
+Set these environment variables in `server/.env` for Gmail:
+- `FRONTEND_URL` (example: `http://localhost:3000`) used to build reset links
+- `MAIL_FROM` (example: `LGTM <no-reply@lgtm.local>`)
+- `SMTP_USER` (your Gmail address)
+- `GOOGLE_APP_PASSWORD` (16-character App Password)
+
+If Gmail vars are missing, the server falls back to Nodemailer `jsonTransport` and logs the email content locally for development.
