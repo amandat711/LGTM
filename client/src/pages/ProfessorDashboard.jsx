@@ -14,8 +14,9 @@ import Navbar from '../components/Navbar';
 import calendarIcon from '../assets/calendarIcon.png';
 import coursesIcon from '../assets/courseIcon.png';
 import searchIcon from '../assets/searchIcon.png';
+import createAvailabilityIcon from '../assets/createAvailabilityIcon.png';
 import InfoIcon from '../assets/infoIcon.png';
-import { DeleteConfirmModal, SlotDetailModal } from '../components/Modals';
+import { DeleteConfirmModal, HelpGuideModal, SlotDetailModal } from '../components/Modals';
 import Calendar from '../components/calendar/Calendar';
 import {
   formatDate,
@@ -35,6 +36,7 @@ import {
 // Heatmap data is shown in the right panel for quick access.
 import { getHeatmaps } from '../api/heatmaps';
 import CreateAvailabilityModal from '../components/CreateAvailabilityModal';
+import { DASHBOARD_HELP_GUIDES } from '../data/helpGuides';
 
 // Reusable sidebar component instead of hand-writing the menu here.
 import Sidebar from '../components/Sidebar'; 
@@ -42,8 +44,10 @@ import '../styles/Dashboard.css';
 import { logout } from '../api/auth';
 
 export default function ProfessorDashboard() {
+  // Router helper for moving between dashboard, heatmap, and landing pages.
   // Used any time the page needs to redirect somewhere else.
   const navigate = useNavigate();
+  // Shared session hook gives this page the logged-in professor and their database ID.
   // Current professor object plus their numeric ID from session state.
   const { user, userId } = useAppShellSession();
 
@@ -247,11 +251,12 @@ export default function ProfessorDashboard() {
   return (
     <>
       <div className="dashboard-page">
+        {/* Whole dashboard shell: navbar on top, sidebar/calendar/panel underneath. */}
         {/* Top navbar:
             page title, user identity, and quick actions like logout or new heatmap. */}
         <Navbar
           logo={logo}
-          title="Dashboard"
+          title="Dashboard Calendar"
           onLeftClick={() => navigate('/')}
           user={{
             displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
@@ -259,25 +264,30 @@ export default function ProfessorDashboard() {
             initials,
           }}
           actions={[
+            // Starts the professor heatmap creation flow.
             { label: '+ New heatmap', onClick: () => navigate('/heatmap/professor/new') },
+            // Lets the professor hide the summary panel when they need more calendar space.
             { label: rightPanelOpen ? 'Hide panel' : 'Show panel', onClick: () => setRightPanelOpen((open) => !open) },
+            // Ends the current session and returns to the landing page.
             { label: 'Log Out', onClick: handleLogout },
           ]}
         />
 
         <div className="dashboard-layout">
-          {/* Left sidebar for navigation.
-              The create button uses a text "+" instead of an image asset. */}
+          {/* Left sidebar for navigation between professor dashboard actions. */}
           <Sidebar
             activeId={sideTab}
             items={[
+              // Calendar, courses, and search are local dashboard navigation options.
               { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => setSideTab('calendar') },
               { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => setSideTab('courses') },
-              { id: 'search', icon: searchIcon, label: 'Search', onClick: () => setSideTab('search') },
-              { id: 'create', iconText: '+', label: 'Create availability', onClick: () => setModal('createAvailability') },
+              { id: 'search', icon: searchIcon, iconClassName: 'side-menu-icon-img-search', label: 'Search', onClick: () => setSideTab('search') },
+              // Create opens the same availability modal as the old plus button.
+              { id: 'create', icon: createAvailabilityIcon, label: 'Create availability', onClick: () => setModal('createAvailability') },
             ]}
             bottomItems={[
-              { id: 'help', icon: InfoIcon, label: 'Help' },
+              // Help is kept at the bottom of the sidebar for consistent access.
+              { id: 'help', icon: InfoIcon, label: 'Help', onClick: () => setModal('help') },
             ]}
           />
 
@@ -290,6 +300,7 @@ export default function ProfessorDashboard() {
 
             {/* Weekly calendar view for appointments and still-open availability slots. */}
             {!loading && (
+              // Main week calendar. Clicking any block opens the detail modal below.
               <Calendar
                 view="week"
                 appointments={calendarEvents}
@@ -308,12 +319,15 @@ export default function ProfessorDashboard() {
               <div>
                 <div className="side-panel-title">Upcoming appointments</div>
                 {upcomingAppts.length === 0 ? (
+                  // Empty state keeps the panel useful even when the professor is free.
                   <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
                 ) : (
                   upcomingAppts.map((appt) => {
+                    // Convert raw status into label + CSS class for the pill.
                     const { label, cls } = statusLabel(appt.status);
 
                     return (
+                      // Each card is clickable so the professor can inspect or cancel it.
                       <div
                         key={appt.id}
                         className="appointment-item"
@@ -345,6 +359,7 @@ export default function ProfessorDashboard() {
                   <p style={{ fontSize: 12, color: '#aaa' }}>No past appointments yet.</p>
                 ) : (
                   pastAppts.map((appt) => {
+                    // Past cards use the same visual status treatment as upcoming ones.
                     const { label, cls } = statusLabel(appt.status);
 
                     return (
@@ -401,6 +416,7 @@ export default function ProfessorDashboard() {
                     <p style={{ fontSize: 12, color: '#888', margin: 0 }}>No heatmaps created yet.</p>
                   ) : (
                     heatmaps.slice(0, 4).map((heatmap) => (
+                      // Recent heatmap card shows pending work and links back to the heatmap page.
                       <div key={heatmap.id} className="invite-item">
                         <div className={`invite-dot${heatmap.pendingCount > 0 ? '' : ' responded'}`} />
                         <div>
@@ -435,6 +451,7 @@ export default function ProfessorDashboard() {
 
       {/* Opens the form for creating a new availability slot. */}
       {modal === 'createAvailability' && (
+        /* Closing simply hides the modal; submitting calls the API helper above. */
         <CreateAvailabilityModal
           onClose={() => setModal(null)}
           onSubmit={handleCreateAvailability}
@@ -443,6 +460,7 @@ export default function ProfessorDashboard() {
 
       {/* Opens when the professor clicks an appointment or availability block for more detail. */}
       {modal === 'detail' && activeAppt && (
+        /* The modal expects display-friendly fields, so reshape the calendar event here. */
         <SlotDetailModal
           appointment={{
             title: activeAppt.title,
@@ -469,6 +487,7 @@ export default function ProfessorDashboard() {
 
       {/* Final confirmation before deleting an availability or cancelling a booking. */}
       {modal === 'delete' && activeAppt && (
+        /* This passes only the details needed for the confirmation message. */
         <DeleteConfirmModal
           appointment={{
             title: activeAppt.title,
@@ -478,6 +497,14 @@ export default function ProfessorDashboard() {
           }}
           onConfirm={handleDelete}
           onClose={() => setModal('detail')}
+        />
+      )}
+
+      {/* Page-specific help opened from the info icon in the sidebar. */}
+      {modal === 'help' && (
+        <HelpGuideModal
+          guide={DASHBOARD_HELP_GUIDES.professor}
+          onClose={() => setModal(null)}
         />
       )}
     </>

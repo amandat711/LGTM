@@ -1,3 +1,5 @@
+/*AMANDA TRAN*/
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../api/auth';
@@ -92,7 +94,7 @@ export default function DashboardLayout({
               <img
                 src={item.icon}
                 alt={item.label}
-                style={{ width: 40, height: 40, objectFit: 'contain' }}
+                style={{ width: 68, height: 68, objectFit: 'contain' }}
               />
               <span className="dash-sidebar-label">{item.label}</span>
             </button>
@@ -104,7 +106,7 @@ export default function DashboardLayout({
             <img
               src={InfoIcon}
               alt="Help"
-              style={{ width: 40, height: 40, objectFit: 'contain' }}
+              style={{ width: 68, height: 68, objectFit: 'contain' }}
             />
           </button>
         </aside>

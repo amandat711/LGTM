@@ -1,3 +1,5 @@
+/*AMANDA TRAN*/
+
 import React from 'react';
 import '../styles/Sidebar.css';
 
@@ -6,7 +8,7 @@ import '../styles/Sidebar.css';
  
  */
 export default function Sidebar({ items = [], activeId, bottomItems = [] }) {
-  function renderButton({ id, icon, iconText, label, onClick }) {
+  function renderButton({ id, icon, iconText, label, onClick, iconClassName = '' }) {
     const isActive = id && id === activeId;
 
     return (
@@ -19,8 +21,7 @@ export default function Sidebar({ items = [], activeId, bottomItems = [] }) {
           <img
             src={icon}
             alt={label || ''}
-            className="side-menu-icon-img"
-            style={{ width: 40, height: 40, objectFit: 'contain' }}
+            className={`side-menu-icon-img${iconClassName ? ` ${iconClassName}` : ''}`}
           />
         )}
         {!icon && iconText && (

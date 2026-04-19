@@ -1,13 +1,15 @@
+/*AMANDA TRAN*/
+
 import React, { useEffect, useMemo, useState } from 'react';
 
 // ─── Shared shell ─────────────────────────────────────────────
-function Modal({ title, onClose, children, footer }) {
+function Modal({ title, onClose, children, footer, className = '' }) {
   return (
     <div
       className="modal-overlay"
       onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="modal">
+      <div className={`modal${className ? ` ${className}` : ''}`}>
         <div className="modal-header">
           <h3>{title}</h3>
           <button className="modal-close" onClick={onClose}>×</button>
@@ -16,6 +18,60 @@ function Modal({ title, onClose, children, footer }) {
         {footer && <div className="modal-footer">{footer}</div>}
       </div>
     </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// HelpGuideModal
+//    Reusable detailed instructions popup for page-specific help.
+// ─────────────────────────────────────────────────────────────
+export function HelpGuideModal({ guide, onClose }) {
+  const safeGuide = guide || {};
+
+  return (
+    <Modal
+      title={safeGuide.title || 'How to use this page'}
+      onClose={onClose}
+      className="help-guide-modal"
+      footer={
+        <button className="button button-primary" onClick={onClose}>
+          Got it
+        </button>
+      }
+    >
+      <div className="help-guide">
+        {safeGuide.eyebrow && (
+          <p className="help-guide-eyebrow">{safeGuide.eyebrow}</p>
+        )}
+        {safeGuide.intro && (
+          <p className="help-guide-intro">{safeGuide.intro}</p>
+        )}
+
+        {safeGuide.quickTips?.length > 0 && (
+          <div className="help-guide-tips">
+            <h4>Quick tips</h4>
+            <ul>
+              {safeGuide.quickTips.map((tip) => (
+                <li key={tip}>{tip}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="help-guide-sections">
+          {(safeGuide.sections || []).map((section) => (
+            <section key={section.title} className="help-guide-section">
+              <h4>{section.title}</h4>
+              <ol>
+                {section.steps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            </section>
+          ))}
+        </div>
+      </div>
+    </Modal>
   );
 }
 

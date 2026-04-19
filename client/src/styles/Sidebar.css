@@ -6,22 +6,22 @@
 /* ─── CONTAINER ──────────────────────────────────────────── */
 
 .side-menu {
-  width: 72px;
+  width: 116px;
   background: #fff;
   border-right: 1px solid #e4e4e4;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 0;
-  gap: 40px;
+  padding: 32px 0 24px;
+  gap: 46px;
   flex-shrink: 0;
 }
 
 /* ─── BUTTON ─────────────────────────────────────────────── */
 
 .side-menu-button {
-  width: 55px;
-  height: 55px;
+  width: 100px;
+  min-height: 88px;
   border-radius: 10px;
   border: none;
   background: transparent;
@@ -29,9 +29,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 3px;
+  gap: 4px;
   cursor: pointer;
   font-family: Arial;
+  text-align: center;
   transition: background 0.15s;
 }
 
@@ -50,11 +51,21 @@
 }
 
 .side-menu-icon {
-  font-size: 20px;
+  font-size: 40px;
   color: #888;
   line-height: 1;
-  padding: 20px;
   transition: color 0.15s;
+}
+
+.side-menu-icon-img {
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+}
+
+.side-menu-icon-img-search {
+  width: 60px;
+  height: 60px;
 }
 
 /* ─── TEXT ICON (e.g. the "+" button) ───────────────────── */
@@ -79,11 +90,16 @@
 /* ─── LABEL ──────────────────────────────────────────────── */
 
 .side-menu-label {
+  display: none;
   font-size: 9px;
   font-weight: 500;
   color: #888;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow-wrap: normal;
+  word-break: normal;
   transition: color 0.15s;
 }
 
@@ -101,6 +117,13 @@
 
 @media (max-width: 700px) {
   .side-menu {
-    width: 56px;
+    width: 98px;
+    padding-top: 34px;
+    gap: 42px;
+  }
+
+  .side-menu-button {
+    width: 88px;
+    min-height: 84px;
   }
 }

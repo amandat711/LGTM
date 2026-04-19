@@ -117,6 +117,7 @@
 }
 
 .appointment-item:hover {
+  /* Subtle lift so clickable appointment cards feel interactive. */
   border-color: #ccc;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
@@ -257,6 +258,7 @@
 }
 
 .invite-action-button:hover {
+  /* Red hover state matches the main app accent and signals this is actionable. */
   border-color: #E31429;
   color: #E31429;
 }
@@ -274,6 +276,274 @@
   margin: 4px 0;
 }
 
+/* 
+   SHARED MODAL SHELL
+   Used by appointment detail pop-ups and the page help guide.
+ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 15, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  width: 100%;
+  max-width: 460px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #111;
+}
+
+.modal-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #f8f8f8;
+  color: #666;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: #f0f0f0;
+  color: #111;
+}
+
+.modal-body {
+  margin-bottom: 24px;
+}
+
+.modal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.modal-row:last-child {
+  border-bottom: none;
+}
+
+.modal-row-label {
+  color: #666;
+}
+
+.modal-row-value {
+  color: #111;
+  font-weight: 600;
+  text-align: right;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid #e4e4e4;
+}
+
+.button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+  font-family: inherit;
+}
+
+.button-primary {
+  background: #E31429;
+  color: #fff;
+  border: 1.5px solid #E31429;
+}
+
+.button-primary:hover {
+  background: #b01020;
+  border-color: #b01020;
+  transform: translateY(-1px);
+}
+
+.button-outline {
+  background: #fff;
+  color: #111;
+  border: 1.5px solid #ccc;
+}
+
+.button-ghost {
+  background: transparent;
+  border: none;
+  color: #666;
+}
+
+.button-danger {
+  background: #fff;
+  border: 1.5px solid #cc2222;
+  color: #cc2222;
+}
+
+.button-small {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+.badge-pending,
+.badge-success {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-pending {
+  background: #fff8e1;
+  color: #7a5800;
+}
+
+.badge-success {
+  background: #d4edda;
+  color: #1a5c2a;
+}
+
+/* 
+   HELP GUIDE MODAL
+   Reusable pop-up opened by the info icon in the sidebar.
+   It uses the same red accent, white surfaces, and compact dashboard typography.
+ */
+
+.help-guide-modal {
+  max-width: 760px;
+  max-height: calc(100vh - 32px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.help-guide-modal .modal-body {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  padding-right: 10px;
+  padding-bottom: 8px;
+  margin-bottom: 0;
+  overscroll-behavior: contain;
+}
+
+.help-guide-modal .modal-footer {
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.help-guide {
+  display: grid;
+  gap: 18px;
+}
+
+.help-guide-eyebrow {
+  margin: 0;
+  color: #E31429;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.help-guide-intro {
+  margin: 0;
+  color: #444;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.help-guide-tips {
+  border: 1px solid #f2c9ce;
+  background: #fff7f8;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.help-guide-tips h4,
+.help-guide-section h4 {
+  margin: 0 0 10px;
+  color: #111;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.help-guide-tips ul,
+.help-guide-section ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.help-guide-tips li,
+.help-guide-section li {
+  margin-bottom: 6px;
+}
+
+.help-guide-tips li:last-child,
+.help-guide-section li:last-child {
+  margin-bottom: 0;
+}
+
+.help-guide-sections {
+  display: grid;
+  gap: 12px;
+}
+
+.help-guide-section {
+  border: 1px solid #e9e9e9;
+  background: #fff;
+  border-radius: 12px;
+  padding: 15px 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.help-guide-section::before {
+  content: '';
+  display: block;
+  width: 34px;
+  height: 3px;
+  border-radius: 999px;
+  background: #E31429;
+  margin-bottom: 10px;
+}
+
 
 /* 
    RESPONSIVE 
@@ -282,16 +552,23 @@
  */
 
 @media (max-width: 900px) {
+  /* Give the calendar more room on tablet-sized screens. */
   .side-panel {
     width: 240px;
   }
 }
 
 @media (max-width: 700px) {
+  /* On phones, hide the side panel so the calendar stays usable. */
   .side-panel {
     display: none;
   }
   /* .side-menu responsive rule moved to Sidebar.css */
+
+  .help-guide-modal {
+    max-height: calc(100vh - 20px);
+    padding: 20px;
+  }
 }
 
 
@@ -328,6 +605,7 @@
 
 .booking-box h1,
 .booking-box h2 {
+  /* Shared heading treatment for discovery and booking confirmation cards. */
   margin: 0 0 10px;
   font-size: 28px;
   color: #111;
@@ -354,6 +632,7 @@
 }
 
 .booking-search-box:focus {
+  /* Focus ring helps keyboard users see exactly where they are typing. */
   border-color: #E31429;
   box-shadow: 0 0 0 4px rgba(227, 20, 41, 0.1);
 }
@@ -422,6 +701,7 @@
 }
 
 .professor-card-button:hover {
+  /* Small lift makes primary booking actions feel clickable without being flashy. */
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(227, 20, 41, 0.18);
 }
@@ -460,11 +740,13 @@
 }
 
 .booking-professor-email-row .professor-card-email {
+  /* Removes paragraph spacing so the email aligns with the button. */
   margin: 0;
 }
 
 /* When .professor-card-button is used as an <a> tag (mailto link) */
 a.professor-card-button {
+  /* Keeps mailto links visually identical to normal buttons. */
   text-decoration: none;
   display: inline-block;
   box-sizing: border-box;
@@ -486,12 +768,14 @@ a.professor-card-button {
 }
 
 .booking-status-message.success {
+  /* Green feedback means the booking action completed successfully. */
   background: #e6ffed;
   color: #1f7255;
   border: 1px solid #b7f0c3;
 }
 
 .booking-status-message.error {
+  /* Red feedback means the booking action failed or needs attention. */
   background: #ffe8e8;
   color: #8f1d23;
   border: 1px solid #f1c1c1;
@@ -526,6 +810,7 @@ a.professor-card-button {
 }
 
 .booking-day-block:first-child {
+  /* The first day group does not need extra top spacing. */
   margin-top: 0;
 }
 
@@ -555,6 +840,7 @@ a.professor-card-button {
 }
 
 .available-slot-card:hover {
+  /* Hover gives selectable slots the same card affordance as dashboard items. */
   border-color: #dadada;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
 }
@@ -572,6 +858,7 @@ a.professor-card-button {
 }
 
 .available-slot-card.disabled:hover {
+  /* Disabled slots should not lift or look selectable. */
   box-shadow: none;
   border-color: #e6e6e6;
 }
@@ -615,6 +902,7 @@ a.professor-card-button {
 }
 
 .selected-slot-panel h2 {
+  /* Keeps the summary heading compact beside the slot list. */
   margin: 0;
   font-size: 18px;
   color: #111;
@@ -658,12 +946,14 @@ a.professor-card-button {
 }
 
 .secondary-button:hover {
+  /* Secondary actions get a lighter hover effect than the red primary buttons. */
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 /* On tablets the two-column booking layout stacks into one column */
 @media (max-width: 900px) {
+  /* Booking confirmation becomes single-column when horizontal space is limited. */
   .booking-layout {
     grid-template-columns: 1fr;
   }

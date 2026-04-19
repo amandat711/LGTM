@@ -4,7 +4,8 @@ import LandingPage from './pages/landingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import Heatmap from './pages/Heatmap';
+import StudentHeatmap from './pages/StudentHeatmap';
+import ProfessorHeatmap from './pages/ProfessorHeatmap';
 import StudentDashboard from './pages/StudentDashboard';
 import ProfessorDashboard from './pages/ProfessorDashboard';
 import BookingDiscovery from './pages/BookingDiscovery';
@@ -28,12 +29,12 @@ function App() {
         </Route>
 
         <Route element={<AppShellLayout variant="any" />}>
-          <Route path="/heatmap/student/:eventId" element={<Heatmap />} />
+          <Route path="/heatmap/student/:eventId" element={<StudentHeatmap />} />
         </Route>
 
         <Route element={<AppShellLayout variant="professor" />}>
           <Route path="/dashboard/professor" element={<ProfessorDashboard />} />
-          <Route path="/heatmap/professor/:eventId" element={<Heatmap />} />
+          <Route path="/heatmap/professor/:eventId" element={<ProfessorHeatmap />} />
         </Route>
 
       </Routes>

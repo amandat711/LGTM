@@ -12,7 +12,7 @@ import calendarIcon from '../assets/calendarIcon.png';
 import coursesIcon from '../assets/courseIcon.png';
 import searchIcon from '../assets/searchIcon.png';
 import InfoIcon from '../assets/infoIcon.png';
-import { DeleteConfirmModal, SlotDetailModal } from '../components/Modals';
+import { DeleteConfirmModal, HelpGuideModal, SlotDetailModal } from '../components/Modals';
 import Calendar from '../components/calendar/Calendar';
 import {
   formatDate,
@@ -23,12 +23,15 @@ import {
 import { getMyAppointments, cancelAppointment } from '../api/appointments';
 import { getHeatmaps } from '../api/heatmaps';
 import { logout } from '../api/auth';
+import { DASHBOARD_HELP_GUIDES } from '../data/helpGuides';
 
 // Reusable sidebar component instead of hardcoding the left menu here.
 import Sidebar from '../components/Sidebar'; 
 import '../styles/Dashboard.css';
 export default function StudentDashboard() {
+  // Router helper for moving from the dashboard to search, heatmaps, or home.
   const navigate = useNavigate();
+  // Shared session hook gives this page the logged-in student and their database ID.
   const { user, userId } = useAppShellSession();
 
   // Logs the student out, then sends them back to the landing page no matter what.
@@ -161,10 +164,11 @@ export default function StudentDashboard() {
   return (
     <>
       <div className="dashboard-page">
+        {/* Whole dashboard shell: navbar on top, sidebar/calendar/panel underneath. */}
         {/* Top navigation bar with the page title, profile badge, and quick actions. */}
         <Navbar
           logo={logo}
-          title="Dashboard"
+          title="Dashboard Calendar"
           onLeftClick={() => navigate('/')}
           user={{
             displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
@@ -172,7 +176,9 @@ export default function StudentDashboard() {
             initials,
           }}
           actions={[
+            // Lets the student reclaim calendar space when the side summary is not needed.
             { label: rightPanelOpen ? 'Hide panel' : 'Show panel', onClick: () => setRightPanelOpen((open) => !open) },
+            // Ends the current session and returns to the landing page.
             { label: 'Log Out', onClick: handleLogout },
           ]}
         />
@@ -183,12 +189,15 @@ export default function StudentDashboard() {
           <Sidebar
             activeId={sideTab}
             items={[
+              // Calendar and courses are local dashboard tabs.
               { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => setSideTab('calendar') },
               { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => setSideTab('courses') },
-              { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
+              // Search opens the booking discovery flow where students find professors.
+              { id: 'search', icon: searchIcon, iconClassName: 'side-menu-icon-img-search', label: 'Search', onClick: () => navigate('/booking/search') },
             ]}
             bottomItems={[
-              { id: 'help', icon: InfoIcon, label: 'Help' },
+              // Help is kept at the bottom of the sidebar for consistent access.
+              { id: 'help', icon: InfoIcon, label: 'Help', onClick: () => setModal('help') },
             ]}
           />
 
@@ -199,6 +208,7 @@ export default function StudentDashboard() {
             {error && <p style={{ padding: 16, color: 'red' }}>{error}</p>}
 
             {!loading && (
+              // Main week calendar. Clicking any event opens the detail modal below.
               <Calendar
                 view="week"
                 appointments={appointments}
@@ -216,12 +226,15 @@ export default function StudentDashboard() {
               <div>
                 <div className="side-panel-title">Upcoming appointments</div>
                 {upcomingAppts.length === 0 ? (
+                  // Empty state keeps the panel from looking broken when there is no data.
                   <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
                 ) : (
                   upcomingAppts.map((appt) => {
+                    // Convert raw status into label + CSS class for the pill.
                     const { label, cls } = statusLabel(appt.status);
 
                     return (
+                      // Each card is clickable so students can review or cancel from the modal.
                       <div
                         key={appt.id}
                         className="appointment-item"
@@ -246,12 +259,14 @@ export default function StudentDashboard() {
 
               <div className="side-panel-divider" />
 
+              {/* Past appointments stay available as a simple history list. */}
               <div>
                 <div className="side-panel-title">Past appointments</div>
                 {pastAppts.length === 0 ? (
                   <p style={{ fontSize: 12, color: '#aaa' }}>No past appointments yet.</p>
                 ) : (
                   pastAppts.map((appt) => {
+                    // Reuse the same status pill treatment as upcoming appointments.
                     const { label, cls } = statusLabel(appt.status);
 
                     return (
@@ -286,6 +301,7 @@ export default function StudentDashboard() {
                   <p style={{ fontSize: 12, color: '#aaa' }}>No heatmap invitations right now.</p>
                 ) : (
                   heatmapInvites.map((inv) => (
+                    // One invitation card per heatmap the student can view or respond to.
                     <div key={inv.id} className="invite-item">
                       <div className={`invite-dot${inv.responded ? ' responded' : ''}`} />
                       <div>
@@ -309,6 +325,7 @@ export default function StudentDashboard() {
                         onClick={() => navigate(`/heatmap/student/${inv.id}`)}
                         title={inv.responded ? 'View heatmap' : 'Respond to heatmap'}
                       >
+                        {/* Plus means action needed; arrow means they already responded. */}
                         {inv.responded ? '>' : '+'}
                       </button>
                     </div>
@@ -323,6 +340,7 @@ export default function StudentDashboard() {
 
       {/* Opens when a student clicks an appointment to see the full details. */}
       {modal === 'detail' && activeAppt && (
+        /* The modal expects a smaller display object, so reshape the calendar event here. */
         <SlotDetailModal
           appointment={{
             title: activeAppt.title,
@@ -347,6 +365,7 @@ export default function StudentDashboard() {
       )}
       {/* Second modal that asks for confirmation before actually cancelling the appointment. */}
       {modal === 'delete' && activeAppt && (
+        /* This gives the confirmation modal the exact text it needs to show. */
         <DeleteConfirmModal
           appointment={{
             title: activeAppt.title,
@@ -356,6 +375,14 @@ export default function StudentDashboard() {
           }}
           onConfirm={handleDelete}
           onClose={() => setModal('detail')}
+        />
+      )}
+
+      {/* Page-specific help opened from the info icon in the sidebar. */}
+      {modal === 'help' && (
+        <HelpGuideModal
+          guide={DASHBOARD_HELP_GUIDES.student}
+          onClose={() => setModal(null)}
         />
       )}
     </>

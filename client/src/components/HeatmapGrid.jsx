@@ -7,7 +7,7 @@ import { useDragSelect } from '../hooks/useDragSelect';
 //   Every cell is identified by a string: "YYYY-MM-DD:ti"
 //   e.g. "2026-04-07:3" = Apr 7, 4th time slot
 //   This means slots are date-specific — never bleed across weeks.
-//   Recurring slots are expanded in Heatmap.jsx before being passed down.
+//   Recurring slots are expanded in ProfessorHeatmap.jsx before being passed down.
 // ─────────────────────────────────────────────────────────────
 export function makeKey(iso, ti) {
   return `${iso}:${ti}`;
