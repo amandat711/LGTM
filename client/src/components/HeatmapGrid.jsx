@@ -1,5 +1,5 @@
 import React from 'react';
-import { heatColor, thresholdHeatColor } from '../utils/heatColor';
+import { studentAvailabilityColor, thresholdHeatColor } from '../utils/heatColor';
 import { useDragSelect } from '../hooks/useDragSelect';
 
 const GROUP_MEETING_THRESHOLD_RATIO = 1;
@@ -72,11 +72,7 @@ export function ProfAvailGrid({ days, times, profSlots, selected, setSelected, o
                 return <div key={ti} className="cell" style={{ cursor: 'default' }} />;
               }
 
-              const bg = isSel
-                ? '#ffb8c0'
-                : hasHeatmap
-                  ? heatColor(count, totalOthers)
-                  : '#ffe0e3';
+              const bg = studentAvailabilityColor(count, hasHeatmap ? totalOthers : 0, isSel);
 
               const tooltipText = isSel
                 ? `${timeLabel} — your selection`
@@ -110,7 +106,7 @@ export function ProfAvailGrid({ days, times, profSlots, selected, setSelected, o
 export function GroupGrid({ days, times, participants, activeNames, selectedKeys, setSelectedKeys, onSelectKey }) {
   const active = participants.filter(p => activeNames.has(p.name));
   const max    = active.length || 1;
-  const { onMouseDown, onMouseEnter } = useDragSelect(selectedKeys, setSelectedKeys);
+  const { onMouseDown, onMouseEnter, isDragging } = useDragSelect(selectedKeys, setSelectedKeys);
 
   return (
     <div className="grid-wrap">
@@ -137,7 +133,7 @@ export function GroupGrid({ days, times, participants, activeNames, selectedKeys
                   }}
                   onMouseEnter={() => {
                     onMouseEnter(key)();
-                    onSelectKey(key, meta);
+                    if (isDragging.current) onSelectKey(key, meta);
                   }}
                 >
                   <div className="cell-tooltip">

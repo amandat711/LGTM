@@ -30,5 +30,5 @@ export function useDragSelect(selected, setSelected) {
     });
   }, [setSelected]);
 
-  return { onMouseDown, onMouseEnter };
+  return { onMouseDown, onMouseEnter, isDragging };
 }

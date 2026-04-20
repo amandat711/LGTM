@@ -480,7 +480,15 @@ body {
 }
 
 .group-cell:hover { transform: scaleY(1.04); z-index: 50; }
-.group-cell.selected { border-color: var(--red) !important; box-shadow: 0 0 0 2px rgba(227,20,41,0.2); }
+.group-cell.selected { border: 2.5px solid #b30000 !important; box-shadow: 0 0 0 3px rgba(179,0,0,0.4); }
+.group-cell.selected::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(179, 0, 0, 0.28);
+  border-radius: inherit;
+  pointer-events: none;
+}
 
 /* ─── Tooltip ────────────────────────────────────────────── */
 .cell-tooltip {
