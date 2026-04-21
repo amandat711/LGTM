@@ -9,6 +9,7 @@ import coursesIcon from '../../assets/courseIcon.png';
 import searchIcon from '../../assets/searchIcon.png';
 import InfoIcon from '../../assets/infoIcon.png';
 import '../../styles/Dashboard.css';
+import NotificationPanel from './NotificationPanel';
 
 export default function DashboardLayout({
   user,
@@ -53,7 +54,7 @@ export default function DashboardLayout({
           </button>
           <span className="dash-nav-title">Dashboard</span>
         </div>
-
+            
         <div className="dash-nav-right">
           <span className="dash-nav-name">
             {user.lastName}, {user.firstName}

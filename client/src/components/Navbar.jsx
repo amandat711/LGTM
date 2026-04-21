@@ -2,10 +2,11 @@
 
 import React from 'react';
 import '../styles/Navbar.css';
+import NotificationPanel from './dashboard/NotificationPanel';
 
 
- 
-export default function Navbar({ logo, title, onLeftClick, user, actions = [] }) {
+
+export default function Navbar({ logo, title, onLeftClick, user, actions = [], appointments = [] }) {
   const badgeClass = user?.role === 'professor' ? 'role-tag-professor' : 'role-tag-student';
 
   const badgeLabel =
@@ -42,6 +43,7 @@ export default function Navbar({ logo, title, onLeftClick, user, actions = [] })
 
       {/* ── Right: user info  +  action buttons ────────────── */}
       <div className="top-bar-right">
+        {user && <NotificationPanel user={user} appointments={appointments}/>}
         {user && (
           <div className="top-bar-user">
             <div className="top-bar-user-info">
