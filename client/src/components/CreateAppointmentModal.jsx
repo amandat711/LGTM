@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { getCourses } from '../api/courses';
 import '../styles/CreateAvailabilityModal.css';
 
 function toIsoLocal(date, time) {
@@ -16,6 +17,7 @@ function deriveInitialForm(defaultVisibility, initialData) {
     location: '',
     capacity: 1,
     visibility: defaultVisibility,
+    course_id: '',
   };
 
   if (!initialData) return base;
@@ -34,6 +36,7 @@ function deriveInitialForm(defaultVisibility, initialData) {
     location: initialData.location || '',
     capacity: Number(initialData.capacity || 1),
     visibility: initialData.visibility || defaultVisibility,
+    course_id: initialData.course_id != null ? String(initialData.course_id) : '',
   };
 }
 
@@ -43,12 +46,53 @@ export default function CreateAppointmentModal({
   defaultVisibility = 'public',
   initialData = null,
   mode = 'create',
+  forcedCourse = null,
 }) {
   const [form, setForm] = useState({
     ...deriveInitialForm(defaultVisibility, initialData),
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [allCourses, setAllCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
+  const [courseSearch, setCourseSearch] = useState('');
+
+  useEffect(() => {
+    if (!forcedCourse) {
+      setCoursesLoading(true);
+      getCourses()
+        .then((data) => {
+          const list = Array.isArray(data?.courses) ? data.courses : [];
+          setAllCourses(list);
+        })
+        .catch(() => {
+          setAllCourses([]);
+        })
+        .finally(() => setCoursesLoading(false));
+    }
+  }, [forcedCourse]);
+
+  useEffect(() => {
+    if (forcedCourse?.course_id != null) {
+      setForm((prev) => ({ ...prev, course_id: String(forcedCourse.course_id) }));
+      return;
+    }
+    if (initialData?.course_id != null) {
+      setForm((prev) => ({ ...prev, course_id: String(initialData.course_id) }));
+    }
+  }, [forcedCourse, initialData]);
+
+  const filteredCourses = useMemo(() => {
+    const q = courseSearch.trim().toLowerCase();
+    if (!q) return allCourses;
+    return allCourses.filter((course) => {
+      const code = String(course.course_code || '').toLowerCase();
+      const name = String(course.course_name || '').toLowerCase();
+      const term = String(course.course_term || '').toLowerCase();
+      const year = String(course.course_year || '').toLowerCase();
+      return code.includes(q) || name.includes(q) || term.includes(q) || year.includes(q);
+    });
+  }, [allCourses, courseSearch]);
 
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -75,6 +119,7 @@ export default function CreateAppointmentModal({
         location: form.location.trim() || null,
         capacity: Number(form.capacity),
         visibility: form.visibility,
+        course_id: form.course_id ? Number(form.course_id) : null,
       });
     } catch (err) {
       setError(err.message || `Failed to ${mode === 'edit' ? 'update' : 'create'} appointment.`);
@@ -123,6 +168,44 @@ export default function CreateAppointmentModal({
               placeholder="Optional details"
               rows={3}
             />
+          </div>
+
+          <div className="form-group form-group-full">
+            <label htmlFor="ap_course">Course</label>
+            {forcedCourse ? (
+              <>
+                <input
+                  id="ap_course"
+                  type="text"
+                  value={`${forcedCourse.course_code || ''} ${forcedCourse.course_name || ''}`.trim() || `Course ${forcedCourse.course_id}`}
+                  readOnly
+                />
+                <small>This appointment is locked to this course when created from a course page.</small>
+              </>
+            ) : (
+              <>
+                <input
+                  id="ap_course_search"
+                  type="text"
+                  value={courseSearch}
+                  onChange={(e) => setCourseSearch(e.target.value)}
+                  placeholder="Search by code, name, term, year"
+                />
+                <select
+                  id="ap_course"
+                  value={form.course_id}
+                  onChange={(e) => updateField('course_id', e.target.value)}
+                >
+                  <option value="">No course</option>
+                  {filteredCourses.map((course) => (
+                    <option key={course.course_id} value={course.course_id}>
+                      {course.course_code} - {course.course_name} ({course.course_term} {course.course_year})
+                    </option>
+                  ))}
+                </select>
+                {coursesLoading ? <small>Loading courses...</small> : null}
+              </>
+            )}
           </div>
 
           <div className="form-group">
