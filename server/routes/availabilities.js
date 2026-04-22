@@ -156,6 +156,11 @@ function buildSlots(startDate, endDate, slotDurationMinutes) {
   return slots;
 }
 
+function toDateOnlyString(date) {
+  const pad = (value) => String(value).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
 router.post('/', (req, res) => {
   const {
     created_by,
@@ -415,10 +420,14 @@ router.post('/', (req, res) => {
       const insertedIds = [];
 
       const insertSlots = () => {
-        const insertQuery = `
+        const insertAvailabilityQuery = `
           INSERT INTO availabilities
           (
             created_by,
+            course_id,
+            recurrence_group_id,
+            recurrence_instance_date,
+            is_recurrence_exception,
             location,
             capacity,
             start_time,
@@ -428,59 +437,138 @@ router.post('/', (req, res) => {
             av_title,
             av_description
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
-        const insertOne = (index) => {
-          if (index >= slots.length) {
-            const placeholders = insertedIds.map(() => '?').join(',');
+        const insertAvailabilityRows = (recurrenceGroupId = null) => {
+          const insertOne = (index) => {
+            if (index >= slots.length) {
+              const placeholders = insertedIds.map(() => '?').join(',');
 
-            db.all(
-              `SELECT * FROM availabilities WHERE availability_id IN (${placeholders}) ORDER BY datetime(start_time) ASC`,
-              insertedIds,
-              (err, rows) => {
-                if (err) return res.status(500).json({ error: err.message });
+              db.all(
+                `SELECT * FROM availabilities WHERE availability_id IN (${placeholders}) ORDER BY datetime(start_time) ASC`,
+                insertedIds,
+                (err, rows) => {
+                  if (err) return res.status(500).json({ error: err.message });
 
-                return res.status(201).json({
-                  message: 'Availabilities created successfully',
-                  created_count: rows.length,
-                  slot_duration_minutes: finalSlotDuration,
-                  recurrence_applied: !!parsedRecurrence?.enabled,
-                  availabilities: rows
-                });
+                  return res.status(201).json({
+                    message: 'Availabilities created successfully',
+                    created_count: rows.length,
+                    slot_duration_minutes: finalSlotDuration,
+                    recurrence_applied: !!parsedRecurrence?.enabled,
+                    recurrence_group_id: recurrenceGroupId,
+                    availabilities: rows
+                  });
+                }
+              );
+
+              return;
+            }
+
+            const slot = slots[index];
+            const slotStartDate = parseDate(slot.start_time);
+            const recurrenceInstanceDate =
+              recurrenceGroupId != null && slotStartDate
+                ? toDateOnlyString(slotStartDate)
+                : null;
+
+            db.run(
+              insertAvailabilityQuery,
+              [
+                created_by,
+                courseIdForRow,
+                recurrenceGroupId,
+                recurrenceInstanceDate,
+                0,
+                location || null,
+                finalCapacity,
+                slot.start_time,
+                slot.end_time,
+                finalVisibility,
+                recurrenceRuleForDb || null,
+                av_title || null,
+                av_description || null
+              ],
+              function (err) {
+                if (err) {
+                  return res.status(500).json({ error: err.message });
+                }
+
+                insertedIds.push(this.lastID);
+                insertOne(index + 1);
               }
             );
+          };
 
-            return;
-          }
-
-          const slot = slots[index];
-
-          db.run(
-            insertQuery,
-            [
-              created_by,
-              location || null,
-              finalCapacity,
-              slot.start_time,
-              slot.end_time,
-              finalVisibility,
-              recurrenceRuleForDb || null,
-              av_title || null,
-              av_description || null
-            ],
-            function (err) {
-              if (err) {
-                return res.status(500).json({ error: err.message });
-              }
-
-              insertedIds.push(this.lastID);
-              insertOne(index + 1);
-            }
-          );
+          insertOne(0);
         };
 
-        insertOne(0);
+        if (!parsedRecurrence || !parsedRecurrence.enabled) {
+          return insertAvailabilityRows(null);
+        }
+
+        const insertSeriesQuery = `
+          INSERT INTO recurrence_series
+          (
+            created_by,
+            course_id,
+            frequency,
+            interval_value,
+            by_weekdays,
+            by_month_day,
+            monthly_pattern,
+            end_type,
+            until_date,
+            occurrence_count,
+            exception_dates,
+            series_start_time,
+            series_end_time,
+            slot_duration_minutes,
+            location,
+            capacity,
+            visibility,
+            av_title,
+            av_description,
+            recurrence_rule
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
+        db.run(
+          insertSeriesQuery,
+          [
+            created_by,
+            courseIdForRow,
+            parsedRecurrence.frequency,
+            parsedRecurrence.interval,
+            JSON.stringify(parsedRecurrence.byWeekdays || []),
+            parsedRecurrence.byMonthDay || null,
+            parsedRecurrence.monthlyPattern
+              ? JSON.stringify(parsedRecurrence.monthlyPattern)
+              : null,
+            parsedRecurrence.endType,
+            parsedRecurrence.endType === 'on' ? parsedRecurrence.until : null,
+            parsedRecurrence.endType === 'after' ? parsedRecurrence.count : null,
+            JSON.stringify([]),
+            toSqliteDateTime(startDate),
+            toSqliteDateTime(endDate),
+            finalSlotDuration,
+            location || null,
+            finalCapacity,
+            finalVisibility,
+            av_title || null,
+            av_description || null,
+            recurrenceRuleForDb
+          ],
+          function (err) {
+            if (err) {
+              return res.status(500).json({ error: err.message });
+            }
+
+            const recurrenceGroupId = this.lastID;
+            return insertAvailabilityRows(recurrenceGroupId);
+          }
+        );
       };
 
       checkOverlaps(0);
