@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import RecurrenceModal from './RecurrenceModal';
 import { getUsers } from '../api/users';
+import {
+  toLocalDateInputValue,
+  toLocalTimeInputValue,
+} from './calendar/calendarUtils';
 
 function toIsoLocal(date, time) {
   return `${date}T${time}:00`;
@@ -28,7 +32,7 @@ export default function CreateAppointmentForm({
   initialStartTime = null, // ISO string
   initialEndTime = null, // ISO string
 }) {
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const today = useMemo(() => toLocalDateInputValue(new Date()), []);
 
   const [form, setForm] = useState({
     ap_title: '',
@@ -61,9 +65,9 @@ export default function CreateAppointmentForm({
     const end = providedEnd && !Number.isNaN(providedEnd.getTime())
       ? providedEnd
       : new Date(start.getTime() + 30 * 60000);
-    const date = start.toISOString().slice(0, 10);
-    const start_time = start.toTimeString().slice(0, 5);
-    const end_time = end.toTimeString().slice(0, 5);
+    const date = toLocalDateInputValue(start);
+    const start_time = toLocalTimeInputValue(start);
+    const end_time = toLocalTimeInputValue(end);
 
     setForm((prev) => ({
       ...prev,

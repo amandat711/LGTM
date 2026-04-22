@@ -28,6 +28,22 @@
   white-space: nowrap;
 }
 
+.dash-cal-timezone {
+  font-size: 10px;
+  color: #6b7280;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.dash-week-timezone-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  text-align: center;
+}
+
 .dash-cal-nav {
   display: flex;
   align-items: center;

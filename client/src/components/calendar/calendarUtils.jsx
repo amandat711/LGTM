@@ -15,6 +15,37 @@ export const HOURS = Array.from(
   (_, i) => i + CALENDAR_START_HOUR
 );
 
+export function getCalendarTimeZone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+}
+
+export function getCalendarTimeZoneLabel(date = new Date()) {
+  const timeZone = getCalendarTimeZone();
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    timeZoneName: 'short',
+  });
+  const zonePart = formatter.formatToParts(date).find((part) => part.type === 'timeZoneName');
+  return zonePart?.value || timeZone;
+}
+
+export function toLocalDateInputValue(value = new Date()) {
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function toLocalTimeInputValue(value = new Date()) {
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const hour = String(d.getHours()).padStart(2, '0');
+  const minute = String(d.getMinutes()).padStart(2, '0');
+  return `${hour}:${minute}`;
+}
+
 export function formatTime(iso) {
   const d = new Date(iso);
   const h = d.getHours();

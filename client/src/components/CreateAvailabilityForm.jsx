@@ -1,5 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import RecurrenceModal from './RecurrenceModal';
+import {
+  toLocalDateInputValue,
+  toLocalTimeInputValue,
+} from './calendar/calendarUtils';
 
 function toIsoLocal(date, time) {
   return `${date}T${time}:00`;
@@ -83,15 +87,17 @@ export default function CreateAvailabilityForm({
   initialStartTime = null,
   initialEndTime = null,
 }) {
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  const initialDate = initialData?.start_time?.slice(0, 10) || today;
+  const today = useMemo(() => toLocalDateInputValue(new Date()), []);
+  const initialDate = initialData?.start_time
+    ? toLocalDateInputValue(initialData.start_time)
+    : today;
 
   const [form, setForm] = useState({
     av_title: initialData?.av_title || '',
     av_description: initialData?.av_description || '',
     date: initialDate,
-    start_time: initialData?.start_time?.slice(11, 16) || '10:00',
-    end_time: initialData?.end_time?.slice(11, 16) || '10:30',
+    start_time: initialData?.start_time ? toLocalTimeInputValue(initialData.start_time) : '10:00',
+    end_time: initialData?.end_time ? toLocalTimeInputValue(initialData.end_time) : '10:30',
     location: initialData?.location || '',
     capacity: initialData?.capacity ?? 1,
     visibility: initialData?.visibility || defaultVisibility,
@@ -113,9 +119,9 @@ export default function CreateAvailabilityForm({
     const end = providedEnd && !Number.isNaN(providedEnd.getTime())
       ? providedEnd
       : new Date(start.getTime() + 30 * 60000);
-    const date = start.toISOString().slice(0, 10);
-    const start_time = start.toTimeString().slice(0, 5);
-    const end_time = end.toTimeString().slice(0, 5);
+    const date = toLocalDateInputValue(start);
+    const start_time = toLocalTimeInputValue(start);
+    const end_time = toLocalTimeInputValue(end);
 
     setForm((prev) => ({
       ...prev,

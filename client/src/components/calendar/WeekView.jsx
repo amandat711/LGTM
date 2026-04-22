@@ -5,6 +5,8 @@ import {
   HOURS,
   isSameDay,
   getEventStyle,
+  getCalendarTimeZone,
+  getCalendarTimeZoneLabel,
   CALENDAR_START_HOUR,
   CALENDAR_END_HOUR,
 } from './calendarUtils';
@@ -52,6 +54,8 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
 
   const titleMonth = MONTHS[weekDays[0].getMonth()];
   const titleYear = weekDays[0].getFullYear();
+  const calendarTimeZone = useMemo(() => getCalendarTimeZone(), []);
+  const calendarTimeZoneLabel = useMemo(() => getCalendarTimeZoneLabel(), []);
 
   const weekLabel = `${MONTHS[weekDays[0].getMonth()]} ${weekDays[0].getDate()} – ${
     MONTHS[weekDays[6].getMonth()]
@@ -168,7 +172,9 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
 
       <div className="dash-week-grid" ref={scrollRef}>
         <div className="dash-week-days">
-          <div className="dash-week-day-header" />
+          <div className="dash-week-day-header dash-week-timezone-cell">
+            <span className="dash-cal-timezone">{calendarTimeZoneLabel}</span>
+          </div>
           {weekDays.map((d, i) => (
             <div key={i} className="dash-week-day-header">
               <div className="dash-day-name">{DAYS_SHORT[d.getDay()]}</div>
@@ -258,6 +264,7 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
                   const startTimeString = new Date(appt.startTime).toLocaleTimeString([], {
                     hour: 'numeric',
                     minute: '2-digit',
+                    timeZone: calendarTimeZone,
                   });
                   const eventTop = top + 2;
                   const eventHeight = Math.max(height - 4, 24);
