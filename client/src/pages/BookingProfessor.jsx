@@ -6,6 +6,7 @@ import useAppShellSession from '../hooks/useAppShellSession';
 import { resolvePath } from '../auth/authUtils';
 import Navbar from '../components/Navbar';
 import BookingCalendar, { toCalendarDateKey } from '../components/BookingCalendar';
+import { InviteURLModal } from '../components/Modals';
 
 function formatSlotTime(value) {
   return new Intl.DateTimeFormat('en-CA', {
@@ -76,6 +77,7 @@ export default function BookingProfessor() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(toCalendarDateKey(new Date()));
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const today = new Date();
@@ -252,6 +254,13 @@ export default function BookingProfessor() {
                 >
                   Contact
                 </a>
+                <button
+                  type="button"
+                  className="professor-card-button secondary-button booking-professor-email-btn"
+                  onClick={() => setInviteModalOpen(true)}
+                >
+                  Copy booking link
+                </button>
               </div>
             </div>
             {/* <div className="booking-info-pill">Student ID {studentId}</div> */}
@@ -343,6 +352,18 @@ export default function BookingProfessor() {
           </div>
         </section>
       </div>
+      {inviteModalOpen && (
+        <InviteURLModal
+          ownerEmail={professor.email}
+          eventTitle={professor.name}
+          inviteURL={window.location.href}
+          title="Share professor booking page"
+          description="Share this link so students can open this professor booking page and choose an available slot."
+          contextLabel="Professor booking page"
+          tip="Tip: share this in your course channel or office-hours announcement."
+          onClose={() => setInviteModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

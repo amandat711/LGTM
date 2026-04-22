@@ -16,6 +16,7 @@ import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import CreateAvailabilityModal from '../components/CreateAvailabilityModal';
 import CourseSettingsModal from '../components/CourseSettingsModal';
+import { InviteURLModal } from '../components/Modals';
 import logo from '../assets/logo1.png';
 import calendarIcon from '../assets/calendarIcon.png';
 import coursesIcon from '../assets/courseIcon.png';
@@ -122,6 +123,7 @@ export default function CourseDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createEventOpen, setCreateEventOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
 
   const currentUser = useMemo(
     () => ({
@@ -161,7 +163,7 @@ export default function CourseDetailPage() {
   const eventsMerged = useMemo(() => mergeEvents(detail), [detail]);
 
   const course = detail?.course;
-  const showInviteSection = Boolean(detail && (course?.is_staff || course?.is_owner) && inviteHref);
+  const showInviteSection = Boolean(detail && (course?.is_owner) && inviteHref);
   const showOwnerTools = Boolean(course?.is_owner);
   /** Owners or course admins (assigned staff) may add/delete course calendar events. */
   const canManageCourseEvents = Boolean(course?.is_owner || course?.is_staff);
@@ -404,7 +406,7 @@ export default function CourseDetailPage() {
 
                     {showInviteSection && (
                       <div className="course-detail-invite-actions">
-                        <button type="button" className="course-detail-generate-btn" onClick={handleCopyInvite}>
+                        <button type="button" className="course-detail-generate-btn" onClick={() => setInviteModalOpen(true)}>
                           <ShareIcon />
                           Copy invitation link
                         </button>
@@ -483,13 +485,25 @@ export default function CourseDetailPage() {
                     <div className="course-detail-events-header">
                       <h2 className="course-detail-events-title">Events</h2>
                       {canManageCourseEvents && (
-                        <button
-                          type="button"
-                          className="course-detail-add-event-btn"
-                          onClick={() => setCreateEventOpen(true)}
-                        >
-                          Add event +
-                        </button>
+                        <details className="course-detail-add-event-dropdown">
+                          <summary className="course-detail-add-event-btn">Add event +</summary>
+                          <div className="course-detail-add-event-menu">
+                            <button
+                              type="button"
+                              className="course-detail-add-event-item"
+                              onClick={() => setCreateEventOpen(true)}
+                            >
+                              Calendar Booking
+                            </button>
+                            <button
+                              type="button"
+                              className="course-detail-add-event-item"
+                              onClick={() => navigate('/heatmap/professor/new')}
+                            >
+                              Heatmap Booking
+                            </button>
+                          </div>
+                        </details>
                       )}
                     </div>
                     {eventsMerged.length === 0 ? (
@@ -549,6 +563,19 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {inviteModalOpen && inviteHref && (
+              <InviteURLModal
+                ownerEmail={user.mcgill_email || ''}
+                eventTitle={course?.course_name || course?.course_code || 'Course'}
+                inviteURL={inviteHref}
+                title="Share course invitation link"
+                description="Share this link so students can join the course."
+                contextLabel="Course"
+                tip="Tip: post this in your class announcements."
+                onClose={() => setInviteModalOpen(false)}
+              />
             )}
 
             {actionError ? <p className="course-detail-error course-detail-error--banner">{actionError}</p> : null}
