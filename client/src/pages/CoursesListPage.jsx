@@ -5,13 +5,9 @@ import { isFacultyAdmin } from '../auth/authUtils';
 import { createCourse, getCourses } from '../api/courses';
 import { logout } from '../api/auth';
 import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
+import AppSidebar from '../components/AppSidebar';
 import CreateCourseModal from '../components/CreateCourseModal';
 import logo from '../assets/logo1.png';
-import calendarIcon from '../assets/calendarIcon.png';
-import coursesIcon from '../assets/courseIcon.png';
-import searchIcon from '../assets/searchIcon.png';
-import InfoIcon from '../assets/infoIcon.png';
 import '../styles/Dashboard.css';
 import '../styles/CoursesListPage.css';
 
@@ -170,14 +166,11 @@ export default function CoursesListPage() {
       )}
 
       <div className="dashboard-layout">
-        <Sidebar
+        <AppSidebar
           activeId="courses"
-          items={[
-            { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => navigate('/dashboard/student') },
-            { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
-            { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
-          ]}
-          bottomItems={[{ id: 'help', icon: InfoIcon, label: 'Help' }]}
+          user={user}
+          navigate={navigate}
+          canCreate={canCreate}
         />
 
         <div className="main-content">
