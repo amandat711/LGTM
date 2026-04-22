@@ -464,7 +464,8 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
       if (sErr) return res.status(500).json({ error: sErr.message });
       db.all(ownersSql, [courseId], (oErr, owners) => {
         if (oErr) return res.status(500).json({ error: oErr.message });
-        db.all(apSql, [uid, courseId], (apErr, appointments) => {
+        const apParams = (isStaff || isOwner) ? [courseId] : [uid, courseId];
+        db.all(apSql, apParams, (apErr, appointments) => {
           if (apErr) return res.status(500).json({ error: apErr.message });
 
           const course = {

@@ -540,6 +540,11 @@ export default function CourseDetailPage() {
           defaultVisibility="public"
           initialData={editingEvent}
           mode={editingEvent ? 'edit' : 'create'}
+          forcedCourse={course ? {
+            course_id: course.course_id,
+            course_code: course.course_code,
+            course_name: course.course_name,
+          } : null}
           onClose={() => {
             setCreateEventOpen(false);
             setEditingEvent(null);
