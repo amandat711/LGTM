@@ -54,6 +54,19 @@ router.get('/', (req, res) => {
   });
 });
 
+router.get('/professors', (req, res) => {
+  db.all(
+    `SELECT user_id, first_name, last_name, mcgill_email, user_type, department, staff_title
+    FROM users
+    WHERE user_type = 'general_admin'
+    ORDER BY last_name ASC, first_name ASC`,
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+      return res.json(rows.map(mapUser));
+    }
+  );
+});
+
 router.get('/:id', (req, res) => {
   db.get(
     `

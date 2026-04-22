@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAvailableProfessors, getProfessorPublicAvailabilities } from '../api/availabilities';
+import { getProfessorPublicAvailabilities } from '../api/availabilities';
+import { getAllProfessors } from '../api/users';
 import { createAppointment } from '../api/appointments';
 import { logout } from '../api/auth';
 import useAppShellSession from '../hooks/useAppShellSession';
@@ -82,18 +83,15 @@ function professorMailtoHref(professor) {
 
 function mapOwnerToProfessor(owner) {
   const department = owner.department?.trim() || '';
-  const staffTitle = owner.staff_title?.trim() || '';
+  const staffTitle = owner.staffTitle?.trim() || '';
   const subtitle = [department, staffTitle].filter(Boolean).join(' • ') || 'Faculty';
   return {
-    id: owner.user_id?.toString() ?? `${owner.first_name?.toLowerCase()}.${owner.last_name?.toLowerCase()}`,
-    name: owner.first_name && owner.last_name ? `${owner.first_name} ${owner.last_name}` : owner.staff_title || 'Professor',
+    id: owner.id?.toString() ?? `${owner.firstName?.toLowerCase()}.${owner.lastName?.toLowerCase()}`,
+    name: owner.firstName && owner.lastName ? `${owner.firstName} ${owner.lastName}` : owner.staffTitle || 'Professor',
     department,
     staffTitle,
     subtitle,
-    email: owner.mcgill_email || 'noreply@mail.mcgill.ca',
-    bio: staffTitle
-      ? `Available for meetings in ${department}.`
-      : 'Available for appointments.',
+    email: owner.email || 'noreply@mail.mcgill.ca',
   };
 }
 
@@ -140,7 +138,7 @@ export default function BookingProfessor() {
       setMessage('');
 
       try {
-        const owners = await getAvailableProfessors('');
+        const owners = await getAllProfessors('');
         const mapped = Array.isArray(owners) ? owners.map(mapOwnerToProfessor) : [];
         const found = mapped.find((prof) => prof.id === professorId);
 

@@ -1,19 +1,22 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAvailableProfessors } from '../api/availabilities';
+import { getAllProfessors } from '../api/users';
 import useAppShellSession from '../hooks/useAppShellSession';
 import { resolvePath } from '../auth/authUtils';
 import Navbar from '../components/Navbar';
 
 function mapOwnerToProfessor(owner) {
+  const firstName = owner.firstName ?? owner.first_name ?? '';
+  const lastName = owner.lastName ?? owner.last_name ?? '';
+  const department = owner.department ?? '';
+  const staffTitle = owner.staffTitle ?? owner.staff_title ?? '';
+  const email = owner.email ?? owner.mcgill_email ?? 'noreply@mail.mcgill.ca';
+
   return {
-    id: owner.user_id?.toString() ?? `${owner.first_name?.toLowerCase()}.${owner.last_name?.toLowerCase()}`,
-    name: owner.first_name && owner.last_name ? `Prof. ${owner.first_name} ${owner.last_name}` : owner.staff_title || 'Professor',
-    department: owner.department || owner.staff_title || 'Faculty',
-    email: owner.mcgill_email || 'noreply@mail.mcgill.ca',
-    bio: owner.staff_title
-      ? `Available for meetings in ${owner.department || 'your area of study'}.`
-      : 'Available for appointments.',
+    id: owner.id?.toString() ?? owner.user_id?.toString() ?? `${firstName.toLowerCase()}.${lastName.toLowerCase()}`,
+    name: firstName && lastName ? `${firstName} ${lastName}` : staffTitle || 'Professor',
+    department: department || staffTitle || 'Faculty',
+    email,
   };
 }
 
@@ -33,7 +36,7 @@ export default function BookingDiscovery() {
       setLoading(true);
       setError('');
       try {
-        const data = await getAvailableProfessors('');
+        const data = await getAllProfessors('');
         if (!active) return;
 
         setProfessors(Array.isArray(data) ? data.map(mapOwnerToProfessor) : []);

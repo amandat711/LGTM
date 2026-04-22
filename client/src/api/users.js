@@ -25,6 +25,11 @@ export async function getUsers(typeOrOptions = '') {
   return handleResponse(res);
 }
 
+export async function getAllProfessors() {
+  const res = await fetch(`${API_BASE}/users/professors`, { credentials: 'include' });
+  return handleResponse(res);
+}
+
 export async function getUser(userId) {
   const res = await fetch(`${API_BASE}/users/${userId}`, { credentials: 'include' });
   return handleResponse(res);
