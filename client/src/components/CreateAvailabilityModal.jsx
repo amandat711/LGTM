@@ -20,12 +20,8 @@ function getWeekdayOrder(code) {
   return order[code] ?? 999;
 }
 
-function getRecurrenceSummary(recurrence) {
-  if (!recurrence?.enabled) {
-    return 'Does not repeat';
-  }
-
-  const weekdayLabels = {
+function getWeekdayLabel(code) {
+  const labels = {
     MO: 'Mon',
     TU: 'Tue',
     WE: 'Wed',
@@ -34,24 +30,35 @@ function getRecurrenceSummary(recurrence) {
     SA: 'Sat',
     SU: 'Sun',
   };
+  return labels[code] || code;
+}
+
+function getRecurrenceSummary(recurrence) {
+  if (!recurrence?.enabled) {
+    return 'Does not repeat';
+  }
 
   const sortedDays = [...(recurrence.byWeekdays || [])].sort(
     (a, b) => getWeekdayOrder(a) - getWeekdayOrder(b)
   );
 
-  const dayNames = sortedDays.map((code) => weekdayLabels[code]).join(', ');
+  const dayNames = sortedDays.map(getWeekdayLabel);
 
   let summary = `Repeats every ${recurrence.interval} week${
     recurrence.interval > 1 ? 's' : ''
   }`;
 
-  if (dayNames) {
-    summary += ` on ${dayNames}`;
+  if (dayNames.length > 0) {
+    if (dayNames.length <= 2) {
+      summary += ` on ${dayNames.join(' and ')}`;
+    } else {
+      summary += ` on ${dayNames.join(', ')}`;
+    }
   }
 
   if (recurrence.endType === 'on' && recurrence.until) {
     summary += ` until ${recurrence.until}`;
-  } else if (recurrence.endType === 'after') {
+  } else if (recurrence.endType === 'after' && recurrence.count) {
     summary += ` for ${recurrence.count} occurrence${
       recurrence.count !== 1 ? 's' : ''
     }`;
@@ -60,17 +67,22 @@ function getRecurrenceSummary(recurrence) {
   return summary;
 }
 
-function getInitialRecurrence(initialData) {
+function getDefaultRecurrence(baseDate) {
+  return {
+    enabled: false,
+    frequency: 'weekly',
+    interval: 1,
+    byWeekdays: [],
+    endType: 'never',
+    until: '',
+    count: 13,
+    baseDate: baseDate || '',
+  };
+}
+
+function getInitialRecurrence(initialData, baseDate) {
   if (!initialData?.recurrence_rule) {
-    return {
-      enabled: false,
-      frequency: 'weekly',
-      interval: 1,
-      byWeekdays: [],
-      endType: 'never',
-      until: '',
-      count: 13,
-    };
+    return getDefaultRecurrence(baseDate);
   }
 
   try {
@@ -82,22 +94,15 @@ function getInitialRecurrence(initialData) {
     return {
       enabled: Boolean(parsed?.enabled),
       frequency: parsed?.frequency || 'weekly',
-      interval: parsed?.interval || 1,
+      interval: Number(parsed?.interval) || 1,
       byWeekdays: Array.isArray(parsed?.byWeekdays) ? parsed.byWeekdays : [],
       endType: parsed?.endType || 'never',
       until: parsed?.until || '',
-      count: parsed?.count || 13,
+      count: Number(parsed?.count) || 13,
+      baseDate: baseDate || '',
     };
   } catch {
-    return {
-      enabled: false,
-      frequency: 'weekly',
-      interval: 1,
-      byWeekdays: [],
-      endType: 'never',
-      until: '',
-      count: 13,
-    };
+    return getDefaultRecurrence(baseDate);
   }
 }
 
@@ -125,23 +130,11 @@ export default function CreateAvailabilityModal({
   });
 
   const [recurrence, setRecurrence] = useState(() =>
-    getInitialRecurrence(initialData)
+    getInitialRecurrence(initialData, initialDate)
   );
   const [recurrenceModalOpen, setRecurrenceModalOpen] = useState(false);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
-
-  function resetRecurrence() {
-    setRecurrence({
-      enabled: false,
-      frequency: 'weekly',
-      interval: 1,
-      byWeekdays: [],
-      endType: 'never',
-      until: '',
-      count: 13,
-    });
-  }
 
   function resetForm() {
     setForm({
@@ -157,11 +150,55 @@ export default function CreateAvailabilityModal({
     });
   }
 
+  function resetRecurrence(dateValue = today) {
+    setRecurrence(getDefaultRecurrence(dateValue));
+  }
+
   function updateField(key, value) {
     setForm((prev) => ({
       ...prev,
       [key]: value,
     }));
+
+    if (key === 'date') {
+      setRecurrence((prev) => ({
+        ...prev,
+        baseDate: value,
+      }));
+    }
+  }
+
+  function handleRecurrenceOpen() {
+    setRecurrenceModalOpen(true);
+  }
+
+  function handleRecurrenceClose() {
+    setRecurrenceModalOpen(false);
+  }
+
+  function handleRecurrenceSave(newRecurrence) {
+    setRecurrence({
+      ...newRecurrence,
+      baseDate: form.date,
+    });
+    setRecurrenceModalOpen(false);
+  }
+
+  function handleRemoveRecurrence() {
+    setRecurrence(getDefaultRecurrence(form.date));
+    setRecurrenceModalOpen(false);
+  }
+
+  function handleModalClose() {
+    setError('');
+    setRecurrenceModalOpen(false);
+    onClose();
+  }
+
+  function handleOverlayClick(e) {
+    if (e.target === e.currentTarget) {
+      handleModalClose();
+    }
   }
 
   async function handleSubmit(e) {
@@ -191,17 +228,17 @@ export default function CreateAvailabilityModal({
 
     if (recurrence.enabled) {
       if (!Array.isArray(recurrence.byWeekdays) || recurrence.byWeekdays.length === 0) {
-        setError('Recurrence: Select at least one weekday.');
+        setError('Recurrence: select at least one weekday.');
         return;
       }
 
       if (!Number.isInteger(Number(recurrence.interval)) || Number(recurrence.interval) < 1) {
-        setError('Recurrence: Interval must be at least 1.');
+        setError('Recurrence: interval must be at least 1.');
         return;
       }
 
       if (recurrence.endType === 'on' && !recurrence.until) {
-        setError('Recurrence: Select an end date.');
+        setError('Recurrence: select an end date.');
         return;
       }
 
@@ -209,7 +246,7 @@ export default function CreateAvailabilityModal({
         recurrence.endType === 'after' &&
         (!Number.isInteger(Number(recurrence.count)) || Number(recurrence.count) < 1)
       ) {
-        setError('Recurrence: Occurrences must be at least 1.');
+        setError('Recurrence: occurrences must be at least 1.');
         return;
       }
     }
@@ -229,8 +266,6 @@ export default function CreateAvailabilityModal({
           }
         : null;
 
-      console.log('[CreateAvailabilityModal] recurrence_rule payload:', recurrencePayload);
-
       await onSubmit({
         av_title: form.av_title.trim() || null,
         av_description: form.av_description.trim() || null,
@@ -244,34 +279,12 @@ export default function CreateAvailabilityModal({
       });
 
       resetForm();
-      resetRecurrence();
+      resetRecurrence(today);
       setRecurrenceModalOpen(false);
     } catch (err) {
       setError(err?.message || 'Failed to create availability.');
     } finally {
       setSaving(false);
-    }
-  }
-
-  function handleRecurrenceClose() {
-    setRecurrenceModalOpen(false);
-  }
-
-  function handleRecurrenceSave(newRecurrence) {
-    setRecurrence(newRecurrence);
-    setRecurrenceModalOpen(false);
-  }
-
-  function handleModalClose() {
-    resetRecurrence();
-    setRecurrenceModalOpen(false);
-    setError('');
-    onClose();
-  }
-
-  function handleOverlayClick(e) {
-    if (e.target === e.currentTarget) {
-      handleModalClose();
     }
   }
 
@@ -285,7 +298,13 @@ export default function CreateAvailabilityModal({
         onMouseDown={(e) => e.stopPropagation()}
       >
         <div className="availability-modal-header">
-          <h2>{title}</h2>
+          <div>
+            <h2>{title}</h2>
+            <p className="availability-modal-subtitle">
+              Create a time slot students can book.
+            </p>
+          </div>
+
           <button
             type="button"
             className="availability-close-btn"
@@ -402,24 +421,31 @@ export default function CreateAvailabilityModal({
 
           <div className="form-group">
             <label>Recurrence</label>
-            <div className="recurrence-display">
-              <span className="recurrence-summary">
-                {getRecurrenceSummary(recurrence)}
+            <button
+              type="button"
+              className="recurrence-display"
+              onClick={handleRecurrenceOpen}
+            >
+              <div className="recurrence-display-text">
+                <span className={`recurrence-badge ${recurrence.enabled ? 'active' : ''}`}>
+                  {recurrence.enabled ? 'Repeating' : 'One-time'}
+                </span>
+                <span className="recurrence-summary">
+                  {getRecurrenceSummary(recurrence)}
+                </span>
+              </div>
+
+              <span className="recurrence-display-action">
+                {recurrence.enabled ? 'Edit' : 'Custom'}
               </span>
-              <button
-                type="button"
-                className="recurrence-edit-btn"
-                onClick={() => setRecurrenceModalOpen(true)}
-              >
-                Custom...
-              </button>
-            </div>
+            </button>
           </div>
 
           <RecurrenceModal
             isOpen={recurrenceModalOpen}
             onClose={handleRecurrenceClose}
             onSave={handleRecurrenceSave}
+            onRemove={handleRemoveRecurrence}
             initialRecurrence={recurrence}
             baseDate={form.date}
           />
