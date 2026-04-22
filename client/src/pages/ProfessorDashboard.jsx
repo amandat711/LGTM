@@ -193,15 +193,6 @@ export default function ProfessorDashboard() {
       .slice(0, 5);
   }, [appointments]);
 
-  // History list so older appointments do not disappear completely.
-  const pastAppts = useMemo(() => {
-    const now = new Date();
-    return appointments
-      .filter((a) => new Date(a.startTime) < now && a.status !== 'cancelled')
-      .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
-  }, [appointments]);
-
-  
   // Handles both delete flows:
   // deleting an open availability slot or cancelling a booked appointment.
   async function handleDelete() {
@@ -425,97 +416,64 @@ export default function ProfessorDashboard() {
                 {/* Quick look at what is coming up soon. */}
               <div>
                 <div className="side-panel-title">Upcoming appointments</div>
-                {upcomingAppts.length === 0 ? (
-                  // Empty state keeps the panel useful even when the professor is free.
-                  <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
-                ) : (
-                  upcomingAppts.map((appt) => {
-                    // Convert raw status into label + CSS class for the pill.
-                    const { label, cls } = statusLabel(appt.status);
+                <div className="side-panel-scroll">
+                  {upcomingAppts.length === 0 ? (
+                    // Empty state keeps the panel useful even when the professor is free.
+                    <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
+                  ) : (
+                    upcomingAppts.map((appt) => {
+                      // Convert raw status into label + CSS class for the pill.
+                      const { label, cls } = statusLabel(appt.status);
 
-                    return (
-                      // Each card is clickable so the professor can inspect or cancel it.
-                      <div
-                        key={appt.id}
-                        className="appointment-item"
-                        onClick={() => {
-                          setActiveAppt(appt);
-                          setModal('detail');
-                        }}
-                      >
-                        <div className="appointment-color-dot" style={{ background: appt.color }} />
-                        <div>
-                          <h4>{appt.title || 'Untitled appointment'}</h4>
-                          <h6>{appt.ownerName}</h6>
-                          <p>{formatDate(appt.startTime)}</p>
-                          <p>{appt.location}</p>
-                        </div>
-                        <span className={`appointment-status-pill ${cls}`}>{label}</span>
-                        {appt.status === 'pending' && (
-                          <div style={{ display: 'grid', gap: 6 }}>
-                            <button
-                              type="button"
-                              className="invite-action-button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUpdateMyStatus(appt.id, 'confirmed');
-                              }}
-                              title="Accept request"
-                            >
-                              ✓
-                            </button>
-                            <button
-                              type="button"
-                              className="invite-action-button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUpdateMyStatus(appt.id, 'cancelled');
-                              }}
-                              title="Decline request"
-                            >
-                              ×
-                            </button>
+                      return (
+                        // Each card is clickable so the professor can inspect or cancel it.
+                        <div
+                          key={appt.id}
+                          className="appointment-item"
+                          onClick={() => {
+                            setActiveAppt(appt);
+                            setModal('detail');
+                          }}
+                        >
+                          <div className="appointment-color-dot" style={{ background: appt.color }} />
+                          <div>
+                            <h4>{appt.title || 'Untitled appointment'}</h4>
+                            <h6>{appt.ownerName}</h6>
+                            <p>{formatDate(appt.startTime)}</p>
+                            <p>{appt.location}</p>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              <div className="side-panel-divider" />
-
-              {/* Past bookings stay visible here as a lightweight history list. */}
-              <div>
-                <div className="side-panel-title">Past appointments</div>
-                {pastAppts.length === 0 ? (
-                  <p style={{ fontSize: 12, color: '#aaa' }}>No past appointments yet.</p>
-                ) : (
-                  pastAppts.map((appt) => {
-                    // Past cards use the same visual status treatment as upcoming ones.
-                    const { label, cls } = statusLabel(appt.status);
-
-                    return (
-                      <div
-                        key={appt.id}
-                        className="appointment-item"
-                        onClick={() => {
-                          setActiveAppt(appt);
-                          setModal('detail');
-                        }}
-                      >
-                        <div className="appointment-color-dot" style={{ background: appt.color }} />
-                        <div>
-                          <h4>{appt.title || 'Untitled appointment'}</h4>
-                          <h6>{appt.ownerName}</h6>
-                          <p>{formatDate(appt.startTime)}</p>
-                          <p>{appt.location}</p>
+                          <span className={`appointment-status-pill ${cls}`}>{label}</span>
+                          {appt.status === 'pending' && (
+                            <div style={{ display: 'grid', gap: 6 }}>
+                              <button
+                                type="button"
+                                className="invite-action-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateMyStatus(appt.id, 'confirmed');
+                                }}
+                                title="Accept request"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                type="button"
+                                className="invite-action-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateMyStatus(appt.id, 'cancelled');
+                                }}
+                                title="Decline request"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
                         </div>
-                        <span className={`appointment-status-pill ${cls}`}>{label}</span>
-                      </div>
-                    );
-                  })
-                )}
+                      );
+                    })
+                  )}
+                </div>
               </div>
 
               <div className="side-panel-divider" />
@@ -544,7 +502,7 @@ export default function ProfessorDashboard() {
                 </p>
 
                 {/* Small preview list of recent heatmaps for quick access. */}
-                <div style={{ marginTop: 12, display: 'grid', gap: 10 }}>
+                <div className="side-panel-scroll" style={{ marginTop: 12, display: 'grid', gap: 10 }}>
                   {heatmaps.length === 0 ? (
                     <p style={{ fontSize: 12, color: '#888', margin: 0 }}>No heatmaps created yet.</p>
                   ) : (

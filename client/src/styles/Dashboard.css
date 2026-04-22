@@ -81,11 +81,17 @@
   flex-shrink: 0;           /* never squish the panel when space is tight */
   display: flex;
   flex-direction: column;
-  overflow-y: auto;         /* scroll when content overflows */
+  overflow: hidden;         /* panel stays fixed; inner sections can scroll */
   background: #fff;
   padding: clamp(10px, 1.2vw, 16px);
   gap: 20px;
   min-height: 0;            /* allows the panel to scroll within a flex parent */
+}
+
+.side-panel-scroll {
+  max-height: 180px;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 /* Section headings inside the side panel e.g. "Upcoming appointments" */
@@ -111,9 +117,19 @@
   margin-bottom: 8px;
   cursor: pointer;
   transition: box-shadow 0.15s, border-color 0.15s;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 6px;
+  align-items: start;
+  position: relative;
+}
+
+.appointment-item > div:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+  flex: 1;
+  min-width: 0;
 }
 
 .appointment-item:hover {
@@ -129,7 +145,9 @@
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
-  margin-top: 4px;   /* aligns the dot with the first line of text */
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  margin-top: 6px;   /* aligns the dot with the first line of text */
 }
 
 /* Appointment title — the meeting name */
@@ -138,20 +156,35 @@
   font-weight: 500;
   color: #0f0f0f;
   margin: 0 0 3px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
 /* Secondary info: date, location, participant name */
 .appointment-item p {
+  display: block;
+  width: 100%;
+  max-width: 100%;
   font-size: 11px;
   color: #888;
   margin: 0;
   line-height: 1.5;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
 }
 
 /* Status pill pushed to the far right of the appointment card.
    Colour variant is applied by the status-* classes below. */
 .appointment-status-pill {
-  margin-left: auto;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  margin-left: 0;
   flex-shrink: 0;
   padding: 4px 10px;
   border-radius: 9999px;
