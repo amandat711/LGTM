@@ -167,6 +167,7 @@ export default function CourseDetailPage() {
   const showOwnerTools = Boolean(course?.is_owner);
   /** Owners or course admins (assigned staff) may add/delete course calendar events. */
   const canManageCourseEvents = Boolean(course?.is_owner || course?.is_staff);
+  const currentUserId = userId != null ? String(userId) : '';
   const semesterLabel = course ? `${course.course_term} ${course.course_year}` : '';
 
   /** User IDs already on this course as instructors or course admins (string keys for reliable Set lookups). */
@@ -206,17 +207,6 @@ export default function CourseDetailPage() {
       await logout();
     } finally {
       navigate('/', { replace: true });
-    }
-  }
-
-  async function handleCopyInvite() {
-    if (!inviteHref) return;
-    setCopyMsg('');
-    try {
-      await navigator.clipboard.writeText(inviteHref);
-      setCopyMsg('Copied to clipboard.');
-    } catch {
-      setCopyMsg('Copy failed — select the link manually.');
     }
   }
 
@@ -440,12 +430,16 @@ export default function CourseDetailPage() {
                             </div>
                           </div>
                           <div className="course-detail-team-actions">
-                            <a className="course-detail-icon-link" href={`mailto:${o.mcgill_email}`} aria-label="Email">
-                              ✉
-                            </a>
-                            <Link className="course-detail-availability-pill" to={`/booking/professor/${o.user_id}`}>
-                              Availability
-                            </Link>
+                            {String(o.user_id) !== currentUserId && (
+                              <a className="course-detail-icon-link" href={`mailto:${o.mcgill_email}`} aria-label="Email">
+                                ✉
+                              </a>
+                            )}
+                            {String(o.user_id) !== currentUserId && (
+                              <Link className="course-detail-availability-pill" to={`/booking/professor/${o.user_id}`}>
+                                Availability
+                              </Link>
+                            )}
                           </div>
                         </li>
                       ))}
@@ -464,12 +458,16 @@ export default function CourseDetailPage() {
                             </div>
                           </div>
                           <div className="course-detail-team-actions">
-                            <a className="course-detail-icon-link" href={`mailto:${s.mcgill_email}`} aria-label="Email">
-                              ✉
-                            </a>
-                            <Link className="course-detail-availability-pill" to={`/booking/professor/${s.user_id}`}>
-                              Availability
-                            </Link>
+                            {String(s.user_id) !== currentUserId && (
+                              <a className="course-detail-icon-link" href={`mailto:${s.mcgill_email}`} aria-label="Email">
+                                ✉
+                              </a>
+                            )}
+                            {String(s.user_id) !== currentUserId && (
+                              <Link className="course-detail-availability-pill" to={`/booking/professor/${s.user_id}`}>
+                                Availability
+                              </Link>
+                            )}
                           </div>
                         </li>
                       ))}
