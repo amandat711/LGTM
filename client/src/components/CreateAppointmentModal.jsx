@@ -5,9 +5,9 @@ function toIsoLocal(date, time) {
   return `${date}T${time}:00`;
 }
 
-export default function CreateAppointmentModal({ onClose, onSubmit, defaultVisibility = 'public' }) {
+function deriveInitialForm(defaultVisibility, initialData) {
   const today = new Date().toISOString().slice(0, 10);
-  const [form, setForm] = useState({
+  const base = {
     ap_title: '',
     ap_description: '',
     date: today,
@@ -16,6 +16,36 @@ export default function CreateAppointmentModal({ onClose, onSubmit, defaultVisib
     location: '',
     capacity: 1,
     visibility: defaultVisibility,
+  };
+
+  if (!initialData) return base;
+
+  const start = initialData.start_time ? new Date(String(initialData.start_time).replace(' ', 'T')) : null;
+  const end = initialData.end_time ? new Date(String(initialData.end_time).replace(' ', 'T')) : null;
+  const toDate = (d) => (d && !Number.isNaN(d.getTime()) ? d.toISOString().slice(0, 10) : today);
+  const toTime = (d, fallback) => (d && !Number.isNaN(d.getTime()) ? d.toTimeString().slice(0, 5) : fallback);
+
+  return {
+    ap_title: initialData.ap_title || '',
+    ap_description: initialData.ap_description || '',
+    date: toDate(start),
+    start_time: toTime(start, '10:00'),
+    end_time: toTime(end, '10:30'),
+    location: initialData.location || '',
+    capacity: Number(initialData.capacity || 1),
+    visibility: initialData.visibility || defaultVisibility,
+  };
+}
+
+export default function CreateAppointmentModal({
+  onClose,
+  onSubmit,
+  defaultVisibility = 'public',
+  initialData = null,
+  mode = 'create',
+}) {
+  const [form, setForm] = useState({
+    ...deriveInitialForm(defaultVisibility, initialData),
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -47,7 +77,7 @@ export default function CreateAppointmentModal({ onClose, onSubmit, defaultVisib
         visibility: form.visibility,
       });
     } catch (err) {
-      setError(err.message || 'Failed to create appointment.');
+      setError(err.message || `Failed to ${mode === 'edit' ? 'update' : 'create'} appointment.`);
     } finally {
       setSaving(false);
     }
@@ -61,7 +91,7 @@ export default function CreateAppointmentModal({ onClose, onSubmit, defaultVisib
     <div className="availability-modal-overlay" onMouseDown={handleOverlayMouseDown}>
       <div className="availability-modal" onMouseDown={(e) => e.stopPropagation()}>
         <div className="availability-modal-header">
-          <h2>Create appointment</h2>
+          <h2>{mode === 'edit' ? 'Edit appointment' : 'Create appointment'}</h2>
           <button
             type="button"
             className="availability-close-btn"
@@ -169,7 +199,7 @@ export default function CreateAppointmentModal({ onClose, onSubmit, defaultVisib
               Cancel
             </button>
             <button type="submit" className="modal-btn primary" disabled={saving}>
-              {saving ? 'Creating...' : 'Create appointment'}
+              {saving ? (mode === 'edit' ? 'Saving...' : 'Creating...') : (mode === 'edit' ? 'Save changes' : 'Create appointment')}
             </button>
           </div>
         </form>
