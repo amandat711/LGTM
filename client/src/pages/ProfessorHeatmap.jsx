@@ -856,6 +856,10 @@ export default function ProfessorHeatmap() {
             ownerEmail={heatmap?.hostEmail || user.email}
             eventTitle={heatmap?.title || 'Heatmap Booking'}
             inviteURL={`${window.location.origin}/heatmap/student/${currentHeatmapId}`}
+            title="Share your booking page"
+            description="Share this link so students can open the heatmap, mark their availability, and send it back to you."
+            contextLabel="Booking page for"
+            tip="Tip: paste this into your course slides or email signature."
             onClose={() => setModal(null)}
           />
         )}

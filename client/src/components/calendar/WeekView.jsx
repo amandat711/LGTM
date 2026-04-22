@@ -8,9 +8,27 @@ import {
   CALENDAR_START_HOUR,
 } from './calendarUtils';
 
-export default function WeekView({ appointments, onEventClick }) {
+function defaultPopupContent(appt) {
+  return (
+    <>
+      <div className="dash-event-popover-title">{appt.title || 'Appointment'}</div>
+      <div className="dash-event-popover-time">
+        {new Date(appt.startTime).toLocaleString()} - {new Date(appt.endTime).toLocaleString()}
+      </div>
+      {appt.location ? <div className="dash-event-popover-line">{appt.location}</div> : null}
+    </>
+  );
+}
+
+export default function WeekView({
+  appointments,
+  onEventClick,
+  inlineEventPopup = false,
+  renderInlineEventPopup = null,
+}) {
   const today = useMemo(() => new Date(), []);
   const [weekOffset, setWeekOffset] = useState(0);
+  const [expandedEvent, setExpandedEvent] = useState(null);
   const scrollRef = useRef(null);
 
   const slotHeight = 64;
@@ -42,6 +60,23 @@ export default function WeekView({ appointments, onEventClick }) {
     scrollRef.current.scrollTop = top;
   }, []);
 
+  useEffect(() => {
+    if (!inlineEventPopup) return undefined;
+
+    function handleDocumentPointerDown(event) {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        setExpandedEvent(null);
+        return;
+      }
+      if (target.closest('.dash-event') || target.closest('.dash-event-popover')) return;
+      setExpandedEvent(null);
+    }
+
+    document.addEventListener('mousedown', handleDocumentPointerDown);
+    return () => document.removeEventListener('mousedown', handleDocumentPointerDown);
+  }, [inlineEventPopup]);
+  
   return (
     <div className="dash-calendar-panel">
       <div className="dash-cal-header">
@@ -121,6 +156,11 @@ export default function WeekView({ appointments, onEventClick }) {
                   const eventTop = top + 2;
                   const eventHeight = Math.max(height - 4, 24);
 
+                  const isExpanded = inlineEventPopup
+                    && expandedEvent
+                    && expandedEvent.id === appt.id;
+                  const showPopupOnRight = di <= 3;
+
                   return (
                     <button
                       key={appt.id}
@@ -135,7 +175,20 @@ export default function WeekView({ appointments, onEventClick }) {
                         color: appt.color,
                         boxShadow: '0 1px 2px rgba(15, 23, 42, 0.08)',
                       }}
-                      onClick={() => onEventClick(appt)}
+                      onClick={() => {
+                        if (inlineEventPopup) {
+                          setExpandedEvent((prev) => {
+                            if (prev && prev.id === appt.id) return null;
+                            return {
+                              id: appt.id,
+                              dayIndex: di,
+                              top: eventTop,
+                              event: appt,
+                            };
+                          });
+                        }
+                        if (onEventClick) onEventClick(appt);
+                      }}
                       title={`${appt.title} • ${startTimeString}`}
                     >
                       <div className={`dash-event-title-row${shortEvent ? ' short' : ''}`}>
@@ -150,6 +203,16 @@ export default function WeekView({ appointments, onEventClick }) {
                       {!compact && appt.location && (
                         <div className="dash-event-location">{appt.location}</div>
                       )}
+                      {isExpanded ? (
+                        <div
+                          className={`dash-event-popover ${showPopupOnRight ? 'right' : 'left'}`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {renderInlineEventPopup
+                            ? renderInlineEventPopup(expandedEvent.event)
+                            : defaultPopupContent(expandedEvent.event)}
+                        </div>
+                      ) : null}
                     </button>
                   );
                 })}

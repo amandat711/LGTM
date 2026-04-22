@@ -11,8 +11,12 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [department, setDepartment] = useState('');
+  const [staffTitle, setStaffTitle] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const normalizedEmail = email.trim().toLowerCase();
+  const isStaffEmail = normalizedEmail.endsWith('@mcgill.ca') && !normalizedEmail.endsWith('@mail.mcgill.ca');
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -34,10 +38,20 @@ export default function RegisterPage() {
       setError('Passwords do not match.');
       return;
     }
+    if (isStaffEmail) {
+      if (!department.trim()) {
+        setError('Please enter your department.');
+        return;
+      }
+      if (!staffTitle.trim()) {
+        setError('Please enter your staff title.');
+        return;
+      }
+    }
 
     setSubmitting(true);
     try {
-      await register(name, email, password);
+      await register(name, email, password, department, staffTitle);
       navigate('/login');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed.');
@@ -111,6 +125,47 @@ export default function RegisterPage() {
               placeholder="McGill email"
               className="h-[44px] w-full rounded-full border border-[#cbcbcb] bg-white pl-11 pr-5 text-[15px] text-[#0f0f0f] outline-none transition-[border-color,box-shadow] placeholder:text-[#a1a1a1] focus:border-[#8f8f8f] focus:ring-2 focus:ring-[#dadada]"
             />
+            </div>
+          </div>
+          <div
+            className={`grid overflow-hidden transition-all duration-500 ease-in-out ${
+              isStaffEmail
+                ? 'max-h-52 translate-y-0 opacity-100'
+                : 'max-h-0 -translate-y-1 opacity-0'
+            }`}
+            aria-hidden={!isStaffEmail}
+          >
+            <div className="mt-1 flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <div className="relative">
+                  <input
+                    id="register-department"
+                    name="department"
+                    type="text"
+                    autoComplete="organization"
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    placeholder="Department"
+                    className="h-[44px] w-full rounded-full border border-[#cbcbcb] bg-white px-5 text-[15px] text-[#0f0f0f] outline-none transition-[border-color,box-shadow] placeholder:text-[#a1a1a1] focus:border-[#8f8f8f] focus:ring-2 focus:ring-[#dadada]"
+                    disabled={!isStaffEmail}
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="relative">
+                  <input
+                    id="register-staff-title"
+                    name="staffTitle"
+                    type="text"
+                    autoComplete="organization-title"
+                    value={staffTitle}
+                    onChange={(e) => setStaffTitle(e.target.value)}
+                    placeholder="Staff Title"
+                    className="h-[44px] w-full rounded-full border border-[#cbcbcb] bg-white px-5 text-[15px] text-[#0f0f0f] outline-none transition-[border-color,box-shadow] placeholder:text-[#a1a1a1] focus:border-[#8f8f8f] focus:ring-2 focus:ring-[#dadada]"
+                    disabled={!isStaffEmail}
+                  />
+                </div>
+              </div>
             </div>
           </div>
           <div className="flex flex-col gap-1">

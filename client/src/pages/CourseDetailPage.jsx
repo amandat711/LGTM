@@ -10,12 +10,14 @@ import {
   revokeCourseAdmin,
   updateCourse,
 } from '../api/courses';
-import { createAvailability, deleteAvailability } from '../api/availabilities';
+import { cancelAppointment, createDirectAppointment, joinCourseEvent, updateAppointment } from '../api/appointments';
 import { logout } from '../api/auth';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
-import CreateAvailabilityModal from '../components/CreateAvailabilityModal';
+import Calendar from '../components/calendar/Calendar';
+import CreateAppointmentModal from '../components/CreateAppointmentModal';
 import CourseSettingsModal from '../components/CourseSettingsModal';
+import { ConfirmActionModal, InviteURLModal } from '../components/Modals';
 import logo from '../assets/logo1.png';
 import calendarIcon from '../assets/calendarIcon.png';
 import coursesIcon from '../assets/courseIcon.png';
@@ -26,13 +28,18 @@ import '../styles/CourseDetailPage.css';
 
 function formatRange(startIso, endIso) {
   if (!startIso) return '';
-  const start = new Date(startIso);
-  const end = endIso ? new Date(endIso) : null;
+  const start = new Date(normalizeDateTime(startIso));
+  const end = endIso ? new Date(normalizeDateTime(endIso)) : null;
   const opts = { dateStyle: 'medium', timeStyle: 'short' };
   if (end && !Number.isNaN(end.getTime())) {
     return `${start.toLocaleString(undefined, opts)} – ${end.toLocaleString(undefined, opts)}`;
   }
   return start.toLocaleString(undefined, opts);
+}
+
+function normalizeDateTime(value) {
+  if (!value) return '';
+  return String(value).replace(' ', 'T');
 }
 
 function inviteLinkFromDetail(detail) {
@@ -47,11 +54,13 @@ function inviteLinkFromDetail(detail) {
 function mergeEvents(detail) {
   if (!detail) return [];
   const out = [];
-  (detail.office_hours || []).forEach((row) => {
-    out.push({ kind: 'availability', row, start: row.start_time });
-  });
   (detail.appointments || []).forEach((row) => {
-    out.push({ kind: 'appointment', row, start: row.start_time });
+    out.push({
+      kind: 'appointment',
+      row,
+      start: normalizeDateTime(row.start_time),
+      end: normalizeDateTime(row.end_time),
+    });
   });
   out.sort((a, b) => String(a.start).localeCompare(String(b.start)));
   return out;
@@ -66,12 +75,94 @@ function eventAccentClass(title, kind) {
   return 'course-detail-event--accent-blue';
 }
 
+function calendarColorForEvent(title, kind) {
+  const accent = eventAccentClass(title, kind);
+  if (accent === 'course-detail-event--accent-green') return '#2a8c5f';
+  if (accent === 'course-detail-event--accent-purple') return '#7c3aed';
+  return '#1565a8';
+}
+
 function formatEventCreatorName(row) {
   if (!row) return '';
   const fn = row.creator_first_name;
   const ln = row.creator_last_name;
   const parts = [fn, ln].filter(Boolean);
   return parts.length ? parts.join(' ') : '';
+}
+
+function renderCourseCalendarPopup(eventData, options = {}) {
+  const {
+    canManage = false,
+    canJoin = false,
+    onEdit = null,
+    onDelete = null,
+    onJoin = null,
+  } = options;
+  if (!eventData) return null;
+  return (
+    <>
+      <div className="dash-event-popover-title">{eventData.title || 'Appointment'}</div>
+      <div className="dash-event-popover-time">
+        {formatRange(eventData.startTime, eventData.endTime)}
+        {eventData.location ? ` · ${eventData.location}` : ''}
+      </div>
+      {eventData.creatorName ? (
+        <div className="dash-event-popover-line">Created by {eventData.creatorName}</div>
+      ) : null}
+      {canManage && eventData.attendeeCount != null ? (
+        <div className="dash-event-popover-line">
+          Attendees: {eventData.attendeeCount}/{eventData.capacity}
+        </div>
+      ) : null}
+      {eventData.description ? (
+        <div className="dash-event-popover-line">{eventData.description}</div>
+      ) : null}
+      {canManage ? (
+        <div className="dash-event-popover-actions">
+          <details className="course-detail-inline-menu" onClick={(e) => e.stopPropagation()}>
+            <summary className="course-detail-inline-menu-trigger" aria-label="Event actions">⋯</summary>
+            <div className="course-detail-inline-menu-list">
+              <button
+                type="button"
+                className="course-detail-inline-menu-item"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onEdit) onEdit(eventData);
+                }}
+              >
+                Edit
+              </button>
+              <button
+                type="button"
+                className="course-detail-inline-menu-item danger"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onDelete) onDelete(eventData);
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </details>
+        </div>
+      ) : null}
+      {!canManage && canJoin ? (
+        <div className="dash-event-popover-actions">
+          <button
+            type="button"
+            className="dash-event-popover-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onJoin) onJoin(eventData);
+            }}
+            disabled={Boolean(eventData.isJoined) || eventData.isFull}
+          >
+            {eventData.isJoined ? 'Joined' : eventData.isFull ? 'Full' : 'Join'}
+          </button>
+        </div>
+      ) : null}
+    </>
+  );
 }
 
 function PersonIcon() {
@@ -120,8 +211,13 @@ export default function CourseDetailPage() {
   const [copyMsg, setCopyMsg] = useState('');
   const [regenerating, setRegenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createEventOpen, setCreateEventOpen] = useState(false);
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [eventsView, setEventsView] = useState('list');
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [confirmDeleteEvent, setConfirmDeleteEvent] = useState(null);
 
   const currentUser = useMemo(
     () => ({
@@ -159,13 +255,69 @@ export default function CourseDetailPage() {
 
   const inviteHref = useMemo(() => inviteLinkFromDetail(detail), [detail]);
   const eventsMerged = useMemo(() => mergeEvents(detail), [detail]);
+  const courseCalendarEvents = useMemo(
+    () =>
+      eventsMerged.map((ev) => {
+        const title = ev.row.ap_title || 'Appointment';
+        const startTime = normalizeDateTime(ev.row.start_time);
+        const endTime = normalizeDateTime(ev.row.end_time);
+        if (!startTime || !endTime) return null;
+        return {
+          id: `course-appointment-${ev.row.appointment_id}`,
+          title,
+          startTime,
+          endTime,
+          location: ev.row.location || '',
+          status: ev.row.status || '',
+          color: calendarColorForEvent(title, ev.kind),
+          creatorName: formatEventCreatorName(ev.row),
+          description: ev.row.ap_description || '',
+          appointmentId: ev.row.appointment_id,
+          isJoined: Number(ev.row.joined_by_viewer || 0) > 0,
+          attendeeCount: Number(ev.row.attendee_count || 0),
+          capacity: Number(ev.row.capacity || 1),
+          isFull: Number(ev.row.attendee_count || 0) >= Number(ev.row.capacity || 1),
+        };
+      }).filter(Boolean),
+    [eventsMerged]
+  );
 
   const course = detail?.course;
-  const showInviteSection = Boolean(detail && (course?.is_staff || course?.is_owner) && inviteHref);
+  const showInviteSection = Boolean(detail && (course?.is_owner) && inviteHref);
   const showOwnerTools = Boolean(course?.is_owner);
   /** Owners or course admins (assigned staff) may add/delete course calendar events. */
   const canManageCourseEvents = Boolean(course?.is_owner || course?.is_staff);
+  const canJoinCourseEvents = Boolean(!canManageCourseEvents);
+  const currentUserId = userId != null ? String(userId) : '';
   const semesterLabel = course ? `${course.course_term} ${course.course_year}` : '';
+
+  const closeTransientMenus = useCallback(() => {
+    if (typeof document === 'undefined') return;
+    document.querySelectorAll('.course-detail-inline-menu[open], .course-detail-add-event-dropdown[open]')
+      .forEach((el) => el.removeAttribute('open'));
+  }, []);
+
+  useEffect(() => {
+    function handleDocumentPointerDown(event) {
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        closeTransientMenus();
+        return;
+      }
+      if (target.closest('.course-detail-inline-menu')) return;
+      if (target.closest('.course-detail-add-event-dropdown')) return;
+      closeTransientMenus();
+    }
+
+    document.addEventListener('mousedown', handleDocumentPointerDown);
+    return () => document.removeEventListener('mousedown', handleDocumentPointerDown);
+  }, [closeTransientMenus]);
+
+  useEffect(() => {
+    if (createEventOpen || confirmDeleteEvent || inviteModalOpen || settingsOpen) {
+      closeTransientMenus();
+    }
+  }, [createEventOpen, confirmDeleteEvent, inviteModalOpen, settingsOpen, closeTransientMenus]);
 
   /** User IDs already on this course as instructors or course admins (string keys for reliable Set lookups). */
   const staffIdSet = useMemo(() => {
@@ -186,7 +338,7 @@ export default function CourseDetailPage() {
         { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
         { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
       ];
-      if (detail?.course?.is_owner || detail?.course?.is_staff) {
+      if (detail?.course?.is_owner) {
         items.push({
           id: 'create',
           iconText: '+',
@@ -196,7 +348,7 @@ export default function CourseDetailPage() {
       }
       return items;
     },
-    [navigate, detail?.course?.is_owner, detail?.course?.is_staff]
+    [navigate, detail?.course?.is_owner]
   );
 
   async function handleLogout() {
@@ -204,17 +356,6 @@ export default function CourseDetailPage() {
       await logout();
     } finally {
       navigate('/', { replace: true });
-    }
-  }
-
-  async function handleCopyInvite() {
-    if (!inviteHref) return;
-    setCopyMsg('');
-    try {
-      await navigator.clipboard.writeText(inviteHref);
-      setCopyMsg('Copied to clipboard.');
-    } catch {
-      setCopyMsg('Copy failed — select the link manually.');
     }
   }
 
@@ -249,23 +390,56 @@ export default function CourseDetailPage() {
   }
 
   async function handleCreateCourseEvent(payload) {
-    await createAvailability({
+    if (editingEvent?.appointment_id) {
+      await updateAppointment(editingEvent.appointment_id, {
+        ...payload,
+        changed_by: Number(userId),
+      });
+      setEditingEvent(null);
+      setCreateEventOpen(false);
+      await loadCourse();
+      return;
+    }
+
+    await createDirectAppointment({
       created_by: Number(userId),
       course_id: courseId,
+      scheduling_mode: 'calendar',
+      status: 'confirmed',
       ...payload,
     });
     setCreateEventOpen(false);
     await loadCourse();
   }
 
-  async function handleDeleteAvailabilityBlock(avId) {
+  function handleEditEventFromRow(row) {
+    if (!canManageCourseEvents || !row?.appointment_id) return;
+    closeTransientMenus();
+    setEditingEvent(row);
+    setCreateEventOpen(true);
+  }
+
+  function requestDeleteEvent(eventRow) {
+    if (!canManageCourseEvents || !eventRow?.appointment_id) return;
+    closeTransientMenus();
+    setConfirmDeleteEvent(eventRow);
+  }
+
+  function handleDeleteEventById(appointmentId) {
+    if (!canManageCourseEvents || !appointmentId) return;
     setActionError('');
-    try {
-      await deleteAvailability(avId, userId);
-      await loadCourse();
-    } catch (err) {
-      setActionError(err.message || 'Could not remove availability.');
-    }
+    cancelAppointment(appointmentId, userId)
+      .then(loadCourse)
+      .catch((err) => setActionError(err.message || 'Could not cancel event.'));
+  }
+
+  function handleJoinEventById(appointmentId) {
+    if (!canJoinCourseEvents || !appointmentId) return;
+    closeTransientMenus();
+    setActionError('');
+    joinCourseEvent(appointmentId, userId)
+      .then(loadCourse)
+      .catch((err) => setActionError(err.message || 'Could not join event.'));
   }
 
   /** Used when saving course settings; caller runs `loadCourse` after all mutations. */
@@ -313,14 +487,20 @@ export default function CourseDetailPage() {
     }
   }
 
-  function handleEventGear(ev) {
-    if (!canManageCourseEvents) return;
-    if (ev.kind === 'availability') {
-      const id = ev.row.availability_id;
-      if (!id) return;
-      if (window.confirm('Delete this event?')) handleDeleteAvailabilityBlock(id);
-    } else {
-      navigate('/dashboard/professor');
+  async function handleCloseCourse() {
+    setClosing(true);
+    setActionError('');
+    try {
+      const { course: c } = await updateCourse(courseId, { is_closed: true });
+      setDetail((prev) =>
+        prev && c ? { ...prev, course: { ...prev.course, ...c } } : prev
+      );
+    } catch (err) {
+      const msg = err.message || 'Could not close course.';
+      setActionError(msg);
+      throw err;
+    } finally {
+      setClosing(false);
     }
   }
 
@@ -346,6 +526,8 @@ export default function CourseDetailPage() {
           onSaveCourse={handleSaveCourseSettings}
           onAssign={handleAssign}
           onRevoke={handleRevoke}
+          onCloseCourse={handleCloseCourse}
+          closing={closing}
           onDeleteCourse={handleDeleteCourse}
           onAfterSettingsSave={loadCourse}
           deleting={deleting}
@@ -354,9 +536,19 @@ export default function CourseDetailPage() {
       )}
 
       {createEventOpen && (
-        <CreateAvailabilityModal
+        <CreateAppointmentModal
           defaultVisibility="public"
-          onClose={() => setCreateEventOpen(false)}
+          initialData={editingEvent}
+          mode={editingEvent ? 'edit' : 'create'}
+          forcedCourse={course ? {
+            course_id: course.course_id,
+            course_code: course.course_code,
+            course_name: course.course_name,
+          } : null}
+          onClose={() => {
+            setCreateEventOpen(false);
+            setEditingEvent(null);
+          }}
           onSubmit={handleCreateCourseEvent}
         />
       )}
@@ -404,7 +596,7 @@ export default function CourseDetailPage() {
 
                     {showInviteSection && (
                       <div className="course-detail-invite-actions">
-                        <button type="button" className="course-detail-generate-btn" onClick={handleCopyInvite}>
+                        <button type="button" className="course-detail-generate-btn" onClick={() => setInviteModalOpen(true)}>
                           <ShareIcon />
                           Copy invitation link
                         </button>
@@ -438,12 +630,16 @@ export default function CourseDetailPage() {
                             </div>
                           </div>
                           <div className="course-detail-team-actions">
-                            <a className="course-detail-icon-link" href={`mailto:${o.mcgill_email}`} aria-label="Email">
-                              ✉
-                            </a>
-                            <Link className="course-detail-availability-pill" to={`/booking/professor/${o.user_id}`}>
-                              Availability
-                            </Link>
+                            {String(o.user_id) !== currentUserId && (
+                              <a className="course-detail-icon-link" href={`mailto:${o.mcgill_email}`} aria-label="Email">
+                                ✉
+                              </a>
+                            )}
+                            {String(o.user_id) !== currentUserId && (
+                              <Link className="course-detail-availability-pill" to={`/booking/professor/${o.user_id}`}>
+                                Availability
+                              </Link>
+                            )}
                           </div>
                         </li>
                       ))}
@@ -462,12 +658,11 @@ export default function CourseDetailPage() {
                             </div>
                           </div>
                           <div className="course-detail-team-actions">
-                            <a className="course-detail-icon-link" href={`mailto:${s.mcgill_email}`} aria-label="Email">
-                              ✉
-                            </a>
-                            <Link className="course-detail-availability-pill" to={`/booking/professor/${s.user_id}`}>
-                              Availability
-                            </Link>
+                            {String(s.user_id) !== currentUserId && (
+                              <a className="course-detail-icon-link" href={`mailto:${s.mcgill_email}`} aria-label="Email">
+                                ✉
+                              </a>
+                            )}
                           </div>
                         </li>
                       ))}
@@ -481,34 +676,95 @@ export default function CourseDetailPage() {
                 <div className="course-detail-col course-detail-col--right">
                   <div className="course-detail-events-panel">
                     <div className="course-detail-events-header">
-                      <h2 className="course-detail-events-title">Events</h2>
-                      {canManageCourseEvents && (
+                      <div className="course-detail-events-view-toggle" role="tablist" aria-label="Event display mode">
                         <button
                           type="button"
-                          className="course-detail-add-event-btn"
-                          onClick={() => setCreateEventOpen(true)}
+                          role="tab"
+                          aria-selected={eventsView === 'list'}
+                          className={`course-detail-events-view-btn${eventsView === 'list' ? ' active' : ''}`}
+                          onClick={() => setEventsView('list')}
                         >
-                          Add event +
+                          List
                         </button>
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={eventsView === 'calendar'}
+                          className={`course-detail-events-view-btn${eventsView === 'calendar' ? ' active' : ''}`}
+                          onClick={() => setEventsView('calendar')}
+                        >
+                          Calendar
+                        </button>
+                      </div>
+                      <h2 className="course-detail-events-title">Events</h2>
+                      {canManageCourseEvents && (
+                        <details className="course-detail-add-event-dropdown">
+                          <summary className="course-detail-add-event-btn">Add event +</summary>
+                          <div className="course-detail-add-event-menu">
+                            <button
+                              type="button"
+                              className="course-detail-add-event-item"
+                              onClick={() => setCreateEventOpen(true)}
+                            >
+                              Calendar Booking
+                            </button>
+                            <button
+                              type="button"
+                              className="course-detail-add-event-item"
+                              onClick={() => navigate('/heatmap/professor/new')}
+                            >
+                              Heatmap Booking
+                            </button>
+                          </div>
+                        </details>
                       )}
                     </div>
-                    {eventsMerged.length === 0 ? (
+                    {eventsView === 'calendar' ? (
+                      eventsMerged.length === 0 ? (
+                        <p className="course-detail-muted course-detail-events-empty">No events scheduled.</p>
+                      ) : (
+                        <>
+                          <div className="course-detail-calendar-wrap">
+                            <Calendar
+                              view="week"
+                              appointments={courseCalendarEvents}
+                              inlineEventPopup
+                              renderInlineEventPopup={(eventData) =>
+                                renderCourseCalendarPopup(eventData, {
+                                  canManage: canManageCourseEvents,
+                                  canJoin: canJoinCourseEvents,
+                                  onEdit: (evt) => {
+                                    const row = (detail?.appointments || []).find(
+                                      (a) => Number(a.appointment_id) === Number(evt.appointmentId)
+                                    );
+                                    if (row) handleEditEventFromRow(row);
+                                  },
+                                  onDelete: (evt) => {
+                                    const row = (detail?.appointments || []).find(
+                                      (a) => Number(a.appointment_id) === Number(evt.appointmentId)
+                                    );
+                                    if (row) requestDeleteEvent(row);
+                                  },
+                                  onJoin: (evt) => handleJoinEventById(evt.appointmentId),
+                                })
+                              }
+                            />
+                          </div>
+                        </>
+                      )
+                    ) : eventsMerged.length === 0 ? (
                       <p className="course-detail-muted course-detail-events-empty">No events scheduled.</p>
                     ) : (
                       <ul className="course-detail-events-list">
                         {eventsMerged.map((ev) => {
                           const title =
-                            ev.kind === 'availability'
-                              ? ev.row.av_title || 'Availability'
-                              : ev.row.ap_title || 'Appointment';
+                            ev.row.ap_title || 'Appointment';
                           const accent = eventAccentClass(title, ev.kind);
                           const creatorName = formatEventCreatorName(ev.row);
                           return (
                             <li
                               key={
-                                ev.kind === 'availability'
-                                  ? `av-${ev.row.availability_id}`
-                                  : `ap-${ev.row.appointment_id}`
+                                `ap-${ev.row.appointment_id}`
                               }
                               className={`course-detail-event ${accent}`}
                             >
@@ -521,25 +777,59 @@ export default function CourseDetailPage() {
                                   )}
                                   {ev.row.location ? ` · ${ev.row.location}` : ''}
                                 </div>
+                              {canManageCourseEvents && ev.row.attendee_count != null ? (
+                                <div className="course-detail-event-creator">
+                                  Attendees: {Number(ev.row.attendee_count)}/{Number(ev.row.capacity || 1)}
+                                </div>
+                              ) : null}
                                 {creatorName ? (
                                   <div className="course-detail-event-creator">Created by {creatorName}</div>
                                 ) : null}
-                                {ev.kind === 'availability' && ev.row.av_description ? (
-                                  <div className="course-detail-event-desc">{ev.row.av_description}</div>
-                                ) : null}
-                                {ev.kind === 'appointment' && ev.row.ap_description ? (
+                                {ev.row.ap_description ? (
                                   <div className="course-detail-event-desc">{ev.row.ap_description}</div>
                                 ) : null}
                               </div>
                               {canManageCourseEvents && (
-                                <button
-                                  type="button"
-                                  className="course-detail-event-gear"
-                                  onClick={() => handleEventGear(ev)}
-                                  aria-label={ev.kind === 'availability' ? 'Delete or manage event' : 'Manage in dashboard'}
-                                >
-                                  <GearIcon />
-                                </button>
+                                <div className="course-detail-event-actions">
+                                  <details className="course-detail-inline-menu">
+                                    <summary className="course-detail-inline-menu-trigger" aria-label="Event actions">⋯</summary>
+                                    <div className="course-detail-inline-menu-list">
+                                      <button
+                                        type="button"
+                                        className="course-detail-inline-menu-item"
+                                        onClick={() => handleEditEventFromRow(ev.row)}
+                                      >
+                                        Edit
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="course-detail-inline-menu-item danger"
+                                        onClick={() => requestDeleteEvent(ev.row)}
+                                      >
+                                        Delete
+                                      </button>
+                                    </div>
+                                  </details>
+                                </div>
+                              )}
+                              {!canManageCourseEvents && canJoinCourseEvents && (
+                                <div className="course-detail-event-actions">
+                                  <button
+                                    type="button"
+                                    className="course-detail-btn course-detail-btn--small"
+                                    onClick={() => handleJoinEventById(ev.row.appointment_id)}
+                                    disabled={
+                                      Number(ev.row.joined_by_viewer || 0) > 0
+                                      || Number(ev.row.attendee_count || 0) >= Number(ev.row.capacity || 1)
+                                    }
+                                  >
+                                    {Number(ev.row.joined_by_viewer || 0) > 0
+                                      ? 'Joined'
+                                      : Number(ev.row.attendee_count || 0) >= Number(ev.row.capacity || 1)
+                                        ? 'Full'
+                                        : 'Join'}
+                                  </button>
+                                </div>
                               )}
                             </li>
                           );
@@ -549,6 +839,38 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
               </div>
+            )}
+
+            {inviteModalOpen && inviteHref && (
+              <InviteURLModal
+                ownerEmail={user.mcgill_email || ''}
+                eventTitle={course?.course_name || course?.course_code || 'Course'}
+                inviteURL={inviteHref}
+                title="Share course invitation link"
+                description="Share this link so students can join the course."
+                contextLabel="Course"
+                tip="Tip: post this in your class announcements."
+                onClose={() => setInviteModalOpen(false)}
+              />
+            )}
+            {confirmDeleteEvent && (
+              <ConfirmActionModal
+                title="Delete this event?"
+                message="This will cancel the event and remove it from active course scheduling."
+                details={[
+                  { label: 'Event', value: confirmDeleteEvent.ap_title || 'Appointment' },
+                  { label: 'When', value: formatRange(confirmDeleteEvent.start_time, confirmDeleteEvent.end_time) },
+                ]}
+                confirmLabel="Delete event"
+                cancelLabel="Keep event"
+                danger
+                onConfirm={async () => {
+                  const targetId = confirmDeleteEvent.appointment_id;
+                  setConfirmDeleteEvent(null);
+                  await handleDeleteEventById(targetId);
+                }}
+                onClose={() => setConfirmDeleteEvent(null)}
+              />
             )}
 
             {actionError ? <p className="course-detail-error course-detail-error--banner">{actionError}</p> : null}

@@ -10,18 +10,21 @@ async function parseJson(res) {
   return data;
 }
 
+const fetchOpts = { credentials: 'include' };
+
 export async function getMyAppointments(userId) {
-  const res = await fetch(`${API_BASE}/appointments/my?user_id=${userId}`);
+  const res = await fetch(`${API_BASE}/appointments/my?user_id=${userId}`, fetchOpts);
   return parseJson(res);
 }
 
 export async function getHostingAppointments(userId) {
-  const res = await fetch(`${API_BASE}/appointments/hosting?user_id=${userId}`);
+  const res = await fetch(`${API_BASE}/appointments/hosting?user_id=${userId}`, fetchOpts);
   return parseJson(res);
 }
 
 export async function cancelAppointment(appointmentId, changedBy) {
   const res = await fetch(`${API_BASE}/appointments/${appointmentId}/cancel`, {
+    ...fetchOpts,
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
@@ -34,8 +37,37 @@ export async function cancelAppointment(appointmentId, changedBy) {
   return parseJson(res);
 }
 
+export async function updateAppointment(appointmentId, payload) {
+  const res = await fetch(`${API_BASE}/appointments/${appointmentId}`, {
+    ...fetchOpts,
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseJson(res);
+}
+
+export async function joinCourseEvent(appointmentId, userId) {
+  const res = await fetch(`${API_BASE}/appointments/${appointmentId}/join`, {
+    ...fetchOpts,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      user_id: Number(userId),
+    }),
+  });
+
+  return parseJson(res);
+}
+
 export async function createAppointment(availabilityId, bookedBy) {
   const res = await fetch(`${API_BASE}/appointments`, {
+    ...fetchOpts,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -44,6 +76,19 @@ export async function createAppointment(availabilityId, bookedBy) {
       availability_id: Number(availabilityId),
       booked_by: Number(bookedBy),
     }),
+  });
+
+  return parseJson(res);
+}
+
+export async function createDirectAppointment(payload) {
+  const res = await fetch(`${API_BASE}/appointments/direct`, {
+    ...fetchOpts,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
   });
 
   return parseJson(res);

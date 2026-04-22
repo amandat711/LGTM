@@ -20,6 +20,7 @@ function mapOwnerToProfessor(owner) {
 export default function BookingDiscovery() {
   const navigate = useNavigate();
   const { user } = useAppShellSession();
+  const currentUserId = user?.user_id != null ? String(user.user_id) : '';
   const [query, setQuery] = useState('');
   const [professors, setProfessors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,15 +53,16 @@ export default function BookingDiscovery() {
   }, []);
 
   const filteredProfessors = useMemo(() => {
+    const otherProfessors = professors.filter((prof) => String(prof.id) !== currentUserId);
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) return professors;
+    if (!normalizedQuery) return otherProfessors;
 
-    return professors.filter((prof) =>
+    return otherProfessors.filter((prof) =>
       [prof.name, prof.department, prof.email, prof.bio]
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(normalizedQuery))
     );
-  }, [professors, query]);
+  }, [professors, query, currentUserId]);
 
   return (
     <div className="dashboard-page">

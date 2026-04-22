@@ -693,11 +693,12 @@ router.post('/:id/appointments', async (req, res) => {
     const insertResult = await dbRun(
       `
         INSERT INTO appointments
-          (course_id, created_from_availability, capacity, location, start_time, end_time, visibility, ap_title, ap_description, scheduling_mode, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (course_id, created_by, created_from_availability, capacity, location, start_time, end_time, visibility, ap_title, ap_description, scheduling_mode, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         null,
+        changed_by || host_user_id,
         null,
         uniqueAttendeeIds.length,
         location || 'Heatmap booking',

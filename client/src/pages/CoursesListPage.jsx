@@ -37,13 +37,13 @@ function buildArchiveBuckets(courses) {
 }
 
 function isArchived(course) {
-  return course.enrollment_status === 'completed';
+  return Boolean(course.is_closed);
 }
 
 function roleTag(course) {
   if (course.is_owner) return 'Owner';
   if (course.is_staff) return 'Staff';
-  if (course.enrollment_status === 'completed') return 'Completed';
+  if (course.is_closed) return 'Archived';
   return 'Enrolled';
 }
 

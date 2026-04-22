@@ -198,7 +198,7 @@ router.post('/:courseId/invite/regenerate', requireAuth, loadUser, (req, res) =>
 
 /**
  * DELETE /courses/:courseId
- * Hard-delete course (cascades per schema: enrollments, staff, ownerships, course-tied availabilities;
+ * Hard-delete course (cascades per schema: enrollments, staff, ownerships;
  * appointments.course_id set NULL).
  */
 router.delete('/:courseId', requireAuth, loadUser, (req, res) => {
@@ -216,14 +216,14 @@ router.delete('/:courseId', requireAuth, loadUser, (req, res) => {
 
 /**
  * PATCH /courses/:courseId
- * Course owner (general_admin) only. Updates course_name and/or description.
+ * Course owner (general_admin) only. Updates course_name and/or description and/or close state.
  */
 router.patch('/:courseId', requireAuth, loadUser, (req, res) => {
   const courseId = parseCourseIdParam(req, res);
   if (courseId == null) return;
 
   requireCourseOwner(req, res, courseId, () => {
-    const { course_name, description } = req.body || {};
+    const { course_name, description, is_closed } = req.body || {};
     const updates = [];
     const params = [];
 
@@ -242,8 +242,16 @@ router.patch('/:courseId', requireAuth, loadUser, (req, res) => {
       params.push(d);
     }
 
+    if (is_closed !== undefined) {
+      if (typeof is_closed !== 'boolean') {
+        return res.status(400).json({ error: 'is_closed must be a boolean.' });
+      }
+      updates.push('is_closed = ?');
+      params.push(is_closed ? 1 : 0);
+    }
+
     if (updates.length === 0) {
-      return res.status(400).json({ error: 'Provide course_name and/or description to update.' });
+      return res.status(400).json({ error: 'Provide course_name, description, and/or is_closed to update.' });
     }
 
     params.push(courseId);
@@ -255,12 +263,17 @@ router.patch('/:courseId', requireAuth, loadUser, (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Course not found.' });
         db.get(
-          `SELECT course_id, course_code, course_name, course_term, course_year, description
+          `SELECT course_id, course_code, course_name, course_term, course_year, description, is_closed
            FROM courses WHERE course_id = ?`,
           [courseId],
           (gErr, row) => {
             if (gErr) return res.status(500).json({ error: gErr.message });
-            res.json({ course: row });
+            res.json({
+              course: {
+                ...row,
+                is_closed: Number(row?.is_closed) > 0,
+              },
+            });
           }
         );
       }
@@ -311,6 +324,7 @@ router.get('/', requireAuth, loadUser, (req, res) => {
       c.course_term,
       c.course_year,
       c.description,
+      c.is_closed,
       (
         SELECT e.enrollment_status
         FROM course_enrollments e
@@ -341,6 +355,7 @@ router.get('/', requireAuth, loadUser, (req, res) => {
       course_term: row.course_term,
       course_year: row.course_year,
       description: row.description,
+      is_closed: Number(row.is_closed) > 0,
       enrollment_status: row.enrollment_status || null,
       is_staff: Number(row.is_staff) > 0,
       is_owner: Number(row.is_owner) > 0,
@@ -351,7 +366,7 @@ router.get('/', requireAuth, loadUser, (req, res) => {
 
 /**
  * GET /courses/:courseId
- * Course detail, staff, office_hours, course appointments; invite_token / invite_url for staff or owners only.
+ * Course detail, staff, and course appointments; invite_token / invite_url for staff or owners only.
  */
 router.get('/:courseId', requireAuth, loadUser, (req, res) => {
   const courseId = parseInt(req.params.courseId, 10);
@@ -369,6 +384,7 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
       c.course_term,
       c.course_year,
       c.description,
+      c.is_closed,
       c.invitation_link,
       (
         SELECT e.enrollment_status FROM course_enrollments e
@@ -403,7 +419,6 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
       return res.status(403).json({ error: 'You do not have access to this course.' });
     }
 
-    const showPrivateCourseSlots = isStaff || isOwner;
     const showInvite = isStaff || isOwner;
 
     const staffSql = `
@@ -422,48 +437,25 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
       ORDER BY u.last_name ASC, u.first_name ASC
     `;
 
-    // Course-tied availabilities: public slots (e.g. office hours) for everyone;
-    // private slots (e.g. small-group meetings) only for staff/owners.
-    const ohSql = showPrivateCourseSlots
-      ? `SELECT a.*,
-                cu.first_name AS creator_first_name,
-                cu.last_name AS creator_last_name
-         FROM availabilities a
-         JOIN users cu ON cu.user_id = a.created_by
-         WHERE a.course_id = ?
-         ORDER BY datetime(a.start_time) ASC`
-      : `SELECT a.*,
-                cu.first_name AS creator_first_name,
-                cu.last_name AS creator_last_name
-         FROM availabilities a
-         JOIN users cu ON cu.user_id = a.created_by
-         WHERE a.course_id = ? AND a.visibility = 'public'
-         ORDER BY datetime(a.start_time) ASC`;
-
     const apFrom = `
          FROM appointments a
-         LEFT JOIN availabilities av ON av.availability_id = a.created_from_availability
-         LEFT JOIN users cu ON cu.user_id = av.created_by
-         LEFT JOIN (
-           SELECT appointment_id, MIN(user_id) AS user_id
-           FROM appointment_participants
-           WHERE participant_role = 'host'
-           GROUP BY appointment_id
-         ) aph ON aph.appointment_id = a.appointment_id
-         LEFT JOIN users hu ON hu.user_id = aph.user_id`;
+         LEFT JOIN users acu ON acu.user_id = a.created_by`;
 
-    const apSql = showPrivateCourseSlots
+    const apSql = (isStaff || isOwner)
       ? `SELECT a.appointment_id, a.course_id, a.capacity, a.location, a.start_time, a.end_time, a.visibility,
                 a.ap_title, a.ap_description, a.scheduling_mode, a.status, a.created_at,
-                COALESCE(cu.first_name, hu.first_name) AS creator_first_name,
-                COALESCE(cu.last_name, hu.last_name) AS creator_last_name
+                acu.first_name AS creator_first_name,
+                acu.last_name AS creator_last_name
          ${apFrom}
          WHERE a.course_id = ? AND a.status != 'cancelled'
          ORDER BY datetime(a.start_time) ASC`
       : `SELECT a.appointment_id, a.course_id, a.capacity, a.location, a.start_time, a.end_time, a.visibility,
                 a.ap_title, a.ap_description, a.scheduling_mode, a.status, a.created_at,
-                COALESCE(cu.first_name, hu.first_name) AS creator_first_name,
-                COALESCE(cu.last_name, hu.last_name) AS creator_last_name
+                (SELECT COUNT(*) FROM appointment_participants apv
+                  WHERE apv.appointment_id = a.appointment_id AND apv.user_id = ?) AS joined_by_viewer,
+                NULL AS attendee_count,
+                acu.first_name AS creator_first_name,
+                acu.last_name AS creator_last_name
          ${apFrom}
          WHERE a.course_id = ? AND a.status != 'cancelled' AND a.visibility = 'public'
          ORDER BY datetime(a.start_time) ASC`;
@@ -472,38 +464,37 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
       if (sErr) return res.status(500).json({ error: sErr.message });
       db.all(ownersSql, [courseId], (oErr, owners) => {
         if (oErr) return res.status(500).json({ error: oErr.message });
-        db.all(ohSql, [courseId], (ohErr, office_hours) => {
-          if (ohErr) return res.status(500).json({ error: ohErr.message });
-          db.all(apSql, [courseId], (apErr, appointments) => {
-            if (apErr) return res.status(500).json({ error: apErr.message });
+        const apParams = (isStaff || isOwner) ? [courseId] : [uid, courseId];
+        db.all(apSql, apParams, (apErr, appointments) => {
+          if (apErr) return res.status(500).json({ error: apErr.message });
 
-            const course = {
-              course_id: row.course_id,
-              course_code: row.course_code,
-              course_name: row.course_name,
-              course_term: row.course_term,
-              course_year: row.course_year,
-              description: row.description,
-              enrollment_status: enr || null,
-              is_staff: isStaff,
-              is_owner: isOwner,
-            };
+          const course = {
+            course_id: row.course_id,
+            course_code: row.course_code,
+            course_name: row.course_name,
+            course_term: row.course_term,
+            course_year: row.course_year,
+            description: row.description,
+            is_closed: Number(row.is_closed) > 0,
+            enrollment_status: enr || null,
+            is_staff: isStaff,
+            is_owner: isOwner,
+          };
 
-            const payload = {
-              course,
-              staff: staff || [],
-              owners: owners || [],
-              office_hours: office_hours || [],
-              appointments: appointments || [],
-            };
+          const payload = {
+            course,
+            staff: staff || [],
+            owners: owners || [],
+            office_hours: [],
+            appointments: appointments || [],
+          };
 
-            if (showInvite && row.invitation_link) {
-              payload.invite_token = row.invitation_link;
-              payload.invite_url = inviteUrlForToken(row.invitation_link);
-            }
+          if (showInvite && row.invitation_link) {
+            payload.invite_token = row.invitation_link;
+            payload.invite_url = inviteUrlForToken(row.invitation_link);
+          }
 
-            res.json(payload);
-          });
+          res.json(payload);
         });
       });
     });

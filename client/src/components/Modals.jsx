@@ -292,7 +292,16 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
 }
 
 // Share modal for heatmap and booking links.
-export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
+export function InviteURLModal({
+  ownerEmail,
+  eventTitle,
+  inviteURL,
+  onClose,
+  title = 'Share your booking page',
+  description = 'Share this link so students can open the heatmap, mark their availability, and send it back to you.',
+  contextLabel = 'Booking page for',
+  tip = 'Tip: paste this into your course slides or email signature.',
+}) {
   const [copied, setCopied] = useState(false);
   // Heatmap pages pass an explicit invite URL; older booking flows can use the fallback.
   const shareURL = inviteURL || `${window.location.origin}/heatmap`;
@@ -307,7 +316,7 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
 
   return (
     <Modal
-      title="Share your booking page"
+      title={title}
       onClose={onClose}
       footer={
         <>
@@ -319,10 +328,10 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
       }
     >
       <p style={{ fontSize: 13, color: '#666', marginBottom: 14, lineHeight: 1.6 }}>
-        Share this link so students can open the heatmap, mark their availability, and send it back to you.
+        {description}
       </p>
       <p style={{ fontSize: 11, color: '#aaa', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        Booking page for
+        {contextLabel}
       </p>
       <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{eventTitle || ownerEmail}</p>
       <div className="copy-row">
@@ -332,7 +341,7 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
         </button>
       </div>
       <p style={{ marginTop: 12, fontSize: 12, color: '#bbb' }}>
-        Tip: paste this into your course slides or email signature.
+        {tip}
       </p>
     </Modal>
   );
