@@ -180,7 +180,7 @@
   padding: 8px 10px 8px 10px;
   font-size: 12px;
   font-weight: 500;
-  overflow: hidden;
+  overflow: visible;
   cursor: pointer;
   z-index: 2;
   transition: opacity 0.15s, box-shadow 0.15s;
@@ -268,6 +268,80 @@
 
 .dash-event.compact .dash-event-time {
   font-size: 10px;
+}
+
+.dash-event-popover {
+  position: absolute;
+  top: 0;
+  width: 250px;
+  max-width: 250px;
+  background: #ffffff;
+  color: #222;
+  border: 1px solid #d9d9d9;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  padding: 10px 12px;
+  z-index: 100;
+  text-align: left;
+}
+
+.dash-event-popover.right {
+  left: calc(100% + 8px);
+}
+
+.dash-event-popover.left {
+  right: calc(100% + 8px);
+}
+
+.dash-event-popover-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #111;
+}
+
+.dash-event-popover-time {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #555;
+  line-height: 1.35;
+}
+
+.dash-event-popover-line {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #444;
+}
+
+.dash-event-popover-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.dash-event-popover-btn {
+  border: 1px solid #d0d0d0;
+  background: #f6f6f6;
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #222;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.dash-event-popover-btn:hover {
+  background: #eeeeee;
+}
+
+.dash-event-popover-btn.danger {
+  border-color: #e2b6b6;
+  background: #fff5f5;
+  color: #b42318;
+}
+
+.dash-event-popover-btn.danger:hover {
+  background: #ffeaea;
 }
 
 .calendar-modal-overlay {

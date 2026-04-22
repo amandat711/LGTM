@@ -6,7 +6,7 @@ export const MONTHS = [
 ];
 
 // Change these if you want a different visible range
-export const CALENDAR_START_HOUR = 0;
+export const CALENDAR_START_HOUR = 6;
 export const CALENDAR_END_HOUR = 23;
 
 // 6am -> 11pm inclusive

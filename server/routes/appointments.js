@@ -543,6 +543,134 @@ router.get('/attending', (req, res) => {
   });
 });
 
+router.patch('/:id', (req, res) => {
+  const appointmentId = Number(req.params.id);
+  const {
+    changed_by,
+    start_time,
+    end_time,
+    location,
+    capacity,
+    visibility,
+    ap_title,
+    ap_description,
+    note,
+  } = req.body || {};
+
+  if (!Number.isInteger(appointmentId) || appointmentId < 1) {
+    return res.status(400).json({ error: 'Invalid appointment id' });
+  }
+
+  if (!changed_by) {
+    return res.status(400).json({ error: 'changed_by is required' });
+  }
+
+  const changedBy = Number(changed_by);
+  if (!Number.isInteger(changedBy) || changedBy < 1) {
+    return res.status(400).json({ error: 'changed_by must be a positive integer' });
+  }
+
+  const startDate = parseDate(start_time);
+  const endDate = parseDate(end_time);
+  if (!startDate || !endDate) {
+    return res.status(400).json({ error: 'start_time and end_time must be valid datetimes' });
+  }
+  if (endDate <= startDate) {
+    return res.status(400).json({ error: 'end_time must be after start_time' });
+  }
+
+  const parsedCapacity = capacity == null ? null : Number(capacity);
+  if (parsedCapacity != null && (!Number.isInteger(parsedCapacity) || parsedCapacity < 1)) {
+    return res.status(400).json({ error: 'capacity must be a positive integer' });
+  }
+
+  const finalVisibility = visibility == null ? null : String(visibility);
+  if (finalVisibility != null && !['public', 'private'].includes(finalVisibility)) {
+    return res.status(400).json({ error: 'visibility must be public or private' });
+  }
+
+  db.get(`SELECT * FROM appointments WHERE appointment_id = ?`, [appointmentId], (getErr, existing) => {
+    if (getErr) return res.status(500).json({ error: getErr.message });
+    if (!existing) return res.status(404).json({ error: 'Appointment not found' });
+    if (existing.status === 'cancelled') {
+      return res.status(400).json({ error: 'Cancelled appointments cannot be edited' });
+    }
+
+    db.run(
+      `
+      UPDATE appointments
+      SET
+        start_time = ?,
+        end_time = ?,
+        location = ?,
+        capacity = ?,
+        visibility = ?,
+        ap_title = ?,
+        ap_description = ?
+      WHERE appointment_id = ?
+      `,
+      [
+        start_time,
+        end_time,
+        location == null || location === '' ? null : String(location),
+        parsedCapacity == null ? Number(existing.capacity || 1) : parsedCapacity,
+        finalVisibility == null ? existing.visibility : finalVisibility,
+        ap_title == null || ap_title === '' ? null : String(ap_title),
+        ap_description == null || ap_description === '' ? null : String(ap_description),
+        appointmentId,
+      ],
+      (updateErr) => {
+        if (updateErr) return res.status(500).json({ error: updateErr.message });
+
+        db.run(
+          `
+          INSERT INTO appointment_history
+          (
+            appointment_id,
+            changed_by,
+            old_status,
+            new_status,
+            old_start_time,
+            new_start_time,
+            old_end_time,
+            new_end_time,
+            changed_at,
+            note
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+          `,
+          [
+            appointmentId,
+            changedBy,
+            existing.status,
+            existing.status,
+            existing.start_time,
+            start_time,
+            existing.end_time,
+            end_time,
+            note || 'Appointment details updated',
+          ],
+          (histErr) => {
+            if (histErr) return res.status(500).json({ error: histErr.message });
+
+            db.get(
+              `SELECT * FROM appointments WHERE appointment_id = ?`,
+              [appointmentId],
+              (finalErr, appointment) => {
+                if (finalErr) return res.status(500).json({ error: finalErr.message });
+                return res.json({
+                  message: 'Appointment updated successfully',
+                  appointment,
+                });
+              }
+            );
+          }
+        );
+      }
+    );
+  });
+});
+
 router.patch('/:id/cancel', (req, res) => {
   const appointmentId = req.params.id;
   const { changed_by, note } = req.body;
