@@ -1,11 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
-
-function parseDate(value) {
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? null : d;
-}
+const { parseDate } = require('../utils/dateTime');
 
 router.post('/', (req, res) => {
   const { availability_id, booked_by } = req.body;

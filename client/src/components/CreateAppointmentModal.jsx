@@ -1,13 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { getCourses } from '../api/courses';
 import '../styles/CreateAvailabilityModal.css';
+import { toIsoWithOffsetFromLocalParts, toLocalDateInputValue } from '../utils/dateTime';
 
 function toIsoLocal(date, time) {
-  return `${date}T${time}:00`;
+  return toIsoWithOffsetFromLocalParts(date, time);
 }
 
 function deriveInitialForm(defaultVisibility, initialData) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toLocalDateInputValue(new Date());
   const base = {
     ap_title: '',
     ap_description: '',
@@ -24,7 +25,7 @@ function deriveInitialForm(defaultVisibility, initialData) {
 
   const start = initialData.start_time ? new Date(String(initialData.start_time).replace(' ', 'T')) : null;
   const end = initialData.end_time ? new Date(String(initialData.end_time).replace(' ', 'T')) : null;
-  const toDate = (d) => (d && !Number.isNaN(d.getTime()) ? d.toISOString().slice(0, 10) : today);
+  const toDate = (d) => (d && !Number.isNaN(d.getTime()) ? toLocalDateInputValue(d) : today);
   const toTime = (d, fallback) => (d && !Number.isNaN(d.getTime()) ? d.toTimeString().slice(0, 5) : fallback);
 
   return {

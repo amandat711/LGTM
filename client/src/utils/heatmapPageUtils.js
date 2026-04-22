@@ -4,6 +4,7 @@
 // makeKey creates the shared "YYYY-MM-DD:index" cell ID used by the heatmap grids.
 import { makeKey } from '../components/HeatmapGrid';
 import { thresholdHeatColor } from './heatColor';
+import { toIsoWithOffset } from './dateTime';
 
 // Colours used in the professor group heatmap participant chips.
 // These follow the same light-to-strong red scale used by thresholdHeatColor.
@@ -73,13 +74,7 @@ export function toLocalIsoDate(date) {
  */
 // Converts a Date into the local datetime string sent to the backend.
 export function toLocalDateTime(date) {
-  // Keep each time part two digits so backend values are consistent.
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-
-  // Final shape: "YYYY-MM-DDTHH:mm:ss".
-  return `${toLocalIsoDate(date)}T${hours}:${minutes}:${seconds}`;
+  return toIsoWithOffset(date);
 }
 
 // Moves an ISO date forward or backward by a number of calendar days.

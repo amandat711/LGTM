@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import '../styles/CreateAvailabilityModal.css';
+import { toIsoWithOffsetFromLocalParts, toLocalDateInputValue } from '../utils/dateTime';
 
 function toIsoLocal(date, time) {
-  return `${date}T${time}:00`;
+  return toIsoWithOffsetFromLocalParts(date, time);
 }
 
 export default function CreateAvailabilityModal({ onClose, onSubmit, defaultVisibility = 'private' }) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toLocalDateInputValue(new Date());
 
   const [form, setForm] = useState({
     av_title: '',

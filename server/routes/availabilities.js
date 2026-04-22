@@ -1,14 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { parseDate, toStoredIsoDateTime } = require('../utils/dateTime');
 
 function toSqliteDateTime(date) {
-  return date.toISOString().slice(0, 19);
-}
-
-function parseDate(value) {
-  const d = new Date(value);
-  return isNaN(d.getTime()) ? null : d;
+  return toStoredIsoDateTime(date);
 }
 
 function buildSlots(startDate, endDate, slotDurationMinutes) {
