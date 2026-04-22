@@ -216,14 +216,14 @@ router.delete('/:courseId', requireAuth, loadUser, (req, res) => {
 
 /**
  * PATCH /courses/:courseId
- * Course owner (general_admin) only. Updates course_name and/or description.
+ * Course owner (general_admin) only. Updates course_name and/or description and/or close state.
  */
 router.patch('/:courseId', requireAuth, loadUser, (req, res) => {
   const courseId = parseCourseIdParam(req, res);
   if (courseId == null) return;
 
   requireCourseOwner(req, res, courseId, () => {
-    const { course_name, description } = req.body || {};
+    const { course_name, description, is_closed } = req.body || {};
     const updates = [];
     const params = [];
 
@@ -242,8 +242,16 @@ router.patch('/:courseId', requireAuth, loadUser, (req, res) => {
       params.push(d);
     }
 
+    if (is_closed !== undefined) {
+      if (typeof is_closed !== 'boolean') {
+        return res.status(400).json({ error: 'is_closed must be a boolean.' });
+      }
+      updates.push('is_closed = ?');
+      params.push(is_closed ? 1 : 0);
+    }
+
     if (updates.length === 0) {
-      return res.status(400).json({ error: 'Provide course_name and/or description to update.' });
+      return res.status(400).json({ error: 'Provide course_name, description, and/or is_closed to update.' });
     }
 
     params.push(courseId);
@@ -255,12 +263,17 @@ router.patch('/:courseId', requireAuth, loadUser, (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
         if (this.changes === 0) return res.status(404).json({ error: 'Course not found.' });
         db.get(
-          `SELECT course_id, course_code, course_name, course_term, course_year, description
+          `SELECT course_id, course_code, course_name, course_term, course_year, description, is_closed
            FROM courses WHERE course_id = ?`,
           [courseId],
           (gErr, row) => {
             if (gErr) return res.status(500).json({ error: gErr.message });
-            res.json({ course: row });
+            res.json({
+              course: {
+                ...row,
+                is_closed: Number(row?.is_closed) > 0,
+              },
+            });
           }
         );
       }
@@ -311,6 +324,7 @@ router.get('/', requireAuth, loadUser, (req, res) => {
       c.course_term,
       c.course_year,
       c.description,
+      c.is_closed,
       (
         SELECT e.enrollment_status
         FROM course_enrollments e
@@ -341,6 +355,7 @@ router.get('/', requireAuth, loadUser, (req, res) => {
       course_term: row.course_term,
       course_year: row.course_year,
       description: row.description,
+      is_closed: Number(row.is_closed) > 0,
       enrollment_status: row.enrollment_status || null,
       is_staff: Number(row.is_staff) > 0,
       is_owner: Number(row.is_owner) > 0,
@@ -369,6 +384,7 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
       c.course_term,
       c.course_year,
       c.description,
+      c.is_closed,
       c.invitation_link,
       (
         SELECT e.enrollment_status FROM course_enrollments e
@@ -484,6 +500,7 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
               course_term: row.course_term,
               course_year: row.course_year,
               description: row.description,
+              is_closed: Number(row.is_closed) > 0,
               enrollment_status: enr || null,
               is_staff: isStaff,
               is_owner: isOwner,

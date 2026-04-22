@@ -121,6 +121,7 @@ export default function CourseDetailPage() {
   const [copyMsg, setCopyMsg] = useState('');
   const [regenerating, setRegenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [closing, setClosing] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [createEventOpen, setCreateEventOpen] = useState(false);
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
@@ -305,6 +306,23 @@ export default function CourseDetailPage() {
     }
   }
 
+  async function handleCloseCourse() {
+    setClosing(true);
+    setActionError('');
+    try {
+      const { course: c } = await updateCourse(courseId, { is_closed: true });
+      setDetail((prev) =>
+        prev && c ? { ...prev, course: { ...prev.course, ...c } } : prev
+      );
+    } catch (err) {
+      const msg = err.message || 'Could not close course.';
+      setActionError(msg);
+      throw err;
+    } finally {
+      setClosing(false);
+    }
+  }
+
   function handleEventGear(ev) {
     if (!canManageCourseEvents) return;
     if (ev.kind === 'availability') {
@@ -338,6 +356,8 @@ export default function CourseDetailPage() {
           onSaveCourse={handleSaveCourseSettings}
           onAssign={handleAssign}
           onRevoke={handleRevoke}
+          onCloseCourse={handleCloseCourse}
+          closing={closing}
           onDeleteCourse={handleDeleteCourse}
           onAfterSettingsSave={loadCourse}
           deleting={deleting}

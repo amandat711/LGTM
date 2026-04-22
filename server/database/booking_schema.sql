@@ -46,6 +46,7 @@ CREATE TABLE courses (
     course_year          INTEGER NOT NULL,
     description          TEXT,
     invitation_link      TEXT,
+    is_closed            INTEGER NOT NULL DEFAULT 0 CHECK (is_closed IN (0, 1)),
     UNIQUE(course_code, course_term, course_year)
 );
 
