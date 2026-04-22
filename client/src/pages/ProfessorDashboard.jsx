@@ -26,7 +26,12 @@ import {
   mapAvailabilityToCalendarEvent,
 } from '../components/calendar/calendarUtils';
 // API helpers for professor-owned appointments.
-import { getHostingAppointments, cancelAppointment, createDirectAppointment } from '../api/appointments';
+import {
+  getHostingAppointments,
+  cancelAppointment,
+  createDirectAppointment,
+  updateMyParticipantStatus,
+} from '../api/appointments';
 // API helpers for availability slots the professor can create or remove.
 import {
   createAvailability,
@@ -97,7 +102,7 @@ export default function ProfessorDashboard() {
         ]);
 
         // Appointment rows from the server are reshaped into calendar-friendly event objects.
-        setAppointments(appointmentData.map(mapAppointmentToCalendarEvent));
+        setAppointments(appointmentData.map((appt) => mapAppointmentToCalendarEvent(appt, userId)));
         setAvailabilities(availabilityData);
         setError('');
       } catch (err) {
@@ -251,7 +256,7 @@ export default function ProfessorDashboard() {
 
   async function refreshHostedAppointments() {
     const appointmentData = await getHostingAppointments(userId);
-    setAppointments(appointmentData.map(mapAppointmentToCalendarEvent));
+    setAppointments(appointmentData.map((appt) => mapAppointmentToCalendarEvent(appt, userId)));
   }
 
   async function handleCreateDirectAppointment(payload) {
@@ -301,6 +306,43 @@ export default function ProfessorDashboard() {
             }
           : prev
       );
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleUpdateMyStatus(appointmentId, nextStatus) {
+    try {
+      await updateMyParticipantStatus(appointmentId, userId, nextStatus);
+      const toDisplayStatus = (statuses, fallbackStatus) => {
+        const me = statuses.find((p) => Number(p.userId) === Number(userId));
+        return me?.status || fallbackStatus || 'pending';
+      };
+
+      setAppointments((prev) =>
+        prev.map((appt) => {
+          if (appt.id !== appointmentId) return appt;
+          const participantStatuses = (appt.participantStatuses || []).map((p) =>
+            Number(p.userId) === Number(userId) ? { ...p, status: nextStatus } : p
+          );
+          const status = toDisplayStatus(participantStatuses, appt.status);
+          const color =
+            status === 'confirmed'
+              ? '#2a8c5f'
+              : status === 'cancelled'
+                ? '#dc2626'
+                : '#f59e0b';
+
+          return {
+            ...appt,
+            participantStatuses,
+            status,
+            color,
+          };
+        })
+      );
+      setActiveAppt((prev) => (prev && prev.id === appointmentId ? { ...prev, status: nextStatus } : prev));
       setError('');
     } catch (err) {
       setError(err.message);
@@ -409,6 +451,32 @@ export default function ProfessorDashboard() {
                           <p>{appt.location}</p>
                         </div>
                         <span className={`appointment-status-pill ${cls}`}>{label}</span>
+                        {appt.status === 'pending' && (
+                          <div style={{ display: 'grid', gap: 6 }}>
+                            <button
+                              type="button"
+                              className="invite-action-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdateMyStatus(appt.id, 'confirmed');
+                              }}
+                              title="Accept request"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              type="button"
+                              className="invite-action-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdateMyStatus(appt.id, 'cancelled');
+                              }}
+                              title="Decline request"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })
@@ -562,8 +630,16 @@ export default function ProfessorDashboard() {
             location: activeAppt.location,
             status: activeAppt.status,
             type: activeAppt.type,
+            participants: activeAppt.participantStatuses || [],
+            myStatus: activeAppt.status,
+            currentUserId: userId,
           }}
           isOwner={true}
+          onUpdateMyStatus={
+            activeAppt.type !== 'availability'
+              ? (nextStatus) => handleUpdateMyStatus(activeAppt.id, nextStatus)
+              : undefined
+          }
           onEdit={activeAppt.type === 'availability' ? () => setModal('editAvailability') : undefined}
           onDelete={() => setModal('delete')}
           onClose={() => {

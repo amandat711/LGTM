@@ -59,15 +59,32 @@ export function getEventStyle(appt, slotHeight = 64) {
   return { top, height };
 }
 
-export function mapAppointmentToCalendarEvent(appt) {
+export function mapAppointmentToCalendarEvent(appt, viewerUserId = null) {
   const host = appt.participants?.find((p) => p.participant_role === 'host');
   const attendee = appt.participants?.find((p) => p.participant_role === 'attendee');
+  const participantStatuses = (appt.participants || []).map((p) => ({
+    userId: p.user_id,
+    name: `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Unknown user',
+    email: p.mcgill_email || '',
+    role: p.participant_role,
+    status:
+      p.participant_status ||
+      (p.response_status === 'accepted'
+        ? 'confirmed'
+        : p.response_status === 'declined'
+          ? 'cancelled'
+          : 'pending'),
+  }));
+  const attendeeStatuses = participantStatuses.filter((p) => p.role === 'attendee');
+
+  const myParticipant = participantStatuses.find((p) => Number(p.userId) === Number(viewerUserId));
+  const myStatus = appt.status === 'cancelled' ? 'cancelled' : (myParticipant?.status || appt.status || 'pending');
 
   let color = '#1565a8';
-  if (appt.status === 'confirmed') color = '#2a8c5f';
-  else if (appt.status === 'pending') color = '#f59e0b';
-  else if (appt.status === 'waiting_approval') color = '#3b82f6';
-  else if (appt.status === 'cancelled') color = '#dc2626';
+  if (myStatus === 'confirmed') color = '#2a8c5f';
+  else if (myStatus === 'pending') color = '#f59e0b';
+  else if (myStatus === 'waiting_approval') color = '#3b82f6';
+  else if (myStatus === 'cancelled') color = '#dc2626';
 
   return {
     id: appt.appointment_id,
@@ -76,12 +93,22 @@ export function mapAppointmentToCalendarEvent(appt) {
     ownerEmail: host?.mcgill_email || '',
     attendeeName: attendee ? `${attendee.first_name} ${attendee.last_name}` : '',
     attendeeEmail: attendee?.mcgill_email || '',
+    attendeeStatus:
+      attendee?.participant_status ||
+      (attendee?.response_status === 'accepted'
+        ? 'confirmed'
+        : attendee?.response_status === 'declined'
+          ? 'cancelled'
+          : 'pending'),
     startTime: appt.start_time,
     endTime: appt.end_time,
     location: appt.location || 'TBD',
-    status: appt.status,
+    status: myStatus,
+    appointmentStatus: appt.status,
     color,
     participants: appt.participants || [],
+    participantStatuses,
+    attendeeStatuses,
   };
 }
 

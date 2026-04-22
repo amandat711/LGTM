@@ -36,6 +36,47 @@ function uniqueInts(ints) {
   return out;
 }
 
+function toParticipantStatus(responseStatus) {
+  if (responseStatus === 'accepted') return 'confirmed';
+  if (responseStatus === 'declined') return 'cancelled';
+  return 'pending';
+}
+
+function toResponseStatus(participantStatus) {
+  if (participantStatus === 'confirmed') return 'accepted';
+  if (participantStatus === 'cancelled') return 'declined';
+  return 'pending';
+}
+
+async function recalculateAppointmentStatus(appointmentId) {
+  const appointment = await dbGet(
+    `SELECT appointment_id, status FROM appointments WHERE appointment_id = ?`,
+    [appointmentId]
+  );
+  if (!appointment || appointment.status === 'cancelled') return;
+
+  const participants = await dbAll(
+    `
+    SELECT response_status
+    FROM appointment_participants
+    WHERE appointment_id = ?
+    `,
+    [appointmentId]
+  );
+
+  // No participants means no workflow; keep it confirmed.
+  if (participants.length === 0) {
+    await dbRun(`UPDATE appointments SET status = 'confirmed' WHERE appointment_id = ?`, [appointmentId]);
+    return;
+  }
+
+  const anyPending = participants.some((p) => p.response_status === 'pending');
+  const anyCancelled = participants.some((p) => p.response_status === 'declined');
+  const nextStatus = anyPending ? 'pending' : anyCancelled ? 'cancelled' : 'confirmed';
+
+  await dbRun(`UPDATE appointments SET status = ? WHERE appointment_id = ?`, [nextStatus, appointmentId]);
+}
+
 function dbRun(sql, params = []) {
   return new Promise((resolve, reject) => {
     db.run(sql, params, function (err) {
@@ -189,7 +230,7 @@ router.post('/', (req, res) => {
                     availability.av_title || 'Booked Appointment',
                     availability.av_description || null,
                     'calendar',
-                    'confirmed'
+                    'pending'
                     ],
                     function (err) {
                       if (err) return res.status(500).json({ error: err.message });
@@ -203,7 +244,7 @@ router.post('/', (req, res) => {
                         (appointment_id, user_id, participant_role, response_status)
                         VALUES (?, ?, ?, ?)
                         `,
-                        [appointmentId, availability.created_by, 'host', 'accepted'],
+                        [appointmentId, availability.created_by, 'host', 'pending'],
                         (err) => {
                           if (err) return res.status(500).json({ error: err.message });
 
@@ -218,43 +259,56 @@ router.post('/', (req, res) => {
                             (err) => {
                               if (err) return res.status(500).json({ error: err.message });
 
-                              // Add history row
+                              // Create invitation from student to professor.
                               db.run(
                                 `
-                                INSERT INTO appointment_history
-                                (
-                                  appointment_id,
-                                  changed_by,
-                                  old_status,
-                                  new_status,
-                                  changed_at,
-                                  note
-                                )
-                                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+                                INSERT INTO invitations
+                                (appointment_id, inviter_user_id, invitee_user_id, status)
+                                VALUES (?, ?, ?, 'sent')
                                 `,
-                                [
-                                  appointmentId,
-                                  booked_by,
-                                  null,
-                                  'confirmed',
-                                  'Appointment created from availability booking'
-                                ],
+                                [appointmentId, booked_by, availability.created_by],
                                 (err) => {
                                   if (err) return res.status(500).json({ error: err.message });
 
-                                  // Return created appointment
-                                  db.get(
-                                    `SELECT * FROM appointments WHERE appointment_id = ?`,
-                                    [appointmentId],
-                                    (err, appointmentRow) => {
-                                      if (err) {
-                                        return res.status(500).json({ error: err.message });
-                                      }
+                                  // Add history row
+                                  db.run(
+                                    `
+                                    INSERT INTO appointment_history
+                                    (
+                                      appointment_id,
+                                      changed_by,
+                                      old_status,
+                                      new_status,
+                                      changed_at,
+                                      note
+                                    )
+                                    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+                                    `,
+                                    [
+                                      appointmentId,
+                                      booked_by,
+                                      null,
+                                      'pending',
+                                      'Booking request created from availability (awaiting host response)'
+                                    ],
+                                    (err) => {
+                                      if (err) return res.status(500).json({ error: err.message });
 
-                                      res.status(201).json({
-                                        message: 'Appointment booked successfully',
-                                        appointment: appointmentRow
-                                      });
+                                      // Return created appointment
+                                      db.get(
+                                        `SELECT * FROM appointments WHERE appointment_id = ?`,
+                                        [appointmentId],
+                                        (err, appointmentRow) => {
+                                          if (err) {
+                                            return res.status(500).json({ error: err.message });
+                                          }
+
+                                          res.status(201).json({
+                                            message: 'Booking request sent successfully',
+                                            appointment: appointmentRow
+                                          });
+                                        }
+                                      );
                                     }
                                   );
                                 }
@@ -463,7 +517,7 @@ router.post('/direct', async (req, res) => {
             ap_title || null,
             ap_description || null,
             'calendar',
-            'confirmed',
+            uniqueInvitees.length > 0 ? 'pending' : 'confirmed',
           ]
         );
 
@@ -602,9 +656,12 @@ router.get('/my', (req, res) => {
 
       const result = appointments.map(appt => ({
         ...appt,
-        participants: participants.filter(
-          p => p.appointment_id === appt.appointment_id
-        )
+        participants: participants
+          .filter((p) => p.appointment_id === appt.appointment_id)
+          .map((p) => ({
+            ...p,
+            participant_status: toParticipantStatus(p.response_status),
+          })),
       }));
 
       res.json(result);
@@ -660,9 +717,12 @@ router.get('/hosting', (req, res) => {
 
       const result = appointments.map(appt => ({
         ...appt,
-        participants: participants.filter(
-          p => p.appointment_id === appt.appointment_id
-        )
+        participants: participants
+          .filter((p) => p.appointment_id === appt.appointment_id)
+          .map((p) => ({
+            ...p,
+            participant_status: toParticipantStatus(p.response_status),
+          })),
       }));
 
       res.json(result);
@@ -718,9 +778,12 @@ router.get('/attending', (req, res) => {
 
       const result = appointments.map(appt => ({
         ...appt,
-        participants: participants.filter(
-          p => p.appointment_id === appt.appointment_id
-        )
+        participants: participants
+          .filter((p) => p.appointment_id === appt.appointment_id)
+          .map((p) => ({
+            ...p,
+            participant_status: toParticipantStatus(p.response_status),
+          })),
       }));
 
       res.json(result);
@@ -796,11 +859,12 @@ router.patch('/invitations/:id/accept', (req, res) => {
             SET response_status = 'accepted'
             WHERE appointment_id = ?
               AND user_id = ?
-              AND participant_role = 'attendee'
             `,
             [invitation.appointment_id, user_id],
             (err) => {
               if (err) return res.status(500).json({ error: err.message });
+
+              recalculateAppointmentStatus(invitation.appointment_id).catch(() => {});
 
               db.get(
                 `SELECT * FROM invitations WHERE invitation_id = ?`,
@@ -849,11 +913,12 @@ router.patch('/invitations/:id/decline', (req, res) => {
             SET response_status = 'declined'
             WHERE appointment_id = ?
               AND user_id = ?
-              AND participant_role = 'attendee'
             `,
             [invitation.appointment_id, user_id],
             (err) => {
               if (err) return res.status(500).json({ error: err.message });
+
+              recalculateAppointmentStatus(invitation.appointment_id).catch(() => {});
 
               db.get(
                 `SELECT * FROM invitations WHERE invitation_id = ?`,
@@ -869,6 +934,90 @@ router.patch('/invitations/:id/decline', (req, res) => {
       );
     }
   );
+});
+
+router.patch('/:id/participants/:userId/status', async (req, res) => {
+  const appointmentId = Number(req.params.id);
+  const participantUserId = Number(req.params.userId);
+  const { user_id, status } = req.body || {};
+  const requesterUserId = Number(user_id);
+
+  if (!Number.isInteger(appointmentId) || appointmentId < 1) {
+    return res.status(400).json({ error: 'Invalid appointment id' });
+  }
+  if (!Number.isInteger(participantUserId) || participantUserId < 1) {
+    return res.status(400).json({ error: 'Invalid participant user id' });
+  }
+  if (!Number.isInteger(requesterUserId) || requesterUserId < 1) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+  if (requesterUserId !== participantUserId) {
+    return res.status(403).json({ error: 'You can only update your own status' });
+  }
+  if (!['pending', 'confirmed', 'cancelled'].includes(status)) {
+    return res.status(400).json({ error: 'status must be pending, confirmed, or cancelled' });
+  }
+
+  try {
+    const appt = await dbGet(`SELECT appointment_id, status FROM appointments WHERE appointment_id = ?`, [appointmentId]);
+    if (!appt) return res.status(404).json({ error: 'Appointment not found' });
+    if (appt.status === 'cancelled') {
+      return res.status(400).json({ error: 'Cannot update participant status on a cancelled appointment' });
+    }
+
+    const participant = await dbGet(
+      `
+      SELECT appointment_id, user_id, participant_role
+      FROM appointment_participants
+      WHERE appointment_id = ? AND user_id = ?
+      `,
+      [appointmentId, participantUserId]
+    );
+    if (!participant) return res.status(404).json({ error: 'Participant not found for this appointment' });
+    const responseStatus = toResponseStatus(status);
+    await dbRun(
+      `
+      UPDATE appointment_participants
+      SET response_status = ?
+      WHERE appointment_id = ? AND user_id = ?
+      `,
+      [responseStatus, appointmentId, participantUserId]
+    );
+
+    await dbRun(
+      `
+      UPDATE invitations
+      SET status = CASE
+        WHEN ? = 'pending' THEN 'sent'
+        WHEN ? = 'confirmed' THEN 'accepted'
+        ELSE 'declined'
+      END
+      WHERE appointment_id = ? AND invitee_user_id = ?
+      `,
+      [status, status, appointmentId, participantUserId]
+    );
+
+    await recalculateAppointmentStatus(appointmentId);
+
+    const updated = await dbGet(
+      `
+      SELECT appointment_id, user_id, participant_role, response_status
+      FROM appointment_participants
+      WHERE appointment_id = ? AND user_id = ?
+      `,
+      [appointmentId, participantUserId]
+    );
+
+    return res.json({
+      message: 'Participant status updated',
+      participant: {
+        ...updated,
+        participant_status: toParticipantStatus(updated.response_status),
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 router.get('/:id', (req, res) => {
@@ -901,6 +1050,10 @@ router.get('/:id', (req, res) => {
         [appointmentId],
         (e2, participants) => {
           if (e2) return res.status(500).json({ error: e2.message });
+          const participantsWithStatus = participants.map((p) => ({
+            ...p,
+            participant_status: toParticipantStatus(p.response_status),
+          }));
 
           db.all(
             `
@@ -926,7 +1079,7 @@ router.get('/:id', (req, res) => {
 
               return res.json({
                 appointment,
-                participants,
+                participants: participantsWithStatus,
                 invitations,
               });
             }

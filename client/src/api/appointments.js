@@ -96,3 +96,19 @@ export async function declineInvitation(invitationId, userId) {
 
   return parseJson(res);
 }
+
+export async function updateMyParticipantStatus(appointmentId, userId, status) {
+  const res = await fetch(`${API_BASE}/appointments/${appointmentId}/participants/${userId}/status`, {
+    ...fetchOpts,
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      user_id: Number(userId),
+      status,
+    }),
+  });
+
+  return parseJson(res);
+}

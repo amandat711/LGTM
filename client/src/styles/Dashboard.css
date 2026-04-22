@@ -428,6 +428,113 @@
   text-align: right;
 }
 
+.participant-list {
+  display: grid;
+  gap: 10px;
+}
+
+.participant-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.participant-row:last-child {
+  border-bottom: none;
+}
+
+.participant-avatar-wrap {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.participant-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.participant-status-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+.participant-status-confirmed {
+  background: #2a8c5f;
+}
+
+.participant-status-pending {
+  background: #f59e0b;
+}
+
+.participant-status-cancelled {
+  background: #dc2626;
+}
+
+.participant-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.participant-name {
+  font-size: 13px;
+  color: #111;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.participant-email {
+  font-size: 11px;
+  color: #666;
+}
+
+.participant-role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #374151;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.participant-status-actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.participant-status-select {
+  height: 24px;
+  border: 1px solid #d6d6d6;
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 11px;
+  color: #444;
+  background: #fff;
+}
+
 .modal-footer {
   display: flex;
   gap: 10px;

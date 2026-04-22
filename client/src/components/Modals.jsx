@@ -1,13 +1,11 @@
-/* AMANDA TRAN */
-// Shared modal components used across dashboards, booking flows, and heatmap pages.
+/*AMANDA TRAN*/
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { formatTime, statusLabel } from './calendar/calendarUtils';
 
-// One shell for all popups so headers, close behavior, and footers stay consistent.
+// ─── Shared shell ─────────────────────────────────────────────
 function Modal({ title, onClose, children, footer, className = '' }) {
   return (
-    // Clicking the dimmed background closes the modal; clicking inside the modal does not.
     <div
       className="modal-overlay"
       onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}
@@ -24,9 +22,11 @@ function Modal({ title, onClose, children, footer, className = '' }) {
   );
 }
 
-// Page help modal. The guide content comes from data/helpGuides.js.
+// ─────────────────────────────────────────────────────────────
+// HelpGuideModal
+//    Reusable detailed instructions popup for page-specific help.
+// ─────────────────────────────────────────────────────────────
 export function HelpGuideModal({ guide, onClose }) {
-  // Keep the modal usable even if a page forgets to pass guide content.
   const safeGuide = guide || {};
 
   return (
@@ -49,7 +49,6 @@ export function HelpGuideModal({ guide, onClose }) {
         )}
 
         {safeGuide.quickTips?.length > 0 && (
-          // Short reminders first, before the longer step-by-step sections.
           <div className="help-guide-tips">
             <h4>Quick tips</h4>
             <ul>
@@ -77,7 +76,10 @@ export function HelpGuideModal({ guide, onClose }) {
   );
 }
 
-// Generic confirmation modal for actions that deserve a pause before they happen.
+// ─────────────────────────────────────────────────────────────
+// ConfirmActionModal
+//    Small reusable confirmation popup for destructive or important actions.
+// ─────────────────────────────────────────────────────────────
 export function ConfirmActionModal({
   title,
   message,
@@ -117,7 +119,6 @@ export function ConfirmActionModal({
       {details.length > 0 && (
         <div className="modal-detail-stack">
           {details.map((detail) => (
-            // Detail rows make destructive actions feel less ambiguous.
             <div className="modal-row" key={detail.label}>
               <span className="modal-row-label">{detail.label}</span>
               <span className="modal-row-value">{detail.value}</span>
@@ -129,12 +130,14 @@ export function ConfirmActionModal({
   );
 }
 
-// Used when a professor confirms a heatmap slot and wants to notify attendees.
+// ─────────────────────────────────────────────────────────────
+// 1. ConfirmSlotModal
+//    Owner confirms a selected time slot and sends notifications.
+// ─────────────────────────────────────────────────────────────
 export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
   const [sent, setSent] = useState(false);
 
   function handleConfirm() {
-    // Show immediate feedback before the parent creates/navigates away from the appointment.
     setSent(true);
     // TODO: POST /api/appointments/confirm { slotDay, slotTime, attendeeIds }
     setTimeout(() => { onConfirm(); onClose(); }, 1200);
@@ -167,7 +170,6 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
       </div>
       <div className="modal-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
         <span className="modal-row-label">Attendees ({attendees?.length})</span>
-        {/* Attendee tags echo the colors from the heatmap participant chips. */}
         <div className="attendee-list">
           {attendees?.map(a => (
             <span key={a.name} className="attendee-tag">
@@ -184,7 +186,26 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
   );
 }
 
-export function SlotDetailModal({ appointment, isOwner, onDelete, onEdit, onClose }) {
+// ─────────────────────────────────────────────────────────────
+// 2. SlotDetailModal
+//    Click any booked appointment to view details.
+// ─────────────────────────────────────────────────────────────
+function initialsForName(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'U';
+  const first = parts[0][0] || '';
+  const last = parts.length > 1 ? parts[parts.length - 1][0] || '' : '';
+  return `${first}${last}`.toUpperCase();
+}
+
+export function SlotDetailModal({
+  appointment,
+  isOwner,
+  onDelete,
+  onEdit,
+  onClose,
+  onUpdateMyStatus,
+}) {
   const ap = appointment || {};
   const isAvailability = ap.type === 'availability';
 
@@ -214,6 +235,9 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onEdit, onClos
   const emailTarget = isAvailability
     ? (otherPartyEmail || '')
     : (isOwner ? (ap.attendeeEmail || '') : (ap.ownerEmail || ''));
+  const participantList = Array.isArray(ap.participants) ? ap.participants : [];
+  const canUpdateMyStatus = !isAvailability && typeof onUpdateMyStatus === 'function';
+  const ownerPending = isOwner && ap.myStatus === 'pending';
 
   return (
     <Modal
@@ -252,6 +276,11 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onEdit, onClos
           <span className={statusPillClass}>{status.label}</span>
         </div>
       </div>
+      {ownerPending && (
+        <p className="modal-description" style={{ marginTop: -6, marginBottom: 10 }}>
+          Action required: this booking request is waiting for your response.
+        </p>
+      )}
 
       <div className="modal-section">
         <div className="modal-section-title">Details</div>
@@ -301,26 +330,78 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onEdit, onClos
 
       <div className="modal-section">
         <div className="modal-section-title">People</div>
-        <div className="modal-detail-stack">
-          <div className="modal-row">
-            <span className="modal-row-label">Created by</span>
-            <span className="modal-row-value">
-              {createdByEmail ? `${createdByName} (${createdByEmail})` : createdByName}
-            </span>
+        {participantList.length > 0 ? (
+          <div className="participant-list">
+            {participantList.map((p) => {
+              const status = p.status || p.participant_status || 'pending';
+              const role = p.role || p.participant_role || 'attendee';
+              const userId = p.userId || p.user_id;
+              const isCurrentUser = Number(userId) === Number(ap.currentUserId);
+              return (
+                <div key={`${p.userId || p.user_id}-${p.email || p.mcgill_email}`} className="participant-row">
+                  <div className="participant-avatar-wrap">
+                    <span className="participant-avatar">{initialsForName(p.name)}</span>
+                    <span className={`participant-status-dot participant-status-${status}`} />
+                  </div>
+                  <div className="participant-meta">
+                    <span className="participant-name">
+                      {p.name}
+                      {role === 'host' && <span className="participant-role-badge">Host</span>}
+                    </span>
+                    <span className="participant-email">{p.email}</span>
+                  </div>
+                  <div className="participant-status-actions">
+                    <span className={`appointment-status-pill ${
+                      status === 'confirmed'
+                        ? 'status-confirmed'
+                        : status === 'cancelled'
+                          ? 'status-cancelled'
+                          : 'status-pending'
+                    }`}>
+                      {status}
+                    </span>
+                    {canUpdateMyStatus && isCurrentUser && (
+                      <select
+                        className="participant-status-select"
+                        aria-label="Change your status"
+                        value={status}
+                        onChange={(e) => onUpdateMyStatus(e.target.value)}
+                      >
+                        <option value="pending">pending</option>
+                        <option value="confirmed">confirmed</option>
+                        <option value="cancelled">cancelled</option>
+                      </select>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div className="modal-row">
-            <span className="modal-row-label">{isAvailability ? 'Booked by' : isOwner ? 'Booked by' : 'Owner'}</span>
-            <span className="modal-row-value">
-              {otherPartyEmail ? `${otherPartyName} (${otherPartyEmail})` : otherPartyName}
-            </span>
+        ) : (
+          <div className="modal-detail-stack">
+            <div className="modal-row">
+              <span className="modal-row-label">Created by</span>
+              <span className="modal-row-value">
+                {createdByEmail ? `${createdByName} (${createdByEmail})` : createdByName}
+              </span>
+            </div>
+            <div className="modal-row">
+              <span className="modal-row-label">{isAvailability ? 'Booked by' : isOwner ? 'Booked by' : 'Owner'}</span>
+              <span className="modal-row-value">
+                {otherPartyEmail ? `${otherPartyName} (${otherPartyEmail})` : otherPartyName}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </Modal>
   );
 }
 
-// Final confirmation before cancelling a booking or removing an availability block.
+// ─────────────────────────────────────────────────────────────
+// 3. DeleteConfirmModal
+//    Confirms cancellation and opens a mailto: notification.
+// ─────────────────────────────────────────────────────────────
 export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
   const ap = appointment || {};
   const isAvailability = ap.type === 'availability';
@@ -333,6 +414,7 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
       );
       window.open(`mailto:${ap.notifyEmail}?subject=${subject}&body=${body}`);
     }
+
     onConfirm();
     onClose();
   }
@@ -373,23 +455,15 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
   );
 }
 
-// Share modal for heatmap and booking links.
-export function InviteURLModal({
-  ownerEmail,
-  eventTitle,
-  inviteURL,
-  onClose,
-  title = 'Share your booking page',
-  description = 'Share this link so students can open the heatmap, mark their availability, and send it back to you.',
-  contextLabel = 'Booking page for',
-  tip = 'Tip: paste this into your course slides or email signature.',
-}) {
+// ─────────────────────────────────────────────────────────────
+// 4. InviteURLModal
+//    Generates a shareable booking link for owners.
+// ─────────────────────────────────────────────────────────────
+export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
   const [copied, setCopied] = useState(false);
-  // Heatmap pages pass an explicit invite URL; older booking flows can use the fallback.
   const shareURL = inviteURL || `${window.location.origin}/heatmap`;
 
   function handleCopy() {
-    // The copied state gives the user a quick "yes, it worked" moment.
     navigator.clipboard.writeText(shareURL).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -398,7 +472,7 @@ export function InviteURLModal({
 
   return (
     <Modal
-      title={title}
+      title="Share your booking page"
       onClose={onClose}
       footer={
         <>
@@ -410,10 +484,10 @@ export function InviteURLModal({
       }
     >
       <p style={{ fontSize: 13, color: '#666', marginBottom: 14, lineHeight: 1.6 }}>
-        {description}
+        Share this link so students can open the heatmap, mark their availability, and send it back to you.
       </p>
       <p style={{ fontSize: 11, color: '#aaa', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        {contextLabel}
+        Booking page for
       </p>
       <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{eventTitle || ownerEmail}</p>
       <div className="copy-row">
@@ -423,13 +497,16 @@ export function InviteURLModal({
         </button>
       </div>
       <p style={{ marginTop: 12, fontSize: 12, color: '#bbb' }}>
-        {tip}
+        Tip: paste this into your course slides or email signature.
       </p>
     </Modal>
   );
 }
 
-// Turn a raw submitted slot into something a person can scan quickly.
+// ─────────────────────────────────────────────────────────────
+// 5. ApproveSubmissionModal
+//    Professor reviews a student's availability submission.
+// ─────────────────────────────────────────────────────────────
 function formatSlotLabel(slot) {
   if (!slot?.startTime || !slot?.endTime) return 'Unknown time';
 
@@ -449,19 +526,15 @@ function formatSlotLabel(slot) {
   })}`;
 }
 
-// Review modal for a student's heatmap submission.
 export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClose }) {
   const s = submission || {};
-  // Memoize the slots array so the selected radio button only resets when slots really change.
   const slotOptions = useMemo(() => s.slots || [], [s.slots]);
   const [selectedSlotId, setSelectedSlotId] = useState(slotOptions[0]?.id || null);
 
   useEffect(() => {
-    // Default to the first submitted slot whenever a different submission is opened.
     setSelectedSlotId(slotOptions[0]?.id || null);
   }, [slotOptions]);
 
-  // If the selected id no longer exists, fall back gracefully to the first slot.
   const selectedSlot = slotOptions.find((slot) => slot.id === selectedSlotId) || slotOptions[0] || null;
 
   return (
@@ -514,7 +587,6 @@ export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClo
             <span className="modal-row-value">No submitted slots</span>
           ) : (
             slotOptions.map((slot) => (
-              // Radio cards are easier to review than a dense select menu for time slots.
               <label
                 key={slot.id}
                 style={{

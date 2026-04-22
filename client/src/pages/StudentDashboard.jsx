@@ -20,7 +20,7 @@ import {
   statusLabel,
   mapAppointmentToCalendarEvent,
 } from '../components/calendar/calendarUtils';
-import { getMyAppointments, cancelAppointment } from '../api/appointments';
+import { getMyAppointments, cancelAppointment, updateMyParticipantStatus } from '../api/appointments';
 import { getHeatmaps } from '../api/heatmaps';
 import { logout } from '../api/auth';
 import { DASHBOARD_HELP_GUIDES } from '../data/helpGuides';
@@ -79,7 +79,7 @@ export default function StudentDashboard() {
         ]);
 
         // The API shape is not exactly what the calendar wants, so we normalize it first.
-        setAppointments(data.map(mapAppointmentToCalendarEvent));
+        setAppointments(data.map((appt) => mapAppointmentToCalendarEvent(appt, userId)));
         setHeatmaps(heatmapData);
         setError('');
       } catch (err) {
@@ -155,6 +155,36 @@ export default function StudentDashboard() {
 
       setActiveAppt(null);
       setModal(null);
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleUpdateMyStatus(appointmentId, nextStatus) {
+    try {
+      await updateMyParticipantStatus(appointmentId, userId, nextStatus);
+      setAppointments((prev) =>
+        prev.map((appt) => {
+          if (appt.id !== appointmentId) return appt;
+          const participantStatuses = (appt.participantStatuses || []).map((p) =>
+            Number(p.userId) === Number(userId) ? { ...p, status: nextStatus } : p
+          );
+          const attendeeStatuses = participantStatuses.filter((p) => p.role === 'attendee');
+          const allConfirmed = attendeeStatuses.length > 0 && attendeeStatuses.every((p) => p.status === 'confirmed');
+          const allCancelled = attendeeStatuses.length > 0 && attendeeStatuses.every((p) => p.status === 'cancelled');
+          const nextApptStatus = allConfirmed ? 'confirmed' : allCancelled ? 'cancelled' : 'pending';
+
+          return {
+            ...appt,
+            attendeeStatus: nextStatus,
+            participantStatuses,
+            attendeeStatuses,
+            status: nextApptStatus,
+          };
+        })
+      );
+      setActiveAppt((prev) => (prev && prev.id === appointmentId ? { ...prev, attendeeStatus: nextStatus } : prev));
       setError('');
     } catch (err) {
       setError(err.message);
@@ -254,6 +284,32 @@ export default function StudentDashboard() {
                           <p>{appt.location}</p>
                         </div>
                         <span className={`appointment-status-pill ${cls}`}>{label}</span>
+                        {appt.attendeeStatus === 'pending' && (
+                          <div style={{ display: 'grid', gap: 6 }}>
+                            <button
+                              type="button"
+                              className="invite-action-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdateMyStatus(appt.id, 'confirmed');
+                              }}
+                              title="Set your status to confirmed"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              type="button"
+                              className="invite-action-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleUpdateMyStatus(appt.id, 'cancelled');
+                              }}
+                              title="Set your status to cancelled"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })
@@ -357,8 +413,12 @@ export default function StudentDashboard() {
             ownerEmail: activeAppt.ownerEmail,
             location: activeAppt.location,
             status: activeAppt.status,
+            participants: activeAppt.participantStatuses || [],
+            myStatus: activeAppt.attendeeStatus,
+            currentUserId: userId,
           }}
-          isOwner={true}
+          isOwner={false}
+          onUpdateMyStatus={(nextStatus) => handleUpdateMyStatus(activeAppt.id, nextStatus)}
           onDelete={() => setModal('delete')}
           onClose={() => {
             setModal(null);
