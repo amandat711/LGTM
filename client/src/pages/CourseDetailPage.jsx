@@ -190,7 +190,7 @@ export default function CourseDetailPage() {
         { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
         { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
       ];
-      if (detail?.course?.is_owner || detail?.course?.is_staff) {
+      if (detail?.course?.is_owner) {
         items.push({
           id: 'create',
           iconText: '+',
