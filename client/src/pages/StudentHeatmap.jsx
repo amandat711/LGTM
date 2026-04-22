@@ -12,7 +12,7 @@ import { sessionUserToNavUser } from '../auth/authUtils';
 // Student view uses the professor-availability grid, where only professor slots are selectable.
 import { ProfAvailGrid, GridPager } from '../components/HeatmapGrid';
 // Backend helpers for loading a heatmap and saving the student's response.
-import { getHeatmap, saveHeatmapSubmission } from '../api/heatmaps';
+import { getHeatmap, registerHeatmapInvitation, saveHeatmapSubmission } from '../api/heatmaps';
 // Calendar-grid helpers that produce the visible day and time labels.
 import { generateDays, generateTimes } from '../utils/generateDays';
 // Shared conversion helpers used by both heatmap pages.
@@ -109,6 +109,15 @@ export default function StudentHeatmap() {
       navigate(`/heatmap/professor/${eventId}`, { replace: true });
     }
   }, [eventId, navigate, user?.role]);
+
+  // Opening the shared link is what makes this heatmap appear on this student's dashboard.
+  useEffect(() => {
+    if (!eventId || !user?.id || user.role === 'professor') return;
+
+    registerHeatmapInvitation(eventId, user.id).catch(() => {
+      // The page can still load even if the dashboard shortcut could not be registered.
+    });
+  }, [eventId, user?.id, user?.role]);
 
   // Load the heatmap from the invite ID and fit the grid to any existing saved slots.
   useEffect(() => {

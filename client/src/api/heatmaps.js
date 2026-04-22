@@ -36,6 +36,16 @@ export async function getHeatmaps(params = {}) {
   return handleResponse(res);
 }
 
+export async function registerHeatmapInvitation(heatmapId, userId) {
+  const res = await fetch(`${API_BASE}/heatmaps/${heatmapId}/invitations`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: Number(userId) }),
+  });
+
+  return handleResponse(res);
+}
+
 export async function createHeatmap(payload) {
   const res = await fetch(`${API_BASE}/heatmaps`, {
     method: 'POST',
