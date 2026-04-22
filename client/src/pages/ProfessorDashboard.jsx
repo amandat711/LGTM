@@ -71,6 +71,8 @@ export default function ProfessorDashboard() {
   // `modal` says which popup is open, and `activeAppt` says which item it is about.
   const [modal, setModal] = useState(null);
   const [activeAppt, setActiveAppt] = useState(null);
+  const [createStartTime, setCreateStartTime] = useState(null);
+  const [createEndTime, setCreateEndTime] = useState(null);
   // Heatmaps created by this professor, shown in the right-side tools panel.
   const [heatmaps, setHeatmaps] = useState([]);
   // Simple page status flags.
@@ -366,6 +368,11 @@ export default function ProfessorDashboard() {
                   setActiveAppt(appt);
                   setModal('detail');
                 }}
+                onSlotSelect={({ startIso, endIso }) => {
+                  setCreateStartTime(startIso);
+                  setCreateEndTime(endIso);
+                  setModal('createItem');
+                }}
               />
             )}
 
@@ -513,6 +520,8 @@ export default function ProfessorDashboard() {
           onClose={() => setModal(null)}
           onCreateAvailability={handleCreateAvailability}
           onCreateDirectAppointment={handleCreateDirectAppointment}
+          initialStartTime={createStartTime}
+          initialEndTime={createEndTime}
         />
       )}
 

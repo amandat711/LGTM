@@ -8,6 +8,8 @@ export default function CreateItemModal({
   onCreateAvailability,
   onCreateDirectAppointment,
   defaultTab = 'event', // 'event' | 'appointment' | 'availability'
+  initialStartTime = null, // ISO string, used to prefill event/appointment forms
+  initialEndTime = null, // ISO string, used to prefill event/appointment forms
 }) {
   const [tab, setTab] = useState(defaultTab);
 
@@ -69,6 +71,8 @@ export default function CreateItemModal({
             mode={tab}
             onSubmit={onCreateDirectAppointment}
             onCancel={onClose}
+            initialStartTime={initialStartTime}
+            initialEndTime={initialEndTime}
           />
         )}
       </div>

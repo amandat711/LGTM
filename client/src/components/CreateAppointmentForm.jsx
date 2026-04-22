@@ -25,6 +25,8 @@ export default function CreateAppointmentForm({
   onCancel,
   defaultVisibility = 'private',
   submitLabel,
+  initialStartTime = null, // ISO string
+  initialEndTime = null, // ISO string
 }) {
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
@@ -48,6 +50,28 @@ export default function CreateAppointmentForm({
 
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!initialStartTime) return;
+    const start = new Date(initialStartTime);
+    if (Number.isNaN(start.getTime())) return;
+
+    const providedEnd = initialEndTime ? new Date(initialEndTime) : null;
+    const end = providedEnd && !Number.isNaN(providedEnd.getTime())
+      ? providedEnd
+      : new Date(start.getTime() + 30 * 60000);
+    const date = start.toISOString().slice(0, 10);
+    const start_time = start.toTimeString().slice(0, 5);
+    const end_time = end.toTimeString().slice(0, 5);
+
+    setForm((prev) => ({
+      ...prev,
+      date,
+      start_time,
+      end_time,
+    }));
+    setRecurrence((prev) => ({ ...prev, baseDate: date }));
+  }, [initialEndTime, initialStartTime]);
 
   const finalSubmitLabel =
     submitLabel || (mode === 'appointment' ? 'Send invitation' : 'Create event');

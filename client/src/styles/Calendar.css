@@ -164,6 +164,45 @@
   border-right: 1px solid #f0f0f0;
   border-bottom: 1px solid #f3f3f3;
   box-sizing: border-box;
+  width: 100%;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  border-top: none;
+  border-left: none;
+}
+
+.dash-time-cell:hover {
+  background: rgba(227, 20, 41, 0.04);
+}
+
+.dash-time-cell:focus-visible {
+  outline: 2px solid rgba(227, 20, 41, 0.35);
+  outline-offset: -2px;
+}
+
+.dash-day-column {
+  position: relative;
+}
+
+.dash-slot-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: transparent;
+  cursor: crosshair;
+}
+
+.dash-slot-selection {
+  position: absolute;
+  left: 3px;
+  right: 7px;
+  z-index: 3;
+  border-radius: 10px;
+  background: rgba(227, 20, 41, 0.10);
+  border: 1px solid rgba(227, 20, 41, 0.28);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  pointer-events: none;
 }
 
 .dash-day-column:last-child .dash-time-cell {
