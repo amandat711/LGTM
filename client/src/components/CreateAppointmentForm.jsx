@@ -20,7 +20,7 @@ function getDefaultRecurrence(baseDate) {
 }
 
 export default function CreateAppointmentForm({
-  mode = 'event', // 'event' | 'appointment' (UI wording only)
+  mode = 'event',
   onSubmit,
   onCancel,
   defaultVisibility = 'private',
@@ -74,8 +74,7 @@ export default function CreateAppointmentForm({
     setRecurrence((prev) => ({ ...prev, baseDate: date }));
   }, [initialEndTime, initialStartTime]);
 
-  const finalSubmitLabel =
-    submitLabel || (mode === 'appointment' ? 'Send invitation' : 'Create event');
+  const finalSubmitLabel = submitLabel || (selectedInvitees.length > 0 ? 'Send invitation' : 'Create event');
 
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));

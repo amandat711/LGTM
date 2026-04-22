@@ -7,15 +7,14 @@ export default function CreateItemModal({
   onClose,
   onCreateAvailability,
   onCreateDirectAppointment,
-  defaultTab = 'event', // 'event' | 'appointment' | 'availability'
+  defaultTab = 'event', // 'event' | 'availability'
   initialStartTime = null, // ISO string, used to prefill event/appointment forms
   initialEndTime = null, // ISO string, used to prefill event/appointment forms
 }) {
-  const [tab, setTab] = useState(defaultTab);
+  const [tab, setTab] = useState(defaultTab === 'appointment' ? 'event' : defaultTab);
 
   const title = useMemo(() => {
     if (tab === 'availability') return 'Create availability';
-    if (tab === 'appointment') return 'Create appointment';
     return 'Create event';
   }, [tab]);
 
@@ -36,13 +35,6 @@ export default function CreateItemModal({
                 onClick={() => setTab('event')}
               >
                 Event
-              </button>
-              <button
-                type="button"
-                className={`button button-outline button-small availability-tab-btn ${tab === 'appointment' ? 'active' : ''}`}
-                onClick={() => setTab('appointment')}
-              >
-                Appointment
               </button>
               <button
                 type="button"
@@ -69,7 +61,7 @@ export default function CreateItemModal({
             <CreateAvailabilityForm onSubmit={onCreateAvailability} onCancel={onClose} />
           ) : (
             <CreateAppointmentForm
-              mode={tab}
+              mode="event"
               onSubmit={onCreateDirectAppointment}
               onCancel={onClose}
               initialStartTime={initialStartTime}
