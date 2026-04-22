@@ -58,7 +58,12 @@ export default function CreateItemModal({
 
         <div className="availability-modal-body">
           {tab === 'availability' ? (
-            <CreateAvailabilityForm onSubmit={onCreateAvailability} onCancel={onClose} />
+            <CreateAvailabilityForm
+              onSubmit={onCreateAvailability}
+              onCancel={onClose}
+              initialStartTime={initialStartTime}
+              initialEndTime={initialEndTime}
+            />
           ) : (
             <CreateAppointmentForm
               mode="event"
