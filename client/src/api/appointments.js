@@ -1,5 +1,7 @@
 import { API_BASE } from '../constants/config';
 
+const fetchOpts = { credentials: 'include' };
+
 async function parseJson(res) {
   const data = await res.json().catch(() => ({}));
 
@@ -9,8 +11,6 @@ async function parseJson(res) {
 
   return data;
 }
-
-const fetchOpts = { credentials: 'include' };
 
 export async function getMyAppointments(userId) {
   const res = await fetch(`${API_BASE}/appointments/my?user_id=${userId}`, fetchOpts);
@@ -31,34 +31,6 @@ export async function cancelAppointment(appointmentId, changedBy) {
     },
     body: JSON.stringify({
       changed_by: Number(changedBy),
-    }),
-  });
-
-  return parseJson(res);
-}
-
-export async function updateAppointment(appointmentId, payload) {
-  const res = await fetch(`${API_BASE}/appointments/${appointmentId}`, {
-    ...fetchOpts,
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-
-  return parseJson(res);
-}
-
-export async function joinCourseEvent(appointmentId, userId) {
-  const res = await fetch(`${API_BASE}/appointments/${appointmentId}/join`, {
-    ...fetchOpts,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      user_id: Number(userId),
     }),
   });
 
@@ -89,6 +61,37 @@ export async function createDirectAppointment(payload) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
+  });
+
+  return parseJson(res);
+}
+
+export async function getMyInvitations(userId) {
+  const res = await fetch(`${API_BASE}/appointments/invitations/my?user_id=${userId}`, fetchOpts);
+  return parseJson(res);
+}
+
+export async function acceptInvitation(invitationId, userId) {
+  const res = await fetch(`${API_BASE}/appointments/invitations/${invitationId}/accept`, {
+    ...fetchOpts,
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ user_id: Number(userId) }),
+  });
+
+  return parseJson(res);
+}
+
+export async function declineInvitation(invitationId, userId) {
+  const res = await fetch(`${API_BASE}/appointments/invitations/${invitationId}/decline`, {
+    ...fetchOpts,
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ user_id: Number(userId) }),
   });
 
   return parseJson(res);
