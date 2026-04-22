@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getUsers } from '../api/users';
+import { ConfirmActionModal } from './Modals';
 import '../styles/CreateAvailabilityModal.css';
 import '../styles/CourseSettingsModal.css';
 
@@ -34,6 +35,8 @@ export default function CourseSettingsModal({
   onAssign,
   onRevoke,
   onDeleteCourse,
+  onCloseCourse,
+  closing,
   onAfterSettingsSave,
   deleting,
   onClose,
@@ -52,6 +55,8 @@ export default function CourseSettingsModal({
   const [emailQuery, setEmailQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const pendingAddIdSet = useMemo(() => {
     const s = new Set();
@@ -171,13 +176,28 @@ export default function CourseSettingsModal({
     });
   }
 
-  async function handleDeleteClick() {
-    if (!window.confirm('Delete this course permanently? This cannot be undone.')) return;
+  async function handleDeleteCourseConfirm() {
     setError('');
     try {
       await onDeleteCourse();
+      setShowDeleteConfirm(false);
     } catch (err) {
       setError(err.message || 'Could not delete course.');
+    }
+  }
+
+  async function handleCloseCourseConfirm() {
+    if (!onCloseCourse) return;
+    setError('');
+    try {
+      await onCloseCourse();
+      if (onAfterSettingsSave) {
+        await onAfterSettingsSave();
+      }
+      setShowCloseConfirm(false);
+      onClose();
+    } catch (err) {
+      setError(err.message || 'Could not close course.');
     }
   }
 
@@ -369,10 +389,21 @@ export default function CourseSettingsModal({
           </div>
 
           <div className="course-settings-section course-settings-danger form-group-full">
+            {!course?.is_closed && (
+              <button
+                type="button"
+                className="course-settings-delete-btn"
+                onClick={() => setShowCloseConfirm(true)}
+                disabled={closing}
+                style={{ marginBottom: 10 }}
+              >
+                {closing ? 'Closing…' : 'Close course'}
+              </button>
+            )}
             <button
               type="button"
               className="course-settings-delete-btn"
-              onClick={handleDeleteClick}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={deleting}
             >
               {deleting ? 'Deleting…' : 'Delete course'}
@@ -395,6 +426,34 @@ export default function CourseSettingsModal({
           </div>
         </form>
       </div>
+      {showCloseConfirm && (
+        <ConfirmActionModal
+          title="Close this course?"
+          message="Closing this course will move it to Archived in course list views."
+          details={[
+            { label: 'Course', value: `${course?.course_code || ''} ${course?.course_name || ''}`.trim() || 'Current course' },
+          ]}
+          confirmLabel="Close course"
+          danger
+          isWorking={Boolean(closing)}
+          onConfirm={handleCloseCourseConfirm}
+          onClose={() => setShowCloseConfirm(false)}
+        />
+      )}
+      {showDeleteConfirm && (
+        <ConfirmActionModal
+          title="Delete this course?"
+          message="This will permanently remove the course and cannot be undone."
+          details={[
+            { label: 'Course', value: `${course?.course_code || ''} ${course?.course_name || ''}`.trim() || 'Current course' },
+          ]}
+          confirmLabel="Delete course"
+          danger
+          isWorking={Boolean(deleting)}
+          onConfirm={handleDeleteCourseConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </div>
   );
 }
