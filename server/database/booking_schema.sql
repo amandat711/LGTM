@@ -92,7 +92,6 @@ CREATE TABLE course_ownerships (
 CREATE TABLE availabilities (
     availability_id      INTEGER PRIMARY KEY AUTOINCREMENT,
     created_by           INTEGER NOT NULL,
-    course_id            INTEGER,
     location             TEXT,
     capacity             INTEGER NOT NULL DEFAULT 1 CHECK (capacity >= 1),
     start_time           TEXT NOT NULL,
@@ -104,13 +103,13 @@ CREATE TABLE availabilities (
     av_description       TEXT,
     created_at           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CHECK (datetime(end_time) > datetime(start_time)),
-    FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
+    FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE appointments (
     appointment_id            INTEGER PRIMARY KEY AUTOINCREMENT,
     course_id                 INTEGER,
+    created_by                INTEGER,
     created_from_availability INTEGER,
     capacity                  INTEGER NOT NULL DEFAULT 1 CHECK (capacity >= 1),
     location                  TEXT,
@@ -127,6 +126,7 @@ CREATE TABLE appointments (
     created_at                TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CHECK (datetime(end_time) > datetime(start_time)),
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE SET NULL,
     FOREIGN KEY (created_from_availability) REFERENCES availabilities(availability_id) ON DELETE SET NULL
 );
 
@@ -212,7 +212,6 @@ CREATE TABLE hm_submitted_time_slots (
 CREATE INDEX idx_course_enrollments_user ON course_enrollments(user_id);
 CREATE INDEX idx_course_enrollments_course ON course_enrollments(course_id);
 CREATE INDEX idx_availabilities_creator ON availabilities(created_by);
-CREATE INDEX idx_availabilities_course ON availabilities(course_id);
 CREATE INDEX idx_availabilities_time ON availabilities(start_time, end_time);
 CREATE INDEX idx_appointments_course ON appointments(course_id);
 CREATE INDEX idx_appointments_time ON appointments(start_time, end_time);

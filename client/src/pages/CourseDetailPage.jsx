@@ -10,11 +10,11 @@ import {
   revokeCourseAdmin,
   updateCourse,
 } from '../api/courses';
-import { createAvailability, deleteAvailability } from '../api/availabilities';
+import { cancelAppointment, createDirectAppointment } from '../api/appointments';
 import { logout } from '../api/auth';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
-import CreateAvailabilityModal from '../components/CreateAvailabilityModal';
+import CreateAppointmentModal from '../components/CreateAppointmentModal';
 import CourseSettingsModal from '../components/CourseSettingsModal';
 import { InviteURLModal } from '../components/Modals';
 import logo from '../assets/logo1.png';
@@ -48,9 +48,6 @@ function inviteLinkFromDetail(detail) {
 function mergeEvents(detail) {
   if (!detail) return [];
   const out = [];
-  (detail.office_hours || []).forEach((row) => {
-    out.push({ kind: 'availability', row, start: row.start_time });
-  });
   (detail.appointments || []).forEach((row) => {
     out.push({ kind: 'appointment', row, start: row.start_time });
   });
@@ -200,7 +197,7 @@ export default function CourseDetailPage() {
       }
       return items;
     },
-    [navigate, detail?.course?.is_owner, detail?.course?.is_staff]
+    [navigate, detail?.course?.is_owner]
   );
 
   async function handleLogout() {
@@ -242,23 +239,15 @@ export default function CourseDetailPage() {
   }
 
   async function handleCreateCourseEvent(payload) {
-    await createAvailability({
+    await createDirectAppointment({
       created_by: Number(userId),
       course_id: courseId,
+      scheduling_mode: 'calendar',
+      status: 'confirmed',
       ...payload,
     });
     setCreateEventOpen(false);
     await loadCourse();
-  }
-
-  async function handleDeleteAvailabilityBlock(avId) {
-    setActionError('');
-    try {
-      await deleteAvailability(avId, userId);
-      await loadCourse();
-    } catch (err) {
-      setActionError(err.message || 'Could not remove availability.');
-    }
   }
 
   /** Used when saving course settings; caller runs `loadCourse` after all mutations. */
@@ -325,13 +314,13 @@ export default function CourseDetailPage() {
 
   function handleEventGear(ev) {
     if (!canManageCourseEvents) return;
-    if (ev.kind === 'availability') {
-      const id = ev.row.availability_id;
-      if (!id) return;
-      if (window.confirm('Delete this event?')) handleDeleteAvailabilityBlock(id);
-    } else {
-      navigate('/dashboard/professor');
-    }
+    const appointmentId = ev.row.appointment_id;
+    if (!appointmentId) return;
+    if (!window.confirm('Cancel this event?')) return;
+    setActionError('');
+    cancelAppointment(appointmentId, userId)
+      .then(loadCourse)
+      .catch((err) => setActionError(err.message || 'Could not cancel event.'));
   }
 
   return (
@@ -366,7 +355,7 @@ export default function CourseDetailPage() {
       )}
 
       {createEventOpen && (
-        <CreateAvailabilityModal
+        <CreateAppointmentModal
           defaultVisibility="public"
           onClose={() => setCreateEventOpen(false)}
           onSubmit={handleCreateCourseEvent}
@@ -483,11 +472,6 @@ export default function CourseDetailPage() {
                                 ✉
                               </a>
                             )}
-                            {String(s.user_id) !== currentUserId && (
-                              <Link className="course-detail-availability-pill" to={`/booking/professor/${s.user_id}`}>
-                                Availability
-                              </Link>
-                            )}
                           </div>
                         </li>
                       ))}
@@ -530,17 +514,13 @@ export default function CourseDetailPage() {
                       <ul className="course-detail-events-list">
                         {eventsMerged.map((ev) => {
                           const title =
-                            ev.kind === 'availability'
-                              ? ev.row.av_title || 'Availability'
-                              : ev.row.ap_title || 'Appointment';
+                            ev.row.ap_title || 'Appointment';
                           const accent = eventAccentClass(title, ev.kind);
                           const creatorName = formatEventCreatorName(ev.row);
                           return (
                             <li
                               key={
-                                ev.kind === 'availability'
-                                  ? `av-${ev.row.availability_id}`
-                                  : `ap-${ev.row.appointment_id}`
+                                `ap-${ev.row.appointment_id}`
                               }
                               className={`course-detail-event ${accent}`}
                             >
@@ -556,10 +536,7 @@ export default function CourseDetailPage() {
                                 {creatorName ? (
                                   <div className="course-detail-event-creator">Created by {creatorName}</div>
                                 ) : null}
-                                {ev.kind === 'availability' && ev.row.av_description ? (
-                                  <div className="course-detail-event-desc">{ev.row.av_description}</div>
-                                ) : null}
-                                {ev.kind === 'appointment' && ev.row.ap_description ? (
+                                {ev.row.ap_description ? (
                                   <div className="course-detail-event-desc">{ev.row.ap_description}</div>
                                 ) : null}
                               </div>
@@ -568,7 +545,7 @@ export default function CourseDetailPage() {
                                   type="button"
                                   className="course-detail-event-gear"
                                   onClick={() => handleEventGear(ev)}
-                                  aria-label={ev.kind === 'availability' ? 'Delete or manage event' : 'Manage in dashboard'}
+                                  aria-label="Cancel event"
                                 >
                                   <GearIcon />
                                 </button>

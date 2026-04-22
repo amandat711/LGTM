@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 
+function parseDate(value) {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 router.post('/', (req, res) => {
   const { availability_id, booked_by } = req.body;
 
@@ -102,6 +107,7 @@ router.post('/', (req, res) => {
                     INSERT INTO appointments
                     (
                         course_id,
+                        created_by,
                         created_from_availability,
                         capacity,
                         location,
@@ -113,12 +119,13 @@ router.post('/', (req, res) => {
                         scheduling_mode,
                         status
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `;
                   db.run(
                     insertAppointment,
                     [
-                    availability.course_id ?? null,
+                    null,
+                    booked_by,
                     availability.availability_id,
                     availability.capacity,
                     availability.location || null,
@@ -212,6 +219,155 @@ router.post('/', (req, res) => {
       );
     }
   );
+});
+
+router.post('/direct', (req, res) => {
+  const {
+    created_by,
+    course_id,
+    start_time,
+    end_time,
+    location,
+    capacity,
+    visibility,
+    ap_title,
+    ap_description,
+    scheduling_mode,
+    status,
+  } = req.body || {};
+
+  if (!created_by || !start_time || !end_time) {
+    return res.status(400).json({
+      error: 'created_by, start_time, and end_time are required',
+    });
+  }
+
+  const hostId = Number(created_by);
+  if (!Number.isInteger(hostId) || hostId < 1) {
+    return res.status(400).json({ error: 'created_by must be a positive integer' });
+  }
+
+  const parsedCourseId =
+    course_id === undefined || course_id === null || course_id === ''
+      ? null
+      : Number(course_id);
+  if (parsedCourseId != null && (!Number.isInteger(parsedCourseId) || parsedCourseId < 1)) {
+    return res.status(400).json({ error: 'course_id must be a positive integer or null' });
+  }
+
+  const finalCapacity = capacity == null ? 1 : Number(capacity);
+  if (!Number.isInteger(finalCapacity) || finalCapacity < 1) {
+    return res.status(400).json({ error: 'capacity must be a positive integer' });
+  }
+
+  const finalVisibility = visibility || 'private';
+  if (!['public', 'private'].includes(finalVisibility)) {
+    return res.status(400).json({ error: 'visibility must be public or private' });
+  }
+
+  const finalSchedulingMode = scheduling_mode || 'calendar';
+  if (!['calendar', 'heatmap', 'direct_request'].includes(finalSchedulingMode)) {
+    return res.status(400).json({ error: 'scheduling_mode is invalid' });
+  }
+
+  const finalStatus = status || 'confirmed';
+  if (!['pending', 'waiting_confirmation', 'confirmed', 'cancelled', 'rescheduled'].includes(finalStatus)) {
+    return res.status(400).json({ error: 'status is invalid' });
+  }
+
+  const startDate = parseDate(start_time);
+  const endDate = parseDate(end_time);
+  if (!startDate || !endDate) {
+    return res.status(400).json({ error: 'start_time and end_time must be valid datetimes' });
+  }
+  if (endDate <= startDate) {
+    return res.status(400).json({ error: 'end_time must be after start_time' });
+  }
+
+  db.get('SELECT user_id FROM users WHERE user_id = ?', [hostId], (hostErr, hostRow) => {
+    if (hostErr) return res.status(500).json({ error: hostErr.message });
+    if (!hostRow) return res.status(404).json({ error: 'Host user not found' });
+
+    const continueInsert = () => {
+      db.run(
+        `INSERT INTO appointments
+          (
+            course_id,
+            created_by,
+            created_from_availability,
+            capacity,
+            location,
+            start_time,
+            end_time,
+            visibility,
+            ap_title,
+            ap_description,
+            scheduling_mode,
+            status
+          )
+          VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          parsedCourseId,
+          hostId,
+          finalCapacity,
+          location || null,
+          start_time,
+          end_time,
+          finalVisibility,
+          ap_title || null,
+          ap_description || null,
+          finalSchedulingMode,
+          finalStatus,
+        ],
+        function onInsert(insertErr) {
+          if (insertErr) return res.status(500).json({ error: insertErr.message });
+
+          const appointmentId = this.lastID;
+          db.run(
+            `INSERT INTO appointment_participants
+              (appointment_id, user_id, participant_role, response_status)
+              VALUES (?, ?, 'host', 'accepted')`,
+            [appointmentId, hostId],
+            (partErr) => {
+              if (partErr) return res.status(500).json({ error: partErr.message });
+
+              db.run(
+                `INSERT INTO appointment_history
+                  (appointment_id, changed_by, old_status, new_status, changed_at, note)
+                  VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)`,
+                [appointmentId, hostId, null, finalStatus, 'Appointment created directly'],
+                (historyErr) => {
+                  if (historyErr) return res.status(500).json({ error: historyErr.message });
+
+                  db.get(
+                    'SELECT * FROM appointments WHERE appointment_id = ?',
+                    [appointmentId],
+                    (getErr, appointmentRow) => {
+                      if (getErr) return res.status(500).json({ error: getErr.message });
+                      return res.status(201).json({
+                        message: 'Appointment created successfully',
+                        appointment: appointmentRow,
+                      });
+                    }
+                  );
+                }
+              );
+            }
+          );
+        }
+      );
+    };
+
+    if (parsedCourseId == null) {
+      return continueInsert();
+    }
+
+    db.get('SELECT course_id FROM courses WHERE course_id = ?', [parsedCourseId], (courseErr, courseRow) => {
+      if (courseErr) return res.status(500).json({ error: courseErr.message });
+      if (!courseRow) return res.status(404).json({ error: 'Course not found' });
+      continueInsert();
+    });
+  });
 });
 
 router.get('/my', (req, res) => {
