@@ -219,7 +219,8 @@
   padding: 8px 10px 8px 10px;
   font-size: 12px;
   font-weight: 500;
-  overflow: visible;
+  /* Keep content inside the chip (no ellipsis, but prevent spill). */
+  overflow: hidden;
   cursor: pointer;
   z-index: 2;
   transition: opacity 0.15s, box-shadow 0.15s;
@@ -246,53 +247,27 @@
   box-shadow: 0 0 0 2px rgba(227, 20, 41, 0.18);
 }
 
-.dash-event-title-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  width: 100%;
-}
-
-.dash-event-title-row.short {
-  justify-content: space-between;
-  flex-wrap: nowrap;
-}
-
 .dash-event-title {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 650;
   line-height: 1.15;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dash-event-time-inline {
-  font-size: 12px;
-  line-height: 1.15;
-  opacity: 0.78;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex-shrink: 0;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .dash-event-time {
   font-size: 11px;
   line-height: 1.1;
   opacity: 0.85;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
 }
 
 .dash-event-location {
   font-size: 11px;
   line-height: 1.15;
   opacity: 0.8;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .dash-event.compact {
@@ -301,86 +276,39 @@
   gap: 1px;
 }
 
-.dash-event.compact .dash-event-title {
-  font-size: 13px;
-}
-
-.dash-event.compact .dash-event-time {
-  font-size: 10px;
-}
-
-.dash-event-popover {
-  position: absolute;
-  top: 0;
-  width: 250px;
-  max-width: 250px;
-  background: #ffffff;
-  color: #222;
-  border: 1px solid #d9d9d9;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
-  padding: 10px 12px;
-  z-index: 100;
-  text-align: left;
-}
-
-.dash-event-popover.right {
-  left: calc(100% + 8px);
-}
-
-.dash-event-popover.left {
-  right: calc(100% + 8px);
-}
-
-.dash-event-popover-title {
-  font-size: 14px;
-  font-weight: 700;
-  color: #111;
-}
-
-.dash-event-popover-time {
-  margin-top: 4px;
-  font-size: 12px;
-  color: #555;
-  line-height: 1.35;
-}
-
-.dash-event-popover-line {
-  margin-top: 6px;
-  font-size: 12px;
-  color: #444;
-}
-
-.dash-event-popover-actions {
-  margin-top: 10px;
+.dash-event-compact-line {
   display: flex;
-  gap: 8px;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.1;
+  /* Avoid wrapping in compact mode; we prefer showing both and clipping if needed. */
+  white-space: nowrap;
 }
 
-.dash-event-popover-btn {
-  border: 1px solid #d0d0d0;
-  background: #f6f6f6;
-  border-radius: 8px;
-  padding: 5px 10px;
+.dash-event-compact-title,
+.dash-event-compact-time {
   font-size: 12px;
   font-weight: 600;
-  color: #222;
-  cursor: pointer;
-  font-family: inherit;
 }
 
-.dash-event-popover-btn:hover {
-  background: #eeeeee;
+.dash-event-compact-title {
+  font-weight: 650;
 }
 
-.dash-event-popover-btn.danger {
-  border-color: #e2b6b6;
-  background: #fff5f5;
-  color: #b42318;
+.dash-event-compact-sep {
+  opacity: 0.9;
 }
 
-.dash-event-popover-btn.danger:hover {
-  background: #ffeaea;
+/* If space is very tight, slightly reduce font size (still no ellipsis). */
+@media (max-width: 840px) {
+  .dash-event-compact-title,
+  .dash-event-compact-time {
+    font-size: 11px;
+  }
+  .dash-event-title {
+    font-size: 12px;
+  }
 }
 
 .calendar-modal-overlay {

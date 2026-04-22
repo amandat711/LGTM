@@ -225,7 +225,7 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
                 .filter((a) => isSameDay(new Date(a.startTime), day))
                 .map((appt) => {
                   const { top, height } = getEventStyle(appt, hourHeight);
-                  const compact = height < 44;
+                  const compact = height < 40;
                   const startTimeString = new Date(appt.startTime).toLocaleTimeString([], {
                     hour: 'numeric',
                     minute: '2-digit',
@@ -234,6 +234,7 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
                   const shortEvent = durationMinutes <= 30;
                   const eventTop = top + 2;
                   const eventHeight = Math.max(height - 4, 24);
+                  const stacked = eventHeight >= 40;
 
                   return (
                     <button
@@ -252,17 +253,20 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
                       onClick={() => onEventClick(appt)}
                       title={`${appt.title} • ${startTimeString}`}
                     >
-                      <div className={`dash-event-title-row${shortEvent ? ' short' : ''}`}>
-                        <span className="dash-event-title">{appt.title}</span>
-                        {shortEvent && (
-                          <span className="dash-event-time-inline">{startTimeString}</span>
-                        )}
-                      </div>
-                      {!shortEvent && (
-                        <div className="dash-event-time">{startTimeString}</div>
-                      )}
-                      {!compact && appt.location && (
-                        <div className="dash-event-location">{appt.location}</div>
+                      {stacked ? (
+                        <>
+                          <div className="dash-event-title">{appt.title}</div>
+                          <div className="dash-event-time">{startTimeString}</div>
+                          {eventHeight >= 60 && appt.location && (
+                            <div className="dash-event-location">{appt.location}</div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="dash-event-compact-line">
+                          <span className="dash-event-compact-title">{appt.title}</span>
+                          <span className="dash-event-compact-sep">,</span>
+                          <span className="dash-event-compact-time">{startTimeString}</span>
+                        </div>
                       )}
                     </button>
                   );
