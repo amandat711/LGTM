@@ -88,8 +88,23 @@
   min-height: 0;            /* allows the panel to scroll within a flex parent */
 }
 
+.side-panel-section {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-panel-section-upcoming {
+  flex: 5 1 0;
+}
+
+.side-panel-section-heatmap {
+  flex: 3 1 0;
+}
+
 .side-panel-scroll {
-  max-height: 180px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding-right: 2px;
 }
@@ -181,9 +196,6 @@
 /* Status pill pushed to the far right of the appointment card.
    Colour variant is applied by the status-* classes below. */
 .appointment-status-pill {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   margin-left: 0;
   flex-shrink: 0;
   padding: 4px 10px;
@@ -191,6 +203,12 @@
   font-size: 10px;
   font-weight: 500;
   border: 1px solid transparent;
+}
+
+.side-panel .appointment-item .appointment-status-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
 }
 
 /* Green — the appointment is locked in */

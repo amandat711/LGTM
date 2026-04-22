@@ -414,7 +414,7 @@ export default function ProfessorDashboard() {
             {rightPanelOpen && (
               <aside className="side-panel">
                 {/* Quick look at what is coming up soon. */}
-              <div>
+              <div className="side-panel-section side-panel-section-upcoming">
                 <div className="side-panel-title">Upcoming appointments</div>
                 <div className="side-panel-scroll">
                   {upcomingAppts.length === 0 ? (
@@ -480,7 +480,7 @@ export default function ProfessorDashboard() {
 
               {/* Heatmap section:
                   create a new one fast or reopen a recent one. */}
-              <div>
+              <div className="side-panel-section side-panel-section-heatmap">
                 <div className="side-panel-title">Heatmap tools</div>
                 <button
                   className="top-bar-button"
