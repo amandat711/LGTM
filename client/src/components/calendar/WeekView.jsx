@@ -25,6 +25,7 @@ function minutesToTimeLabel(totalMinutes) {
 
 export default function WeekView({ appointments, onEventClick, onSlotClick, onSlotSelect }) {
   const today = useMemo(() => new Date(), []);
+  const [now, setNow] = useState(() => new Date());
   const [weekOffset, setWeekOffset] = useState(0);
   const scrollRef = useRef(null);
 
@@ -62,6 +63,13 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
     const preferredHour = 8;
     const top = Math.max((preferredHour - CALENDAR_START_HOUR) * hourHeight - 20, 0);
     scrollRef.current.scrollTop = top;
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 30000);
+    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -113,6 +121,17 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
       window.removeEventListener('mouseup', handleUp);
     };
   }, [hourHeight, maxSelectableMinutes, onSlotClick, onSlotSelect, stepHeight]);
+
+  const nowDayIndex = useMemo(
+    () => weekDays.findIndex((d) => isSameDay(d, now)),
+    [weekDays, now]
+  );
+  const nowMinutesFromCalendarStart = (now.getHours() - CALENDAR_START_HOUR) * 60 + now.getMinutes();
+  const showNowLine =
+    nowDayIndex >= 0 &&
+    nowMinutesFromCalendarStart >= 0 &&
+    nowMinutesFromCalendarStart <= totalMinutesInDay;
+  const nowLineTop = (nowMinutesFromCalendarStart / 60) * hourHeight;
 
   return (
     <div className="dash-calendar-panel">
@@ -219,6 +238,16 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
                   }}
                   title={`${minutesToTimeLabel(Math.min(drag.startMinutes, drag.endMinutes))} – ${minutesToTimeLabel(Math.max(drag.startMinutes, drag.endMinutes) + MINUTES_STEP)}`}
                 />
+              )}
+
+              {showNowLine && nowDayIndex === di && (
+                <div
+                  className="dash-now-line"
+                  style={{ top: nowLineTop }}
+                  aria-hidden="true"
+                >
+                  <span className="dash-now-dot" />
+                </div>
               )}
 
               {appointments

@@ -205,6 +205,28 @@
   pointer-events: none;
 }
 
+.dash-now-line {
+  position: absolute;
+  left: 3px;
+  right: 7px;
+  height: 2px;
+  background: #e31429;
+  border-radius: 999px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.dash-now-dot {
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e31429;
+  transform: translateY(-50%);
+}
+
 .dash-day-column:last-child .dash-time-cell {
   border-right: none;
 }
