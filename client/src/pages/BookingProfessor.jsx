@@ -54,13 +54,18 @@ function professorMailtoHref(professor) {
 }
 
 function mapOwnerToProfessor(owner) {
+  const department = owner.department?.trim() || '';
+  const staffTitle = owner.staff_title?.trim() || '';
+  const subtitle = [department, staffTitle].filter(Boolean).join(' • ') || 'Faculty';
   return {
     id: owner.user_id?.toString() ?? `${owner.first_name?.toLowerCase()}.${owner.last_name?.toLowerCase()}`,
     name: owner.first_name && owner.last_name ? `${owner.first_name} ${owner.last_name}` : owner.staff_title || 'Professor',
-    department: owner.department || owner.staff_title || 'Faculty',
+    department,
+    staffTitle,
+    subtitle,
     email: owner.mcgill_email || 'noreply@mail.mcgill.ca',
-    bio: owner.staff_title
-      ? `Available for meetings in ${owner.department || 'your area of study'}.`
+    bio: staffTitle
+      ? `Available for meetings in ${department}.`
       : 'Available for appointments.',
   };
 }
@@ -244,7 +249,9 @@ export default function BookingProfessor() {
           <div className="booking-header">
             <div>
               <h1>{professor.name}</h1>
-              <p className="professor-card-subtitle">{professor.department}</p>
+              <p className="professor-card-subtitle">{professor.subtitle}</p>
+              {professor.department ? <p className="professor-card-description">Department: {professor.department}</p> : null}
+              {professor.staffTitle ? <p className="professor-card-description">Staff Title: {professor.staffTitle}</p> : null}
               <p className="professor-card-description">{professor.bio}</p>
               <div className="booking-professor-email-row">
                 <p className="professor-card-email">{professor.email}</p>

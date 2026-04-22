@@ -5,12 +5,12 @@ const jsonHeaders = { 'Content-Type': 'application/json' };
 /** Same-origin policy: session cookie is set on the API origin; include credentials on every auth call. */
 const fetchOpts = { credentials: 'include' };
 
-export async function register(name, email, password) {
+export async function register(name, email, password, department = '', staffTitle = '') {
   const res = await fetch(`${API_BASE}/auth/register`, {
     ...fetchOpts,
     method: 'POST',
     headers: jsonHeaders,
-    body: JSON.stringify({ name, email, password }),
+    body: JSON.stringify({ name, email, password, department, staffTitle }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {

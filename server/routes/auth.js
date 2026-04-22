@@ -69,7 +69,7 @@ function requireAuth(req, res, next) {
 }
 
 router.post('/register', (req, res) => {
-  const { name, email, password } = req.body || {};
+  const { name, email, password, department, staffTitle } = req.body || {};
   const parsed = name != null ? parseFullName(name) : null;
 
   if (!parsed) {
@@ -91,6 +91,19 @@ router.post('/register', (req, res) => {
 
   const normalizedEmail = normalizeEmail(email);
   const userType = userTypeFromEmail(normalizedEmail);
+  const isStaffMcGillEmail =
+    normalizedEmail.endsWith('@mcgill.ca') && !normalizedEmail.endsWith('@mail.mcgill.ca');
+  const normalizedDepartment = String(department ?? '').trim();
+  const normalizedStaffTitle = String(staffTitle ?? '').trim();
+
+  if (isStaffMcGillEmail) {
+    if (!normalizedDepartment) {
+      return res.status(400).json({ error: 'Department is required for @mcgill.ca registration.' });
+    }
+    if (!normalizedStaffTitle) {
+      return res.status(400).json({ error: 'Staff title is required for @mcgill.ca registration.' });
+    }
+  }
 
   db.get(
     'SELECT user_id FROM users WHERE mcgill_email = ?',
@@ -108,9 +121,25 @@ router.post('/register', (req, res) => {
         .hash(password, 10)
         .then((password_hash) => {
           db.run(
-            `INSERT INTO users (first_name, last_name, mcgill_email, user_type, password_hash)
-             VALUES (?, ?, ?, ?, ?)`,
-            [parsed.first_name, parsed.last_name, normalizedEmail, userType, password_hash],
+            `INSERT INTO users (
+               first_name,
+               last_name,
+               mcgill_email,
+               user_type,
+               password_hash,
+               department,
+               staff_title
+             )
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              parsed.first_name,
+              parsed.last_name,
+              normalizedEmail,
+              userType,
+              password_hash,
+              normalizedDepartment || null,
+              normalizedStaffTitle || null,
+            ],
             function onInsert(insertErr) {
               if (insertErr) {
                 if (
@@ -131,6 +160,8 @@ router.post('/register', (req, res) => {
                 last_name: parsed.last_name,
                 mcgill_email: normalizedEmail,
                 user_type: userType,
+                department: normalizedDepartment || null,
+                staff_title: normalizedStaffTitle || null,
               };
               res.status(201).json({ user });
             }
