@@ -27,26 +27,26 @@ export default function CreateItemModal({
     <div className="availability-modal-overlay" onMouseDown={handleOverlayClick}>
       <div className="availability-modal" onMouseDown={(e) => e.stopPropagation()}>
         <div className="availability-modal-header">
-          <div>
+          <div className="availability-modal-header-content">
             <h2>{title}</h2>
-            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <div className="availability-tabs" role="tablist" aria-label="Create item type">
               <button
                 type="button"
-                className={`button button-outline button-small ${tab === 'event' ? 'active' : ''}`}
+                className={`button button-outline button-small availability-tab-btn ${tab === 'event' ? 'active' : ''}`}
                 onClick={() => setTab('event')}
               >
                 Event
               </button>
               <button
                 type="button"
-                className={`button button-outline button-small ${tab === 'appointment' ? 'active' : ''}`}
+                className={`button button-outline button-small availability-tab-btn ${tab === 'appointment' ? 'active' : ''}`}
                 onClick={() => setTab('appointment')}
               >
                 Appointment
               </button>
               <button
                 type="button"
-                className={`button button-outline button-small ${tab === 'availability' ? 'active' : ''}`}
+                className={`button button-outline button-small availability-tab-btn ${tab === 'availability' ? 'active' : ''}`}
                 onClick={() => setTab('availability')}
               >
                 Availability
@@ -64,17 +64,19 @@ export default function CreateItemModal({
           </button>
         </div>
 
-        {tab === 'availability' ? (
-          <CreateAvailabilityForm onSubmit={onCreateAvailability} onCancel={onClose} />
-        ) : (
-          <CreateAppointmentForm
-            mode={tab}
-            onSubmit={onCreateDirectAppointment}
-            onCancel={onClose}
-            initialStartTime={initialStartTime}
-            initialEndTime={initialEndTime}
-          />
-        )}
+        <div className="availability-modal-body">
+          {tab === 'availability' ? (
+            <CreateAvailabilityForm onSubmit={onCreateAvailability} onCancel={onClose} />
+          ) : (
+            <CreateAppointmentForm
+              mode={tab}
+              onSubmit={onCreateDirectAppointment}
+              onCancel={onClose}
+              initialStartTime={initialStartTime}
+              initialEndTime={initialEndTime}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

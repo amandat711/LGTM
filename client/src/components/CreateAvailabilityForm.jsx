@@ -100,6 +100,7 @@ export default function CreateAvailabilityForm({
   const [recurrenceModalOpen, setRecurrenceModalOpen] = useState(false);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const isPublicVisibility = form.visibility === 'public';
 
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -197,120 +198,138 @@ export default function CreateAvailabilityForm({
 
   return (
     <form onSubmit={handleSubmit} className="availability-form-grid">
-      <div className="form-group form-group-full">
-        <label htmlFor="av_title">Title</label>
-        <input
-          id="av_title"
-          type="text"
-          value={form.av_title}
-          onChange={(e) => updateField('av_title', e.target.value)}
-          placeholder="Office hours"
-        />
-      </div>
-
-      <div className="form-group form-group-full">
-        <label htmlFor="av_description">Description</label>
-        <textarea
-          id="av_description"
-          value={form.av_description}
-          onChange={(e) => updateField('av_description', e.target.value)}
-          placeholder="Optional details"
-          rows={3}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="date">Date</label>
-        <input
-          id="date"
-          type="date"
-          value={form.date}
-          onChange={(e) => updateField('date', e.target.value)}
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="location">Location</label>
-        <input
-          id="location"
-          type="text"
-          value={form.location}
-          onChange={(e) => updateField('location', e.target.value)}
-          placeholder="Trottier 3xxx or Zoom"
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="start_time">Start time</label>
-        <input
-          id="start_time"
-          type="time"
-          value={form.start_time}
-          onChange={(e) => updateField('start_time', e.target.value)}
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="end_time">End time</label>
-        <input
-          id="end_time"
-          type="time"
-          value={form.end_time}
-          onChange={(e) => updateField('end_time', e.target.value)}
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="slot_duration_minutes">Slot duration (minutes)</label>
-        <select
-          id="slot_duration_minutes"
-          value={form.slot_duration_minutes}
-          onChange={(e) => updateField('slot_duration_minutes', e.target.value)}
-        >
-          <option value="15">15</option>
-          <option value="30">30</option>
-          <option value="45">45</option>
-          <option value="60">60</option>
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="capacity">Capacity</label>
-        <input
-          id="capacity"
-          type="number"
-          min="1"
-          value={form.capacity}
-          onChange={(e) => updateField('capacity', e.target.value)}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="visibility">Visibility</label>
-        <select
-          id="visibility"
-          value={form.visibility}
-          onChange={(e) => updateField('visibility', e.target.value)}
-        >
-          <option value="private">Private</option>
-          <option value="public">Public</option>
-        </select>
-      </div>
-
-      <div className="form-group">
-        <label>Recurrence</label>
-        <button type="button" className="recurrence-display" onClick={() => setRecurrenceModalOpen(true)}>
-          <div className="recurrence-display-text">
-            <span className={`recurrence-badge ${recurrence.enabled ? 'active' : ''}`}>
-              {recurrence.enabled ? 'Repeating' : 'One-time'}
-            </span>
-            <span className="recurrence-summary">{getRecurrenceSummary(recurrence)}</span>
+      <div className="availability-compact-layout form-group-full">
+        <div className="availability-left-column">
+          <div className="form-group">
+            <label htmlFor="av_title">Title</label>
+            <input
+              id="av_title"
+              type="text"
+              value={form.av_title}
+              onChange={(e) => updateField('av_title', e.target.value)}
+              placeholder="Office hours"
+            />
           </div>
-          <span className="recurrence-display-action">{recurrence.enabled ? 'Edit' : 'Custom'}</span>
-        </button>
+
+          <div className="availability-time-row">
+            <div className="form-group">
+              <label htmlFor="date">Date</label>
+              <input
+                id="date"
+                type="date"
+                value={form.date}
+                onChange={(e) => updateField('date', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="start_time">Start time</label>
+              <input
+                id="start_time"
+                type="time"
+                value={form.start_time}
+                onChange={(e) => updateField('start_time', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="end_time">End time</label>
+              <input
+                id="end_time"
+                type="time"
+                value={form.end_time}
+                onChange={(e) => updateField('end_time', e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Recurrence</label>
+            <button type="button" className="recurrence-display" onClick={() => setRecurrenceModalOpen(true)}>
+              <div className="recurrence-display-text">
+                <span className={`recurrence-badge ${recurrence.enabled ? 'active' : ''}`}>
+                  {recurrence.enabled ? 'Repeating' : 'One-time'}
+                </span>
+                <span className="recurrence-summary">{getRecurrenceSummary(recurrence)}</span>
+              </div>
+              <span className="recurrence-display-action">{recurrence.enabled ? 'Edit' : 'Custom'}</span>
+            </button>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="av_description">Description</label>
+            <textarea
+              id="av_description"
+              value={form.av_description}
+              onChange={(e) => updateField('av_description', e.target.value)}
+              placeholder="Optional details"
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <div className="availability-right-column">
+          <div className="right-meta-row">
+            <div className="form-group">
+              <label htmlFor="capacity">Capacity</label>
+              <input
+                id="capacity"
+                type="number"
+                min="1"
+                value={form.capacity}
+                onChange={(e) => updateField('capacity', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Visibility</label>
+              <div className="visibility-toggle" role="radiogroup" aria-label="Availability visibility">
+                <button
+                  type="button"
+                  className={`visibility-toggle-btn ${!isPublicVisibility ? 'active' : ''}`}
+                  onClick={() => updateField('visibility', 'private')}
+                  aria-pressed={!isPublicVisibility}
+                >
+                  Private
+                </button>
+                <button
+                  type="button"
+                  className={`visibility-toggle-btn ${isPublicVisibility ? 'active' : ''}`}
+                  onClick={() => updateField('visibility', 'public')}
+                  aria-pressed={isPublicVisibility}
+                >
+                  Public
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="location">Location</label>
+            <input
+              id="location"
+              type="text"
+              value={form.location}
+              onChange={(e) => updateField('location', e.target.value)}
+              placeholder="Trottier 3xxx or Zoom"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="slot_duration_minutes">Slot duration (minutes)</label>
+            <select
+              id="slot_duration_minutes"
+              value={form.slot_duration_minutes}
+              onChange={(e) => updateField('slot_duration_minutes', e.target.value)}
+            >
+              <option value="15">15</option>
+              <option value="30">30</option>
+              <option value="45">45</option>
+              <option value="60">60</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <RecurrenceModal

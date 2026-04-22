@@ -50,6 +50,7 @@ export default function CreateAppointmentForm({
 
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const isPublicVisibility = form.visibility === 'public';
 
   useEffect(() => {
     if (!initialStartTime) return;
@@ -101,7 +102,7 @@ export default function CreateAppointmentForm({
       }
 
       try {
-        const users = await getUsers({ type: 'student', q });
+        const users = await getUsers({ q });
         if (!active) return;
         setInviteResults(users);
       } catch {
@@ -189,168 +190,177 @@ export default function CreateAppointmentForm({
 
   return (
     <form onSubmit={handleSubmit} className="availability-form-grid">
-      <div className="form-group form-group-full">
-        <label htmlFor="ap_title">{mode === 'appointment' ? 'Appointment title' : 'Event title'}</label>
-        <input
-          id="ap_title"
-          type="text"
-          value={form.ap_title}
-          onChange={(e) => updateField('ap_title', e.target.value)}
-          placeholder={mode === 'appointment' ? 'Student meeting' : 'Lecture / lab / meeting'}
-        />
-      </div>
-
-      <div className="form-group form-group-full">
-        <label htmlFor="ap_description">Description</label>
-        <textarea
-          id="ap_description"
-          value={form.ap_description}
-          onChange={(e) => updateField('ap_description', e.target.value)}
-          placeholder="Optional details"
-          rows={3}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="date">Date</label>
-        <input
-          id="date"
-          type="date"
-          value={form.date}
-          onChange={(e) => updateField('date', e.target.value)}
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="location">Location</label>
-        <input
-          id="location"
-          type="text"
-          value={form.location}
-          onChange={(e) => updateField('location', e.target.value)}
-          placeholder="Trottier 3xxx or Zoom"
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="start_time">Start time</label>
-        <input
-          id="start_time"
-          type="time"
-          value={form.start_time}
-          onChange={(e) => updateField('start_time', e.target.value)}
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="end_time">End time</label>
-        <input
-          id="end_time"
-          type="time"
-          value={form.end_time}
-          onChange={(e) => updateField('end_time', e.target.value)}
-          required
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="capacity">Capacity</label>
-        <input
-          id="capacity"
-          type="number"
-          min="1"
-          value={form.capacity}
-          onChange={(e) => updateField('capacity', e.target.value)}
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="visibility">Visibility</label>
-        <select
-          id="visibility"
-          value={form.visibility}
-          onChange={(e) => updateField('visibility', e.target.value)}
-        >
-          <option value="private">Private</option>
-          <option value="public">Public</option>
-        </select>
-      </div>
-
-      <div className="form-group form-group-full">
-        <label>Invite students (optional)</label>
-        <input
-          type="text"
-          value={inviteQuery}
-          onChange={(e) => setInviteQuery(e.target.value)}
-          placeholder="Search by email (e.g. student@mail.mcgill.ca)"
-        />
-
-        {selectedInvitees.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
-            {selectedInvitees.map((u) => (
-              <button
-                key={u.id}
-                type="button"
-                className="button button-outline button-small"
-                onClick={() => toggleInvitee(u)}
-                title="Remove invitee"
-              >
-                {u.name} ×
-              </button>
-            ))}
+      <div className="appointment-compact-layout form-group-full">
+        <div className="appointment-left-column">
+          <div className="form-group">
+            <label htmlFor="ap_title">{mode === 'appointment' ? 'Appointment title' : 'Event title'}</label>
+            <input
+              id="ap_title"
+              type="text"
+              value={form.ap_title}
+              onChange={(e) => updateField('ap_title', e.target.value)}
+              placeholder={mode === 'appointment' ? 'Student meeting' : 'Lecture / lab / meeting'}
+            />
           </div>
-        )}
 
-        {inviteResults.length > 0 && inviteQuery.trim() && (
-          <div style={{ marginTop: 10, border: '1px solid #ddd', borderRadius: 8, overflow: 'hidden' }}>
-            {inviteResults.slice(0, 8).map((u) => {
-              const selected = selectedInvitees.some((s) => s.id === u.id);
-              return (
+          <div className="appointment-time-row">
+            <div className="form-group">
+              <label htmlFor="date">Date</label>
+              <input
+                id="date"
+                type="date"
+                value={form.date}
+                onChange={(e) => updateField('date', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="start_time">Start time</label>
+              <input
+                id="start_time"
+                type="time"
+                value={form.start_time}
+                onChange={(e) => updateField('start_time', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="end_time">End time</label>
+              <input
+                id="end_time"
+                type="time"
+                value={form.end_time}
+                onChange={(e) => updateField('end_time', e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Recurrence</label>
+            <button type="button" className="recurrence-display" onClick={() => setRecurrenceModalOpen(true)}>
+              <div className="recurrence-display-text">
+                <span className={`recurrence-badge ${recurrence.enabled ? 'active' : ''}`}>
+                  {recurrence.enabled ? 'Repeating' : 'One-time'}
+                </span>
+                <span className="recurrence-summary">
+                  {recurrence.enabled ? 'Custom recurrence applied' : 'Does not repeat'}
+                </span>
+              </div>
+              <span className="recurrence-display-action">{recurrence.enabled ? 'Edit' : 'Custom'}</span>
+            </button>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="ap_description">Description</label>
+            <textarea
+              id="ap_description"
+              value={form.ap_description}
+              onChange={(e) => updateField('ap_description', e.target.value)}
+              placeholder="Optional details"
+              rows={3}
+            />
+          </div>
+        </div>
+
+        <div className="appointment-right-column">
+          <div className="right-meta-row">
+            <div className="form-group">
+              <label htmlFor="capacity">Capacity</label>
+              <input
+                id="capacity"
+                type="number"
+                min="1"
+                value={form.capacity}
+                onChange={(e) => updateField('capacity', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Visibility</label>
+              <div className="visibility-toggle" role="radiogroup" aria-label="Visibility">
                 <button
-                  key={u.id}
                   type="button"
-                  onClick={() => toggleInvitee(u)}
-                  style={{
-                    display: 'flex',
-                    width: '100%',
-                    padding: '10px 12px',
-                    border: 'none',
-                    background: selected ? '#f7f7f7' : '#fff',
-                    cursor: 'pointer',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}
+                  className={`visibility-toggle-btn ${!isPublicVisibility ? 'active' : ''}`}
+                  onClick={() => updateField('visibility', 'private')}
+                  aria-pressed={!isPublicVisibility}
                 >
-                  <span style={{ textAlign: 'left' }}>
-                    <div style={{ fontWeight: 600 }}>{u.name}</div>
-                    <div style={{ fontSize: 12, color: '#666' }}>{u.email}</div>
-                  </span>
-                  <span style={{ fontSize: 12, color: selected ? '#2a8c5f' : '#999' }}>
-                    {selected ? 'Selected' : 'Select'}
-                  </span>
+                  Private
                 </button>
-              );
-            })}
+                <button
+                  type="button"
+                  className={`visibility-toggle-btn ${isPublicVisibility ? 'active' : ''}`}
+                  onClick={() => updateField('visibility', 'public')}
+                  aria-pressed={isPublicVisibility}
+                >
+                  Public
+                </button>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
 
-      <div className="form-group">
-        <label>Recurrence</label>
-        <button type="button" className="recurrence-display" onClick={() => setRecurrenceModalOpen(true)}>
-          <div className="recurrence-display-text">
-            <span className={`recurrence-badge ${recurrence.enabled ? 'active' : ''}`}>
-              {recurrence.enabled ? 'Repeating' : 'One-time'}
-            </span>
-            <span className="recurrence-summary">
-              {recurrence.enabled ? 'Custom recurrence applied' : 'Does not repeat'}
-            </span>
+          <div className="form-group">
+            <label htmlFor="location">Location</label>
+            <input
+              id="location"
+              type="text"
+              value={form.location}
+              onChange={(e) => updateField('location', e.target.value)}
+              placeholder="Trottier 3xxx or Zoom"
+            />
           </div>
-          <span className="recurrence-display-action">{recurrence.enabled ? 'Edit' : 'Custom'}</span>
-        </button>
+
+          <div className="form-group">
+            <label>Add people</label>
+            <input
+              type="text"
+              value={inviteQuery}
+              onChange={(e) => setInviteQuery(e.target.value)}
+              placeholder="Search by name or email"
+            />
+
+            {selectedInvitees.length > 0 && (
+              <div className="invite-chip-list">
+                {selectedInvitees.map((u) => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    className="button button-outline button-small"
+                    onClick={() => toggleInvitee(u)}
+                    title="Remove invitee"
+                  >
+                    {u.name} ×
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {inviteResults.length > 0 && inviteQuery.trim() && (
+              <div className="invite-results-list">
+                {inviteResults.slice(0, 8).map((u) => {
+                  const selected = selectedInvitees.some((s) => s.id === u.id);
+                  return (
+                    <button
+                      key={u.id}
+                      type="button"
+                      onClick={() => toggleInvitee(u)}
+                      className="invite-result-item"
+                      style={{ background: selected ? '#f7f7f7' : '#fff' }}
+                    >
+                      <span style={{ textAlign: 'left' }}>
+                        <div style={{ fontWeight: 600 }}>{u.name}</div>
+                        <div style={{ fontSize: 12, color: '#666' }}>{u.email}</div>
+                      </span>
+                      <span style={{ fontSize: 12, color: selected ? '#2a8c5f' : '#999' }}>
+                        {selected ? 'Selected' : 'Select'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       <RecurrenceModal

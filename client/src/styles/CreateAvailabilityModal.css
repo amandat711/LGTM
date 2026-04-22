@@ -10,28 +10,62 @@
 }
 
 .availability-modal {
-  width: min(760px, 100%);
-  max-height: 90vh;
-  overflow-y: auto;
+  width: min(920px, 100%);
+  max-height: 88vh;
+  overflow: hidden;
   background: #ffffff;
   border-radius: 20px;
   box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
-  padding: 24px;
+  padding: 16px 18px;
 }
 
 .availability-modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 20px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.availability-modal-header-content {
+  min-width: 0;
 }
 
 .availability-modal-header h2 {
   margin: 0;
-  font-size: 1.9rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: #1f2937;
+}
+
+.availability-modal-body {
+  max-height: calc(88vh - 98px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.availability-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.availability-tab-btn {
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+}
+
+.availability-tab-btn.active {
+  background: #e33244;
+  border-color: #e33244;
+  color: #fff;
+}
+
+.availability-tab-btn.active:hover {
+  background: #cf2436;
+  border-color: #cf2436;
 }
 
 .availability-modal-subtitle {
@@ -41,13 +75,13 @@
 }
 
 .availability-close-btn {
-  width: 40px;
-  height: 40px;
+  width: 34px;
+  height: 34px;
   border: none;
   border-radius: 999px;
   background: transparent;
   color: #6b7280;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   line-height: 1;
   cursor: pointer;
   transition: background 0.2s ease, color 0.2s ease;
@@ -60,22 +94,26 @@
 
 .availability-form-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 12px;
 }
 
 .form-group-full {
   grid-column: 1 / -1;
 }
 
+.form-group-span-2 {
+  grid-column: span 2;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
 }
 
 .form-group label {
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: #374151;
 }
@@ -85,9 +123,9 @@
 .form-group textarea {
   width: 100%;
   border: 1px solid #d1d5db;
-  border-radius: 12px;
-  padding: 12px 14px;
-  font-size: 0.96rem;
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-size: 0.88rem;
   background: #ffffff;
   color: #111827;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -96,7 +134,8 @@
 
 .form-group textarea {
   resize: vertical;
-  min-height: 96px;
+  min-height: 70px;
+  max-height: 120px;
 }
 
 .form-group input:focus,
@@ -115,9 +154,9 @@
 .recurrence-display {
   width: 100%;
   border: 1px solid #d1d5db;
-  border-radius: 14px;
+  border-radius: 10px;
   background: #fafafa;
-  padding: 14px 16px;
+  padding: 10px 10px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -141,7 +180,7 @@
 .recurrence-display-text {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -149,11 +188,11 @@
   display: inline-flex;
   align-items: center;
   width: fit-content;
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: 999px;
   background: #e5e7eb;
   color: #374151;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 700;
 }
 
@@ -164,8 +203,8 @@
 
 .recurrence-summary {
   color: #374151;
-  font-size: 0.95rem;
-  line-height: 1.4;
+  font-size: 0.84rem;
+  line-height: 1.3;
   word-break: break-word;
 }
 
@@ -173,31 +212,31 @@
   flex-shrink: 0;
   color: #e33244;
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: 0.8rem;
 }
 
 .create-av-error {
   margin: 0;
-  padding: 12px 14px;
-  border-radius: 12px;
+  padding: 9px 10px;
+  border-radius: 10px;
   background: #fef2f2;
   color: #b91c1c;
   border: 1px solid #fecaca;
-  font-size: 0.92rem;
+  font-size: 0.84rem;
 }
 
 .availability-modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 2px;
 }
 
 .modal-btn {
   border: none;
-  border-radius: 12px;
-  padding: 11px 16px;
-  font-size: 0.95rem;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease;
@@ -231,14 +270,124 @@
   background: #cf2436;
 }
 
+.invite-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.invite-results-list {
+  margin-top: 6px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow-y: auto;
+  max-height: 140px;
+}
+
+.invite-result-item {
+  display: flex;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  cursor: pointer;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.appointment-compact-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 12px;
+}
+
+.availability-compact-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 12px;
+}
+
+.appointment-left-column,
+.appointment-right-column,
+.availability-left-column,
+.availability-right-column {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.appointment-time-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.availability-time-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.right-meta-row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 10px;
+  align-items: end;
+}
+
+.availability-meta-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.visibility-toggle {
+  display: inline-flex;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  overflow: hidden;
+  width: fit-content;
+}
+
+.visibility-toggle-btn {
+  border: none;
+  background: #fff;
+  color: #6b7280;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.visibility-toggle-btn.active {
+  background: #e33244;
+  color: #fff;
+}
+
 @media (max-width: 640px) {
   .availability-modal {
     padding: 18px;
     border-radius: 16px;
+    max-height: 92vh;
   }
 
   .availability-form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .appointment-compact-layout,
+  .availability-compact-layout,
+  .appointment-time-row,
+  .availability-time-row,
+  .right-meta-row,
+  .availability-meta-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group-span-2 {
+    grid-column: auto;
   }
 
   .availability-modal-header h2 {

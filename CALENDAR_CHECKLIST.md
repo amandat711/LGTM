@@ -121,18 +121,18 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 
 ## Phase 5 - Recurring office hours
 
-- [ ] Decide recurrence format
-  - [ ] simple custom fields
-  - [ ] store recurrence rule string
-- [ ] Start with the simplest version: generate repeated slots in backend
-- [ ] Inputs:
-  - [ ] start date
-  - [ ] end date or number of weeks
-  - [ ] day(s) of week
-  - [ ] start/end time
-- [ ] Generate repeated `availabilities`
+- [X] Decide recurrence format
+  - [X] simple custom fields
+  - [X] store recurrence rule string
+- [X] Start with the simplest version: generate repeated slots in backend
+- [X] Inputs:
+  - [X] start date
+  - [X] end date or number of weeks
+  - [X] day(s) of week
+  - [X] start/end time
+- [X] Generate repeated `availabilities`
 - [ ] Prevent overlapping duplicate slots
-- [ ] Test weekly repetition carefully
+- [X] Test weekly repetition carefully
 
 ---
 
