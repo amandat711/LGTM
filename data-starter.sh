@@ -147,6 +147,7 @@ VALUES
 
 INSERT INTO appointments (
   course_id,
+  created_by,
   created_from_availability,
   capacity,
   location,
@@ -160,7 +161,7 @@ INSERT INTO appointments (
 )
 VALUES
   -- 30 min
-  (NULL, NULL, 1, 'Trottier 3100',
+  (NULL, 2, NULL, 1, 'Trottier 3100',
     date('now') || ' 15:00:00',
     date('now') || ' 15:30:00',
     'public',
@@ -170,7 +171,7 @@ VALUES
     'confirmed'),
 
   -- 1 hour
-  (NULL, NULL, 1, 'Zoom',
+  (NULL, 2, NULL, 1, 'Zoom',
     date('now', '+1 day') || ' 11:00:00',
     date('now', '+1 day') || ' 12:00:00',
     'public',
@@ -180,7 +181,7 @@ VALUES
     'confirmed'),
 
   -- 2 hours
-  (NULL, NULL, 1, 'Trottier 3110',
+  (NULL, 2, NULL, 1, 'Trottier 3110',
     date('now', '+1 day') || ' 13:00:00',
     date('now', '+1 day') || ' 15:00:00',
     'public',
@@ -190,7 +191,7 @@ VALUES
     'confirmed'),
 
   -- 30 min
-  (NULL, NULL, 1, 'Zoom',
+  (NULL, 2, NULL, 1, 'Zoom',
     date('now', '+2 day') || ' 14:00:00',
     date('now', '+2 day') || ' 14:30:00',
     'public',
@@ -200,7 +201,7 @@ VALUES
     'confirmed'),
 
   -- 1 hour
-  (NULL, NULL, 1, 'Trottier 2120',
+  (NULL, 2, NULL, 1, 'Trottier 2120',
     date('now', '+2 day') || ' 16:00:00',
     date('now', '+2 day') || ' 17:00:00',
     'public',
@@ -210,7 +211,7 @@ VALUES
     'confirmed'),
 
   -- 2 hours
-  (NULL, NULL, 1, 'Zoom',
+  (NULL, 2, NULL, 1, 'Zoom',
     date('now', '+3 day') || ' 11:00:00',
     date('now', '+3 day') || ' 13:00:00',
     'public',
@@ -220,7 +221,7 @@ VALUES
     'confirmed'),
 
   -- cancelled (1 hour)
-  (NULL, NULL, 1, 'Zoom',
+  (NULL, 2, NULL, 1, 'Zoom',
     date('now', '+2 day') || ' 09:00:00',
     date('now', '+2 day') || ' 10:00:00',
     'public',

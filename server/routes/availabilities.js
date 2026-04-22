@@ -11,43 +11,6 @@ function parseDate(value) {
   return isNaN(d.getTime()) ? null : d;
 }
 
-function normalizeCourseId(value) {
-  if (value === undefined || value === null || value === '') return null;
-  const n = parseInt(value, 10);
-  if (Number.isNaN(n) || n < 1) return 'invalid';
-  return n;
-}
-
-/** Course owner or active course admin (any user_type) may add course-tied office hours. */
-function assertUserMayPostOfficeHours(courseId, userId, callback) {
-  db.get('SELECT course_id FROM courses WHERE course_id = ?', [courseId], (err, course) => {
-    if (err) return callback(err);
-    if (!course) {
-      const e = new Error('Course not found');
-      e.statusCode = 404;
-      return callback(e);
-    }
-    db.get(
-      `SELECT 1 AS ok FROM course_ownerships
-       WHERE course_id = ? AND general_admin_id = ? AND status = 'active'
-       UNION ALL
-       SELECT 1 AS ok FROM course_admin_assignments
-       WHERE course_id = ? AND course_admin_id = ? AND status = 'active'
-       LIMIT 1`,
-      [courseId, userId, courseId, userId],
-      (e2, row) => {
-        if (e2) return callback(e2);
-        if (!row) {
-          const e = new Error('You are not an owner or course admin for this course.');
-          e.statusCode = 403;
-          return callback(e);
-        }
-        callback(null);
-      }
-    );
-  });
-}
-
 function buildSlots(startDate, endDate, slotDurationMinutes) {
   const slots = [];
   let current = new Date(startDate);
@@ -79,13 +42,7 @@ router.post('/', (req, res) => {
     recurrence_rule,
     av_title,
     av_description,
-    course_id: bodyCourseId,
   } = req.body;
-
-  const courseIdNorm = normalizeCourseId(bodyCourseId);
-  if (courseIdNorm === 'invalid') {
-    return res.status(400).json({ error: 'course_id must be a positive integer or null/omitted.' });
-  }
 
   if (!created_by || !start_time || !end_time) {
     return res.status(400).json({
@@ -156,25 +113,17 @@ router.post('/', (req, res) => {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      const courseIdForRow = courseIdNorm;
-
-      if (courseIdForRow == null) {
-        const allowed = ['course_admin', 'general_admin'];
-        if (!allowed.includes(user.user_type)) {
-          return res.status(403).json({
-            error: 'Not allowed to create availability'
-          });
-        }
+      const allowed = ['course_admin', 'general_admin'];
+      if (!allowed.includes(user.user_type)) {
+        return res.status(403).json({
+          error: 'Not allowed to create availability'
+        });
       }
 
-      const overlapCourseKey = courseIdForRow == null ? -1 : courseIdForRow;
-
-      const startCreateFlow = () => {
       const overlapQuery = `
         SELECT availability_id, start_time, end_time
         FROM availabilities
         WHERE created_by = ?
-          AND COALESCE(course_id, -1) = ?
           AND datetime(start_time) < datetime(?)
           AND datetime(end_time) > datetime(?)
         LIMIT 1
@@ -189,7 +138,7 @@ router.post('/', (req, res) => {
 
         db.get(
           overlapQuery,
-          [created_by, overlapCourseKey, slot.end_time, slot.start_time],
+          [created_by, slot.end_time, slot.start_time],
           (err, overlap) => {
             if (err) return res.status(500).json({ error: err.message });
 
@@ -213,7 +162,6 @@ router.post('/', (req, res) => {
           INSERT INTO availabilities
           (
             created_by,
-            course_id,
             location,
             capacity,
             start_time,
@@ -223,7 +171,7 @@ router.post('/', (req, res) => {
             av_title,
             av_description
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `;
 
         const insertOne = (index) => {
@@ -254,7 +202,6 @@ router.post('/', (req, res) => {
             insertQuery,
             [
               created_by,
-              courseIdForRow,
               location || null,
               finalCapacity,
               slot.start_time,
@@ -279,19 +226,6 @@ router.post('/', (req, res) => {
       };
 
       checkOverlaps(0);
-      };
-
-      if (courseIdForRow == null) {
-        return startCreateFlow();
-      }
-
-      return assertUserMayPostOfficeHours(courseIdForRow, user.user_id, (courseErr) => {
-        if (courseErr) {
-          const code = courseErr.statusCode || 500;
-          return res.status(code).json({ error: courseErr.message });
-        }
-        startCreateFlow();
-      });
     }
   );
 });
@@ -558,25 +492,6 @@ router.delete('/:id', (req, res) => {
 
           if (isCreator) {
             return runDeleteAfterChecks();
-          }
-
-          if (availability.course_id) {
-            return db.get(
-              `SELECT 1 AS ok FROM course_ownerships
-               WHERE course_id = ? AND general_admin_id = ? AND status = 'active'
-               UNION ALL
-               SELECT 1 AS ok FROM course_admin_assignments
-               WHERE course_id = ? AND course_admin_id = ? AND status = 'active'
-               LIMIT 1`,
-              [availability.course_id, deleted_by, availability.course_id, deleted_by],
-              (e2, staffRow) => {
-                if (e2) return res.status(500).json({ error: e2.message });
-                if (staffRow) return runDeleteAfterChecks();
-                return res.status(403).json({
-                  error: 'Not allowed to delete this availability'
-                });
-              }
-            );
           }
 
           if (!isFacultyAdmin) {
