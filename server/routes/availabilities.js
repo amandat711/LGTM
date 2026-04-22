@@ -1,110 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
-const { parseDate, toStoredIsoDateTime } = require('../utils/dateTime');
-
-const NEVER_MAX_WEEKS = 12; // Limit "never" recurrence to 12 weeks for safety
-
-function toSqliteDateTime(date) {
-  return toStoredIsoDateTime(date);
-}
+const {
+  toSqliteDateTime,
+  parseDate,
+  parseAndValidateWeeklyRecurrenceRule,
+  expandOccurrences,
+} = require('../utils/recurrence');
 
 function normalizeCourseId(value) {
   if (value === undefined || value === null || value === '') return null;
   const n = parseInt(value, 10);
   if (Number.isNaN(n) || n < 1) return 'invalid';
   return n;
-}
-
-/**
- * Convert a Date to a weekday code (MO, TU, WE, etc.)
- */
-function weekdayCodeFromDate(date) {
-  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
-  const codeMap = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-  return codeMap[dayOfWeek];
-}
-
-/**
- * Generate weekly recurring occurrences based on a recurrence rule
- * Returns an array of { start: Date, end: Date } objects
- */
-function generateWeeklyOccurrences({
-  baseStartDate,
-  baseEndDate,
-  interval,
-  byWeekdays,
-  endType,
-  until,
-  count,
-  maxOccurrences = 200,
-}) {
-  const occurrences = [];
-  const baseDuration = baseEndDate.getTime() - baseStartDate.getTime();
-  let occurrenceCount = 0;
-
-  // Get the start of the week for baseStartDate (Sunday)
-  let weekStart = new Date(baseStartDate);
-  const dayOfWeek = weekStart.getDay();
-  weekStart.setDate(weekStart.getDate() - dayOfWeek); // Go back to Sunday
-  weekStart.setHours(0, 0, 0, 0);
-
-  // Process weeks according to interval
-  while (occurrences.length < maxOccurrences) {
-    // Check each day in the current week
-    for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
-      const dayDate = new Date(weekStart);
-      dayDate.setDate(dayDate.getDate() + dayOffset);
-      dayDate.setHours(baseStartDate.getHours(), baseStartDate.getMinutes(), baseStartDate.getSeconds());
-
-      // Skip if this day is before baseStartDate
-      if (dayDate < baseStartDate) {
-        continue;
-      }
-
-      const dayWeekday = weekdayCodeFromDate(dayDate);
-
-      // If this day matches a selected weekday, create an occurrence
-      if (byWeekdays.includes(dayWeekday)) {
-        const occStart = new Date(dayDate);
-        const occEnd = new Date(occStart.getTime() + baseDuration);
-
-        occurrences.push({
-          start: occStart,
-          end: occEnd,
-        });
-
-        occurrenceCount += 1;
-
-        // Check end conditions
-        if (endType === 'after' && occurrenceCount >= count) {
-          return occurrences;
-        }
-
-        if (endType === 'on') {
-          const untilDate = parseDate(until);
-          if (occEnd > untilDate) {
-            // Remove last occurrence if it goes past the until date
-            occurrences.pop();
-            return occurrences;
-          }
-        }
-      }
-    }
-
-    // Move to next interval weeks
-    weekStart.setDate(weekStart.getDate() + 7 * interval);
-
-    // Check if we've gone too far (for 'never' type, use maxOccurrences)
-    if (endType === 'never') {
-      const weeksElapsed = (weekStart.getTime() - baseStartDate.getTime()) / (1000 * 60 * 60 * 24 * 7);
-      if (weeksElapsed > NEVER_MAX_WEEKS) {
-        break;
-      }
-    }
-  }
-
-  return occurrences;
 }
 
 /** Course owner or active course admin (any user_type) may add course-tied office hours. */
@@ -229,134 +137,26 @@ router.post('/', (req, res) => {
   // Parse and validate recurrence_rule
   let parsedRecurrence = null;
   let recurrenceRuleForDb = null;
-
-  if (recurrence_rule) {
-    console.log('[DEBUG] recurrence_rule received:', recurrence_rule);
-    console.log('[DEBUG] recurrence_rule type:', typeof recurrence_rule);
-    
-    // Handle both object and JSON string formats
-    if (typeof recurrence_rule === 'string') {
-      try {
-        parsedRecurrence = JSON.parse(recurrence_rule);
-        console.log('[DEBUG] Parsed from string:', parsedRecurrence);
-      } catch (e) {
-        return res.status(400).json({
-          error: 'recurrence_rule must be valid JSON if provided as string'
-        });
-      }
-    } else if (typeof recurrence_rule === 'object') {
-      parsedRecurrence = recurrence_rule;
-      console.log('[DEBUG] Using object directly:', parsedRecurrence);
-    } else {
-      return res.status(400).json({
-        error: 'recurrence_rule must be an object or JSON string'
-      });
-    }
-
-    console.log('[DEBUG] parsedRecurrence after parsing:', parsedRecurrence);
-    console.log('[DEBUG] parsedRecurrence.enabled:', parsedRecurrence?.enabled);
-    
-    // Validate recurrence structure
-    if (parsedRecurrence.enabled) {
-      console.log('[DEBUG] Recurrence is enabled, validating...');
-      
-      if (parsedRecurrence.frequency !== 'weekly') {
-        return res.status(400).json({
-          error: 'Only weekly recurrence is supported in phase 1'
-        });
-      }
-
-      if (!Number.isInteger(parsedRecurrence.interval) || parsedRecurrence.interval < 1) {
-        return res.status(400).json({
-          error: 'recurrence_rule.interval must be a positive integer'
-        });
-      }
-
-      if (!Array.isArray(parsedRecurrence.byWeekdays) || parsedRecurrence.byWeekdays.length === 0) {
-        return res.status(400).json({
-          error: 'recurrence_rule.byWeekdays must be a non-empty array of weekday codes (MO, TU, WE, etc.)'
-        });
-      }
-
-      const validWeekdays = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
-      if (!parsedRecurrence.byWeekdays.every((code) => validWeekdays.includes(code))) {
-        return res.status(400).json({
-          error: 'recurrence_rule.byWeekdays contains invalid weekday codes'
-        });
-      }
-
-      if (!['never', 'on', 'after'].includes(parsedRecurrence.endType)) {
-        return res.status(400).json({
-          error: 'recurrence_rule.endType must be "never", "on", or "after"'
-        });
-      }
-
-      if (parsedRecurrence.endType === 'on') {
-        if (!parsedRecurrence.until) {
-          return res.status(400).json({
-            error: 'recurrence_rule.until is required when endType is "on"'
-          });
-        }
-        const untilDate = parseDate(parsedRecurrence.until);
-        if (!untilDate) {
-          return res.status(400).json({
-            error: 'recurrence_rule.until must be a valid date'
-          });
-        }
-      }
-
-      if (parsedRecurrence.endType === 'after') {
-        if (!Number.isInteger(parsedRecurrence.count) || parsedRecurrence.count < 1) {
-          return res.status(400).json({
-            error: 'recurrence_rule.count must be a positive integer when endType is "after"'
-          });
-        }
-      }
-
-      recurrenceRuleForDb = JSON.stringify(parsedRecurrence);
-      console.log('[DEBUG] recurrenceRuleForDb set to:', recurrenceRuleForDb);
-    } else {
-      console.log('[DEBUG] Recurrence is disabled');
-    }
-  } else {
-    console.log('[DEBUG] No recurrence_rule provided');
+  try {
+    const parsed = parseAndValidateWeeklyRecurrenceRule(recurrence_rule);
+    parsedRecurrence = parsed.rule;
+    recurrenceRuleForDb = parsed.ruleForDb;
+  } catch (e) {
+    const code = e.statusCode || 500;
+    return res.status(code).json({ error: e.message });
   }
 
   // Generate slots
   let slots = [];
   
-  if (!parsedRecurrence || !parsedRecurrence.enabled) {
-    // Non-recurring: use single time window
-    console.log('[DEBUG] Using non-recurring flow');
-    slots = buildSlots(startDate, endDate, finalSlotDuration);
-  } else {
-    // Recurring: generate occurrences and slots for each
-    console.log('[DEBUG] Using recurring flow with interval:', parsedRecurrence.interval, 'byWeekdays:', parsedRecurrence.byWeekdays);
-    
-    const occurrences = generateWeeklyOccurrences({
-      baseStartDate: startDate,
-      baseEndDate: endDate,
-      interval: parsedRecurrence.interval,
-      byWeekdays: parsedRecurrence.byWeekdays,
-      endType: parsedRecurrence.endType,
-      until: parsedRecurrence.until,
-      count: parsedRecurrence.count,
-    });
+  const occurrences = expandOccurrences({
+    baseStartDate: startDate,
+    baseEndDate: endDate,
+    recurrenceRule: parsedRecurrence,
+  });
 
-    console.log('[DEBUG] Generated', occurrences.length, 'occurrences');
-    console.log('[DEBUG] Occurrences:', occurrences.map(o => ({ start: o.start.toISOString(), end: o.end.toISOString() })));
-
-    for (const occ of occurrences) {
-      const occSlots = buildSlots(occ.start, occ.end, finalSlotDuration);
-      console.log('[DEBUG] Built', occSlots.length, 'slots for occurrence starting', occ.start.toISOString());
-      slots.push(...occSlots);
-    }
-  }
-
-  console.log('[DEBUG] Total slots generated:', slots.length);
-  if (slots.length > 0) {
-    console.log('[DEBUG] First slot:', slots[0]);
-    console.log('[DEBUG] Last slot:', slots[slots.length - 1]);
+  for (const occ of occurrences) {
+    slots.push(...buildSlots(occ.start, occ.end, finalSlotDuration));
   }
 
   if (slots.length === 0) {
