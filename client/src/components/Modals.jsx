@@ -2,6 +2,7 @@
 // Shared modal components used across dashboards, booking flows, and heatmap pages.
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { formatTime, statusLabel } from './calendar/calendarUtils';
 
 // One shell for all popups so headers, close behavior, and footers stay consistent.
 function Modal({ title, onClose, children, footer, className = '' }) {
@@ -187,6 +188,33 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onEdit, onClos
   const ap = appointment || {};
   const isAvailability = ap.type === 'availability';
 
+  const start = ap.startTime ? new Date(ap.startTime) : null;
+  const end = ap.endTime ? new Date(ap.endTime) : null;
+
+  const dateLabel = start
+    ? start.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric' })
+    : ap.day || '—';
+  const timeLabel = start && end
+    ? `${formatTime(ap.startTime)} \u2013 ${formatTime(ap.endTime)}`
+    : ap.time || '—';
+
+  const status = statusLabel(ap.status);
+  const statusPillClass = `modal-status-pill ${status.cls || ''}`.trim();
+
+  const createdByName = ap.ownerName || ap.owner || '—';
+  const createdByEmail = ap.ownerEmail || '';
+
+  const otherPartyName = isAvailability
+    ? (ap.attendeeName || ap.bookedBy || '—')
+    : (isOwner ? (ap.attendeeName || ap.bookedBy || '—') : (ap.ownerName || ap.owner || '—'));
+  const otherPartyEmail = isAvailability
+    ? (ap.attendeeEmail || ap.bookedByEmail || '')
+    : (isOwner ? (ap.attendeeEmail || ap.bookedByEmail || '') : (ap.ownerEmail || ''));
+
+  const emailTarget = isAvailability
+    ? (otherPartyEmail || '')
+    : (isOwner ? (ap.attendeeEmail || '') : (ap.ownerEmail || ''));
+
   return (
     <Modal
       title={ap.title || 'Appointment details'}
@@ -204,7 +232,7 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onEdit, onClos
             </button>
           )}
           <a
-            href={`mailto:${ap.ownerEmail || ''}?subject=Re: ${encodeURIComponent(ap.title || 'Appointment')}`}
+            href={`mailto:${emailTarget}?subject=Re:%20${encodeURIComponent(ap.title || 'Appointment')}`}
             className="button button-outline button-small"
             style={{ textDecoration: 'none' }}
           >
@@ -214,33 +242,79 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onEdit, onClos
         </>
       }
     >
-      <div className="modal-row">
-        <span className="modal-row-label">Date</span>
-        <span className="modal-row-value">{ap.day}</span>
-      </div>
-      <div className="modal-row">
-        <span className="modal-row-label">Time</span>
-        <span className="modal-row-value">{ap.time}</span>
-      </div>
-      <div className="modal-row">
-        <span className="modal-row-label">{isAvailability ? 'Booked' : isOwner ? 'Booked by' : 'Owner'}</span>
-        <span className="modal-row-value">{isAvailability ? ap.bookedBy : isOwner ? ap.bookedBy : ap.owner}</span>
-      </div>
-      {ap.location && (
-        <div className="modal-row">
-          <span className="modal-row-label">Location</span>
-          <span className="modal-row-value">{ap.location}</span>
+      <div className="modal-titleblock">
+        <div className="modal-subtitle">
+          <span>{dateLabel}</span>
+          <span className="modal-subtitle-sep">•</span>
+          <span>{timeLabel}</span>
         </div>
-      )}
-      {ap.notes && (
-        <div className="modal-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
-          <span className="modal-row-label">Notes</span>
-          <p style={{ fontSize: 13, color: '#333', marginTop: 4, lineHeight: 1.5 }}>{ap.notes}</p>
+        <div className="modal-titleblock-right">
+          <span className={statusPillClass}>{status.label}</span>
         </div>
-      )}
-      <div className="modal-row">
-        <span className="modal-row-label">Status</span>
-        <span className="badge-pending">{ap.status || 'Pending'}</span>
+      </div>
+
+      <div className="modal-section">
+        <div className="modal-section-title">Details</div>
+        <div className="modal-detail-stack">
+          <div className="modal-row">
+            <span className="modal-row-label">Location</span>
+            <span className="modal-row-value">{ap.location || 'TBD'}</span>
+          </div>
+
+          {(ap.description || ap.notes) && (
+            <div className="modal-row modal-row-multiline">
+              <span className="modal-row-label">{isAvailability ? 'Description' : 'Notes'}</span>
+              <span className="modal-row-value modal-row-value-block">{ap.description || ap.notes}</span>
+            </div>
+          )}
+
+          {isAvailability && (
+            <>
+              <div className="modal-row">
+                <span className="modal-row-label">Visibility</span>
+                <span className="modal-row-value">{ap.visibility || '—'}</span>
+              </div>
+              <div className="modal-row">
+                <span className="modal-row-label">Capacity</span>
+                <span className="modal-row-value">
+                  {Number.isFinite(Number(ap.capacity)) ? ap.capacity : '—'}
+                </span>
+              </div>
+              <div className="modal-row">
+                <span className="modal-row-label">Booked</span>
+                <span className="modal-row-value">
+                  {Number.isFinite(Number(ap.bookedCount)) && Number.isFinite(Number(ap.capacity))
+                    ? `${ap.bookedCount}/${ap.capacity}`
+                    : (ap.attendeeName || ap.bookedBy || '—')}
+                </span>
+              </div>
+              {ap.recurrence_rule && (
+                <div className="modal-row modal-row-multiline">
+                  <span className="modal-row-label">Recurrence</span>
+                  <span className="modal-row-value modal-row-value-block">{ap.recurrence_rule}</span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      <div className="modal-section">
+        <div className="modal-section-title">People</div>
+        <div className="modal-detail-stack">
+          <div className="modal-row">
+            <span className="modal-row-label">Created by</span>
+            <span className="modal-row-value">
+              {createdByEmail ? `${createdByName} (${createdByEmail})` : createdByName}
+            </span>
+          </div>
+          <div className="modal-row">
+            <span className="modal-row-label">{isAvailability ? 'Booked by' : isOwner ? 'Booked by' : 'Owner'}</span>
+            <span className="modal-row-value">
+              {otherPartyEmail ? `${otherPartyName} (${otherPartyEmail})` : otherPartyName}
+            </span>
+          </div>
+        </div>
       </div>
     </Modal>
   );
