@@ -1,6 +1,6 @@
 //AMANDA TRAN
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import logo1 from "../assets/logo1.png";
 import header from "../assets/header.png";
 import heatmapPreview from "../assets/HeatmapPreview.png";
@@ -16,28 +16,18 @@ export default function LandingPage() {
   // without reloading the whole site.
   const navigate = useNavigate();
 
-  // Tracks whether the user has scrolled down a little.
-  const [scrolled, setScrolled] = useState(false);
-
   // Controls visibility of the heatmap explainer section.
   const [showHeatmapDetail, setShowHeatmapDetail] = useState(false);
 
   // Ref for scrolling to the heatmap explainer section.
   const heatmapSectionRef = useRef(null);
 
-  // Updates the top bar style after the user scrolls.
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   //START of the LANDING PAGE design
   //________________________________________________________________________________________________//
   return (
     <div className="landing-page">
       {/* Top navigation bar */}
-      <nav className={`landing-top-bar${scrolled ? " landing-top-bar-scrolled" : ""}`}>
+      <nav className="landing-top-bar">
         <div className="landing-top-bar-content">
           <Navbar
             logo={logo1}
@@ -91,6 +81,7 @@ export default function LandingPage() {
       <section className="feature-section feature-section-light">
         <div className="feature-row feature-row-reversed">
           <div className="feature-image-area">
+            {/*Heatmap preview image displayed*/}
             <img src={heatmapPreview} alt="Heatmap preview" className="feature-preview-image" />
           </div>
           <div className="feature-text">
@@ -119,7 +110,7 @@ export default function LandingPage() {
         ref={heatmapSectionRef}
         style={{ display: showHeatmapDetail ? "block" : "none" }}
       >
-        {/* close the "panel by clicking the link" 0 usually users dont bother with it */}
+        {/* close the "panel by clicking the link" Usually users dont bother with it */}
         <button
           className="accordion-trigger"
           onClick={() => setShowHeatmapDetail(!showHeatmapDetail)}

@@ -20,9 +20,6 @@
   box-shadow: 0 1px 0 #e4e4e4;
 }
 
-/* Slightly stronger shadow after scrolling */
-.landing-top-bar-scrolled { box-shadow: 0 1px 6px rgba(0,0,0,0.10); }
-
 /* Layout inside the top bar */
 .landing-top-bar-content {
   max-width: 1100px;

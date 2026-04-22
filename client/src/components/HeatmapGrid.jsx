@@ -4,18 +4,16 @@ import { useDragSelect } from '../hooks/useDragSelect';
 
 const GROUP_MEETING_THRESHOLD_RATIO = 1;
 
-// ─────────────────────────────────────────────────────────────
 // KEY FORMAT
 //   Every cell is identified by a string: "YYYY-MM-DD:ti"
 //   e.g. "2026-04-07:3" = Apr 7, 4th time slot
 //   This means slots are date-specific — never bleed across weeks.
 //   Recurring slots are expanded in ProfessorHeatmap.jsx before being passed down.
-// ─────────────────────────────────────────────────────────────
+
 export function makeKey(iso, ti) {
   return `${iso}:${ti}`;
 }
 
-// ─────────────────────────────────────────────────────────────
 // PersonalGrid — professor marks their own availability
 // ─────────────────────────────────────────────────────────────
 export function PersonalGrid({ days, times, selected, setSelected }) {
@@ -46,7 +44,7 @@ export function PersonalGrid({ days, times, selected, setSelected }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
+
 // ProfAvailGrid — student view, only professor's slots are clickable.
 // If otherSlotCounts + totalOthers are provided the cells show a
 // when2meet-style heatmap: darker = more students already chose that slot.
@@ -99,7 +97,7 @@ export function ProfAvailGrid({ days, times, profSlots, selected, setSelected, o
   );
 }
 
-// ─────────────────────────────────────────────────────────────
+
 // GroupGrid — read-only heatmap of all participants
 // participants[].slots is string[] of "iso:ti" keys
 // ─────────────────────────────────────────────────────────────

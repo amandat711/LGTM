@@ -28,6 +28,9 @@ import { DASHBOARD_HELP_GUIDES } from '../data/helpGuides';
 // Reusable sidebar component instead of hardcoding the left menu here.
 import Sidebar from '../components/Sidebar'; 
 import '../styles/Dashboard.css';
+
+
+
 export default function StudentDashboard() {
   // Router helper for moving from the dashboard to search, heatmaps, or home.
   const navigate = useNavigate();
@@ -61,7 +64,7 @@ export default function StudentDashboard() {
   const [error, setError] = useState('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
-  // When the logged-in student changes, fetch their appointments and heatmap invites.
+  // When the logged-in student changes, fetch their appointments and heatmap invites from the server.
   useEffect(() => {
     if (!userId) return;
 

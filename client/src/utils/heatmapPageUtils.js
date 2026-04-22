@@ -1,12 +1,15 @@
 /* AMANDA TRAN */
-/* Shared helper functions used after splitting the heatmap into student and professor pages. */
+/* DATA TRANSFORMATION LAYER */
 
 // makeKey creates the shared "YYYY-MM-DD:index" cell ID used by the heatmap grids.
 import { makeKey } from '../components/HeatmapGrid';
+import { thresholdHeatColor } from './heatColor';
 
-// Colours used in the professor group heatmap so each student is easy to tell apart.
-// If there are more participants than colours, ProfessorHeatmap loops through this list again.
-export const PARTICIPANT_COLORS = ['#E31429', '#c0842a', '#2a8c5f', '#5a4ab0', '#1565a8', '#cc4b37'];
+// Colours used in the professor group heatmap participant chips.
+// These follow the same light-to-strong red scale used by thresholdHeatColor.
+export const PARTICIPANT_COLORS = Array.from({ length: 6 }, (_, index) =>
+  thresholdHeatColor(index + 1, 6)
+);
 
 /**
  * Takes the professor's selected grid cells and repeats them into future weeks.

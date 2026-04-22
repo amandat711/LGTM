@@ -1,10 +1,12 @@
-/*AMANDA TRAN*/
+/* AMANDA TRAN */
+// Shared modal components used across dashboards, booking flows, and heatmap pages.
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-// ─── Shared shell ─────────────────────────────────────────────
+// One shell for all popups so headers, close behavior, and footers stay consistent.
 function Modal({ title, onClose, children, footer, className = '' }) {
   return (
+    // Clicking the dimmed background closes the modal; clicking inside the modal does not.
     <div
       className="modal-overlay"
       onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}
@@ -21,11 +23,9 @@ function Modal({ title, onClose, children, footer, className = '' }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// HelpGuideModal
-//    Reusable detailed instructions popup for page-specific help.
-// ─────────────────────────────────────────────────────────────
+// Page help modal. The guide content comes from data/helpGuides.js.
 export function HelpGuideModal({ guide, onClose }) {
+  // Keep the modal usable even if a page forgets to pass guide content.
   const safeGuide = guide || {};
 
   return (
@@ -48,6 +48,7 @@ export function HelpGuideModal({ guide, onClose }) {
         )}
 
         {safeGuide.quickTips?.length > 0 && (
+          // Short reminders first, before the longer step-by-step sections.
           <div className="help-guide-tips">
             <h4>Quick tips</h4>
             <ul>
@@ -75,10 +76,7 @@ export function HelpGuideModal({ guide, onClose }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// ConfirmActionModal
-//    Small reusable confirmation popup for destructive or important actions.
-// ─────────────────────────────────────────────────────────────
+// Generic confirmation modal for actions that deserve a pause before they happen.
 export function ConfirmActionModal({
   title,
   message,
@@ -118,6 +116,7 @@ export function ConfirmActionModal({
       {details.length > 0 && (
         <div className="modal-detail-stack">
           {details.map((detail) => (
+            // Detail rows make destructive actions feel less ambiguous.
             <div className="modal-row" key={detail.label}>
               <span className="modal-row-label">{detail.label}</span>
               <span className="modal-row-value">{detail.value}</span>
@@ -129,14 +128,12 @@ export function ConfirmActionModal({
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 1. ConfirmSlotModal
-//    Owner confirms a selected time slot and sends notifications.
-// ─────────────────────────────────────────────────────────────
+// Used when a professor confirms a heatmap slot and wants to notify attendees.
 export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
   const [sent, setSent] = useState(false);
 
   function handleConfirm() {
+    // Show immediate feedback before the parent creates/navigates away from the appointment.
     setSent(true);
     // TODO: POST /api/appointments/confirm { slotDay, slotTime, attendeeIds }
     setTimeout(() => { onConfirm(); onClose(); }, 1200);
@@ -169,6 +166,7 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
       </div>
       <div className="modal-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
         <span className="modal-row-label">Attendees ({attendees?.length})</span>
+        {/* Attendee tags echo the colors from the heatmap participant chips. */}
         <div className="attendee-list">
           {attendees?.map(a => (
             <span key={a.name} className="attendee-tag">
@@ -185,11 +183,9 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 2. SlotDetailModal
-//    Click any booked appointment to view details.
-// ─────────────────────────────────────────────────────────────
+// Readable appointment detail view for calendar blocks.
 export function SlotDetailModal({ appointment, isOwner, onDelete, onClose }) {
+  // Default object keeps the JSX below from exploding while data is still settling.
   const ap = appointment || {};
 
   return (
@@ -208,6 +204,7 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onClose }) {
             className="button button-outline button-small"
             style={{ textDecoration: 'none' }}
           >
+            {/* The same modal is used from owner and attendee perspectives. */}
             Email {isOwner ? 'attendee' : 'owner'}
           </a>
           <button className="button button-ghost" onClick={onClose}>Close</button>
@@ -246,14 +243,12 @@ export function SlotDetailModal({ appointment, isOwner, onDelete, onClose }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 3. DeleteConfirmModal
-//    Confirms cancellation and opens a mailto: notification.
-// ─────────────────────────────────────────────────────────────
+// Final confirmation before cancelling a booking or removing an availability block.
 export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
   const ap = appointment || {};
 
   function handleDelete() {
+    // Open a prefilled email so the professor can notify the other person in their own words.
     const subject = encodeURIComponent(`Booking cancelled: ${ap.title}`);
     const body    = encodeURIComponent(
       `Hi,\n\nYour booking "${ap.title}" on ${ap.day} at ${ap.time} has been cancelled.\n\nApologies for any inconvenience.`
@@ -296,15 +291,14 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 4. InviteURLModal
-//    Generates a shareable booking link for owners.
-// ─────────────────────────────────────────────────────────────
+// Share modal for heatmap and booking links.
 export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
   const [copied, setCopied] = useState(false);
+  // Heatmap pages pass an explicit invite URL; older booking flows can use the fallback.
   const shareURL = inviteURL || `${window.location.origin}/heatmap`;
 
   function handleCopy() {
+    // The copied state gives the user a quick "yes, it worked" moment.
     navigator.clipboard.writeText(shareURL).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -344,10 +338,7 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 5. ApproveSubmissionModal
-//    Professor reviews a student's availability submission.
-// ─────────────────────────────────────────────────────────────
+// Turn a raw submitted slot into something a person can scan quickly.
 function formatSlotLabel(slot) {
   if (!slot?.startTime || !slot?.endTime) return 'Unknown time';
 
@@ -367,15 +358,19 @@ function formatSlotLabel(slot) {
   })}`;
 }
 
+// Review modal for a student's heatmap submission.
 export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClose }) {
   const s = submission || {};
+  // Memoize the slots array so the selected radio button only resets when slots really change.
   const slotOptions = useMemo(() => s.slots || [], [s.slots]);
   const [selectedSlotId, setSelectedSlotId] = useState(slotOptions[0]?.id || null);
 
   useEffect(() => {
+    // Default to the first submitted slot whenever a different submission is opened.
     setSelectedSlotId(slotOptions[0]?.id || null);
   }, [slotOptions]);
 
+  // If the selected id no longer exists, fall back gracefully to the first slot.
   const selectedSlot = slotOptions.find((slot) => slot.id === selectedSlotId) || slotOptions[0] || null;
 
   return (
@@ -428,6 +423,7 @@ export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClo
             <span className="modal-row-value">No submitted slots</span>
           ) : (
             slotOptions.map((slot) => (
+              // Radio cards are easier to review than a dense select menu for time slots.
               <label
                 key={slot.id}
                 style={{
