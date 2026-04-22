@@ -2,9 +2,17 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAvailableProfessors, getProfessorPublicAvailabilities } from '../api/availabilities';
 import { createAppointment } from '../api/appointments';
+import { logout } from '../api/auth';
 import useAppShellSession from '../hooks/useAppShellSession';
 import { resolvePath } from '../auth/authUtils';
+import logo from '../assets/logo1.png';
+import calendarIcon from '../assets/calendarIcon.png';
+import coursesIcon from '../assets/courseIcon.png';
+import searchIcon from '../assets/searchIcon.png';
+import InfoIcon from '../assets/infoIcon.png';
 import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
+import Calendar from '../components/calendar/Calendar';
 import BookingCalendar, { toCalendarDateKey } from '../components/BookingCalendar';
 
 function formatSlotTime(value) {
@@ -36,6 +44,25 @@ function getSlotDateKey(slot) {
 
 function getSlotTitle(slot, professorName) {
   return slot?.av_title || `Meeting with ${professorName}`;
+}
+
+function mapSlotToCalendarEvent(slot, professorName) {
+  const isFull = slot.booked_count >= slot.capacity;
+
+  return {
+    id: `availability-${slot.availability_id}`,
+    type: 'availability',
+    rawSlot: slot,
+    title: getSlotTitle(slot, professorName),
+    ownerName: professorName,
+    ownerEmail: '',
+    attendeeName: isFull ? 'Full' : 'Open slot',
+    startTime: slot.start_time,
+    endTime: slot.end_time,
+    location: slot.location || 'Online',
+    status: isFull ? 'booked' : 'available',
+    color: isFull ? '#777777' : '#E31429',
+  };
 }
 
 function groupSlotsByDate(slots) {
@@ -81,6 +108,22 @@ export default function BookingProfessor() {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
+
+  const currentUser = useMemo(
+    () => !user
+      ? { firstName: 'User', lastName: '' }
+      : { firstName: user.first_name || 'User', lastName: user.last_name || '' },
+    [user]
+  );
+  const initials = `${currentUser.firstName?.[0] || 'U'}${currentUser.lastName?.[0] || ''}`;
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } finally {
+      navigate('/', { replace: true });
+    }
+  }
 
   useEffect(() => {
     //TODO: this works but is not efficient, we should make an API call to get the professor by id instead of getting all professors and then filtering
@@ -143,6 +186,10 @@ export default function BookingProfessor() {
   const groupedSlots = useMemo(() => groupSlotsByDate(slots), [slots]);
   const availableDateSet = useMemo(() => new Set(Object.keys(groupedSlots)), [groupedSlots]);
   const selectedDaySlots = groupedSlots[selectedDate] || [];
+  const calendarEvents = useMemo(
+    () => slots.map((slot) => mapSlotToCalendarEvent(slot, professor?.name || 'Professor')),
+    [slots, professor]
+  );
 
   useEffect(() => {
     if (slots.length === 0) return;
@@ -192,27 +239,39 @@ export default function BookingProfessor() {
     }
   };
 
+  function handleCalendarEventClick(event) {
+    if (!event.rawSlot || event.rawSlot.booked_count >= event.rawSlot.capacity) return;
+    setSelectedSlot(event.rawSlot);
+    setSelectedDate(getSlotDateKey(event.rawSlot));
+  }
+
+  const sidebarItems = [
+    { id: 'calendar', icon: calendarIcon, label: 'Dashboard', onClick: () => navigate(resolvePath('dashboard', user)) },
+    { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
+    { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
+  ];
+
   if (loading && !professor) {
     return (
-      <div className="dash-root">
-        <nav className="dash-nav">
-          <div className="dash-nav-left">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-              }}
-            >
-              Back
-            </button>
+      <div className="dashboard-page">
+        <Navbar
+          logo={logo}
+          title="Book professor"
+          onLeftClick={() => navigate('/')}
+          user={{
+            displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
+            role: 'student',
+            initials,
+          }}
+          actions={[{ label: 'Log Out', onClick: handleLogout }]}
+        />
+        <div className="dashboard-layout">
+          <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', icon: InfoIcon, label: 'Help' }]} />
+          <div className="main-content">
+            <div className="booking-page">
+              <p>Loading...</p>
+            </div>
           </div>
-        </nav>
-        <div className="booking-page-content">
-          <p>Loading…</p>
         </div>
       </div>
     );
@@ -221,9 +280,24 @@ export default function BookingProfessor() {
   if (!professor) {
     return (
       <div className="dashboard-page">
-        <Navbar title="Back" onLeftClick={() => navigate(-1)} />
-        <div className="booking-page">
-          <p>Professor not found.</p>
+        <Navbar
+          logo={logo}
+          title="Book professor"
+          onLeftClick={() => navigate('/')}
+          user={{
+            displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
+            role: 'student',
+            initials,
+          }}
+          actions={[{ label: 'Log Out', onClick: handleLogout }]}
+        />
+        <div className="dashboard-layout">
+          <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', icon: InfoIcon, label: 'Help' }]} />
+          <div className="main-content">
+            <div className="booking-page">
+              <p>Professor not found.</p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -232,13 +306,23 @@ export default function BookingProfessor() {
   return (
     <div className="dashboard-page">
       <Navbar
-        title="Back to search"
-        onLeftClick={() => navigate(-1)}
-        user={{ displayName: professor.name, role: 'student', badgeText: 'Student booking' }}
+        logo={logo}
+        title="Book professor"
+        onLeftClick={() => navigate('/')}
+        user={{
+          displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
+          role: 'student',
+          initials,
+        }}
+        actions={[{ label: 'Log Out', onClick: handleLogout }]}
       />
 
-      <div className="booking-page">
-        <section className="booking-box booking-flow-box">
+      <div className="dashboard-layout">
+        <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', icon: InfoIcon, label: 'Help' }]} />
+
+        <div className="main-content">
+          <div className="booking-page">
+            <section className="booking-box booking-flow-box">
           <div className="booking-header">
             <div>
               <h1>{professor.name}</h1>
@@ -259,6 +343,15 @@ export default function BookingProfessor() {
 
           {message && <div className="booking-status-message success">{message}</div>}
           {error && <div className="booking-status-message error">{error}</div>}
+
+          <div className="booking-week-calendar">
+            <div className="booking-section-title">Calendar view</div>
+            {calendarEvents.length === 0 ? (
+              <p className="booking-empty-message">No open slots to show on the calendar yet.</p>
+            ) : (
+              <Calendar appointments={calendarEvents} onEventClick={handleCalendarEventClick} />
+            )}
+          </div>
 
           <div className="booking-layout">
             <BookingCalendar
@@ -342,6 +435,8 @@ export default function BookingProfessor() {
             </aside>
           </div>
         </section>
+      </div>
+        </div>
       </div>
     </div>
   );

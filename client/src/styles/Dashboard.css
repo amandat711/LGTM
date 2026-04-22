@@ -791,6 +791,16 @@ a.professor-card-button {
   border: 1px solid #f1c1c1;
 }
 
+.booking-week-calendar {
+  padding: 0 34px 28px;
+  background: #fff;
+}
+
+.booking-week-calendar .dash-calendar-panel {
+  border: 1px solid #ececec;
+  box-shadow: none;
+}
+
 /* Three-column grid: monthly calendar + selected-day slots + booking summary */
 .booking-layout {
   display: grid;

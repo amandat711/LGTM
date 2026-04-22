@@ -126,11 +126,13 @@ export default function ProfessorHeatmap() {
   // Metadata form shown before a brand-new heatmap is created.
   const [newHeatmapTitle, setNewHeatmapTitle] = useState('Office Hours Heatmap');
   const [newHeatmapDescription, setNewHeatmapDescription] = useState('Shared availability collection for bookings');
+  const [newHeatmapCourseId, setNewHeatmapCourseId] = useState('');
   const [creatingHeatmap, setCreatingHeatmap] = useState(false);
   // Existing heatmap details can be edited after creation without changing the availability grid.
   const [isEditingHeatmapDetails, setIsEditingHeatmapDetails] = useState(false);
   const [editHeatmapTitle, setEditHeatmapTitle] = useState('');
   const [editHeatmapDescription, setEditHeatmapDescription] = useState('');
+  const [editHeatmapCourseId, setEditHeatmapCourseId] = useState('');
   const [savingHeatmapDetails, setSavingHeatmapDetails] = useState(false);
   const [deletingHeatmap, setDeletingHeatmap] = useState(false);
 
@@ -139,6 +141,7 @@ export default function ProfessorHeatmap() {
   const loadedHeatmapId = heatmap?.id;
   const loadedHeatmapTitle = heatmap?.title;
   const loadedHeatmapDescription = heatmap?.description;
+  const loadedHeatmapCourseId = heatmap?.courseId;
   const allSubmissions = useMemo(() => heatmapBundle?.submissions || [], [heatmapBundle]);
   const currentHeatmapId = loadedHeatmapId || (isNewHeatmapRoute ? null : Number(eventId));
   const hostSubmission = allSubmissions.find((submission) => submission.participantRole === 'host') || null;
@@ -213,8 +216,9 @@ export default function ProfessorHeatmap() {
 
     setEditHeatmapTitle(loadedHeatmapTitle || '');
     setEditHeatmapDescription(loadedHeatmapDescription || '');
+    setEditHeatmapCourseId(loadedHeatmapCourseId ? String(loadedHeatmapCourseId) : '');
     setIsEditingHeatmapDetails(false);
-  }, [loadedHeatmapId, loadedHeatmapTitle, loadedHeatmapDescription]);
+  }, [loadedHeatmapId, loadedHeatmapTitle, loadedHeatmapDescription, loadedHeatmapCourseId]);
 
   // Apply the full heatmap date range and reset the grid window to the first page.
   function handleApplyDateRange() {
@@ -245,6 +249,7 @@ export default function ProfessorHeatmap() {
 
     const title = newHeatmapTitle.trim();
     const description = newHeatmapDescription.trim();
+    const courseId = newHeatmapCourseId.trim();
 
     if (!title) {
       setError('Please enter a heatmap title.');
@@ -258,6 +263,7 @@ export default function ProfessorHeatmap() {
       const bundle = await createHeatmap({
         created_by: user.id,
         hm_title: title,
+        course_id: courseId || null,
         hm_description: description || null,
         visibility: 'public',
         time_zone: 'America/Toronto',
@@ -278,6 +284,7 @@ export default function ProfessorHeatmap() {
 
     const title = editHeatmapTitle.trim();
     const description = editHeatmapDescription.trim();
+    const courseId = editHeatmapCourseId.trim();
 
     if (!title) {
       setError('Please enter a heatmap title.');
@@ -290,6 +297,7 @@ export default function ProfessorHeatmap() {
 
       const bundle = await updateHeatmap(currentHeatmapId, {
         hm_title: title,
+        course_id: courseId || null,
         hm_description: description || null,
         changed_by: user.id,
       });
@@ -463,6 +471,17 @@ export default function ProfessorHeatmap() {
                     maxLength={500}
                   />
                 </label>
+
+                <label>
+                  <span>Course ID</span>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newHeatmapCourseId}
+                    onChange={(e) => setNewHeatmapCourseId(e.target.value)}
+                    placeholder="Optional"
+                  />
+                </label>
               </div>
 
               <div className="confirm-bar">
@@ -523,6 +542,17 @@ export default function ProfessorHeatmap() {
                       maxLength={500}
                     />
                   </label>
+
+                  <label>
+                    <span>Course ID</span>
+                    <input
+                      type="number"
+                      min="1"
+                      value={editHeatmapCourseId}
+                      onChange={(e) => setEditHeatmapCourseId(e.target.value)}
+                      placeholder="Optional"
+                    />
+                  </label>
                 </div>
 
                 <div className="heatmap-details-actions">
@@ -535,6 +565,7 @@ export default function ProfessorHeatmap() {
                     onClick={() => {
                       setEditHeatmapTitle(heatmap.title || '');
                       setEditHeatmapDescription(heatmap.description || '');
+                      setEditHeatmapCourseId(heatmap.courseId ? String(heatmap.courseId) : '');
                       setIsEditingHeatmapDetails(false);
                     }}
                     disabled={savingHeatmapDetails}
@@ -549,6 +580,9 @@ export default function ProfessorHeatmap() {
                   <span>Heatmap appointment</span>
                   <h3>{heatmap.title || 'Untitled heatmap'}</h3>
                   <p>{heatmap.description || 'No description added yet.'}</p>
+                  {heatmap.courseId && (
+                    <p>Course: {heatmap.courseCode || `#${heatmap.courseId}`}{heatmap.courseName ? ` - ${heatmap.courseName}` : ''}</p>
+                  )}
                 </div>
 
                 <div className="heatmap-details-actions">

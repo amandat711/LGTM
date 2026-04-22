@@ -75,7 +75,7 @@ export default function StudentDashboard() {
         const [data, heatmapData] = await Promise.all([
           getMyAppointments(userId),
           
-          getHeatmaps({ participant_user_id: userId, include_public: 1 }),
+          getHeatmaps({ participant_user_id: userId }),
         ]);
 
         // The API shape is not exactly what the calendar wants, so we normalize it first.
