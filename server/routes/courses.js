@@ -451,6 +451,9 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
          ORDER BY datetime(a.start_time) ASC`
       : `SELECT a.appointment_id, a.course_id, a.capacity, a.location, a.start_time, a.end_time, a.visibility,
                 a.ap_title, a.ap_description, a.scheduling_mode, a.status, a.created_at,
+                (SELECT COUNT(*) FROM appointment_participants apv
+                  WHERE apv.appointment_id = a.appointment_id AND apv.user_id = ?) AS joined_by_viewer,
+                NULL AS attendee_count,
                 acu.first_name AS creator_first_name,
                 acu.last_name AS creator_last_name
          ${apFrom}
@@ -461,7 +464,7 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
       if (sErr) return res.status(500).json({ error: sErr.message });
       db.all(ownersSql, [courseId], (oErr, owners) => {
         if (oErr) return res.status(500).json({ error: oErr.message });
-        db.all(apSql, [courseId], (apErr, appointments) => {
+        db.all(apSql, [uid, courseId], (apErr, appointments) => {
           if (apErr) return res.status(500).json({ error: apErr.message });
 
           const course = {

@@ -76,7 +76,7 @@ export default function WeekView({
     document.addEventListener('mousedown', handleDocumentPointerDown);
     return () => document.removeEventListener('mousedown', handleDocumentPointerDown);
   }, [inlineEventPopup]);
-
+  
   return (
     <div className="dash-calendar-panel">
       <div className="dash-cal-header">

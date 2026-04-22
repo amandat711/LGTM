@@ -543,6 +543,129 @@ router.get('/attending', (req, res) => {
   });
 });
 
+router.post('/:id/join', (req, res) => {
+  const appointmentId = Number(req.params.id);
+  const { user_id } = req.body || {};
+  const userId = Number(user_id);
+
+  if (!Number.isInteger(appointmentId) || appointmentId < 1) {
+    return res.status(400).json({ error: 'Invalid appointment id' });
+  }
+  if (!Number.isInteger(userId) || userId < 1) {
+    return res.status(400).json({ error: 'user_id must be a positive integer' });
+  }
+
+  db.get(`SELECT user_id FROM users WHERE user_id = ?`, [userId], (userErr, userRow) => {
+    if (userErr) return res.status(500).json({ error: userErr.message });
+    if (!userRow) return res.status(404).json({ error: 'User not found' });
+
+    db.get(`SELECT * FROM appointments WHERE appointment_id = ?`, [appointmentId], (apptErr, appt) => {
+      if (apptErr) return res.status(500).json({ error: apptErr.message });
+      if (!appt) return res.status(404).json({ error: 'Appointment not found' });
+      if (appt.status === 'cancelled') {
+        return res.status(400).json({ error: 'Cancelled appointments cannot be joined' });
+      }
+      if (!appt.course_id) {
+        return res.status(400).json({ error: 'Only course events can be joined from this endpoint' });
+      }
+      if (appt.visibility !== 'public') {
+        return res.status(403).json({ error: 'Only public course events are joinable' });
+      }
+
+      db.get(
+        `
+        SELECT
+          (SELECT COUNT(*) FROM course_admin_assignments ca
+            WHERE ca.course_id = ? AND ca.course_admin_id = ? AND ca.status = 'active') AS is_staff,
+          (SELECT COUNT(*) FROM course_ownerships co
+            WHERE co.course_id = ? AND co.general_admin_id = ? AND co.status = 'active') AS is_owner,
+          (SELECT COUNT(*) FROM course_enrollments ce
+            WHERE ce.course_id = ? AND ce.user_id = ? AND ce.enrollment_status IN ('active', 'completed')) AS is_enrolled
+        `,
+        [appt.course_id, userId, appt.course_id, userId, appt.course_id, userId],
+        (roleErr, roleRow) => {
+          if (roleErr) return res.status(500).json({ error: roleErr.message });
+
+          const isStaff = Number(roleRow?.is_staff) > 0;
+          const isOwner = Number(roleRow?.is_owner) > 0;
+          const isEnrolled = Number(roleRow?.is_enrolled) > 0;
+
+          if (isStaff || isOwner) {
+            return res.status(403).json({ error: 'Course staff cannot join course events as attendees' });
+          }
+          if (!isEnrolled) {
+            return res.status(403).json({ error: 'Only enrolled students can join course events' });
+          }
+
+          db.get(
+            `SELECT participant_role FROM appointment_participants WHERE appointment_id = ? AND user_id = ?`,
+            [appointmentId, userId],
+            (existingErr, existing) => {
+              if (existingErr) return res.status(500).json({ error: existingErr.message });
+              if (existing) {
+                return res.status(400).json({
+                  error:
+                    existing.participant_role === 'host'
+                      ? 'Hosts cannot join as attendees'
+                      : 'You have already joined this event',
+                });
+              }
+
+              db.get(
+                `
+                SELECT COUNT(*) AS attendee_count
+                FROM appointment_participants
+                WHERE appointment_id = ?
+                  AND participant_role = 'attendee'
+                  AND (response_status IS NULL OR response_status != 'declined')
+                `,
+                [appointmentId],
+                (countErr, countRow) => {
+                  if (countErr) return res.status(500).json({ error: countErr.message });
+
+                  if (Number(countRow?.attendee_count || 0) >= Number(appt.capacity || 1)) {
+                    return res.status(400).json({ error: 'This event is full' });
+                  }
+
+                  db.run(
+                    `
+                    INSERT INTO appointment_participants
+                      (appointment_id, user_id, participant_role, response_status)
+                    VALUES (?, ?, 'attendee', 'accepted')
+                    `,
+                    [appointmentId, userId],
+                    (insertErr) => {
+                      if (insertErr) return res.status(500).json({ error: insertErr.message });
+
+                      db.run(
+                        `
+                        INSERT INTO appointment_history
+                          (appointment_id, changed_by, old_status, new_status, changed_at, note)
+                        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+                        `,
+                        [appointmentId, userId, appt.status, appt.status, 'Student joined course event'],
+                        (histErr) => {
+                          if (histErr) return res.status(500).json({ error: histErr.message });
+
+                          return res.status(201).json({
+                            message: 'Joined event successfully',
+                            appointment_id: appointmentId,
+                            user_id: userId,
+                          });
+                        }
+                      );
+                    }
+                  );
+                }
+              );
+            }
+          );
+        }
+      );
+    });
+  });
+});
+
 router.patch('/:id', (req, res) => {
   const appointmentId = Number(req.params.id);
   const {
