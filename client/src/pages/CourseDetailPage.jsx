@@ -10,7 +10,7 @@ import {
   revokeCourseAdmin,
   updateCourse,
 } from '../api/courses';
-import { cancelAppointment, createDirectAppointment, updateAppointment } from '../api/appointments';
+import { cancelAppointment, createDirectAppointment, joinCourseEvent, updateAppointment } from '../api/appointments';
 import { logout } from '../api/auth';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
@@ -91,7 +91,13 @@ function formatEventCreatorName(row) {
 }
 
 function renderCourseCalendarPopup(eventData, options = {}) {
-  const { canManage = false, onEdit = null, onDelete = null } = options;
+  const {
+    canManage = false,
+    canJoin = false,
+    onEdit = null,
+    onDelete = null,
+    onJoin = null,
+  } = options;
   if (!eventData) return null;
   return (
     <>
@@ -102,6 +108,11 @@ function renderCourseCalendarPopup(eventData, options = {}) {
       </div>
       {eventData.creatorName ? (
         <div className="dash-event-popover-line">Created by {eventData.creatorName}</div>
+      ) : null}
+      {canManage && eventData.attendeeCount != null ? (
+        <div className="dash-event-popover-line">
+          Attendees: {eventData.attendeeCount}/{eventData.capacity}
+        </div>
       ) : null}
       {eventData.description ? (
         <div className="dash-event-popover-line">{eventData.description}</div>
@@ -133,6 +144,21 @@ function renderCourseCalendarPopup(eventData, options = {}) {
               </button>
             </div>
           </details>
+        </div>
+      ) : null}
+      {!canManage && canJoin ? (
+        <div className="dash-event-popover-actions">
+          <button
+            type="button"
+            className="dash-event-popover-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onJoin) onJoin(eventData);
+            }}
+            disabled={Boolean(eventData.isJoined) || eventData.isFull}
+          >
+            {eventData.isJoined ? 'Joined' : eventData.isFull ? 'Full' : 'Join'}
+          </button>
         </div>
       ) : null}
     </>
@@ -247,6 +273,10 @@ export default function CourseDetailPage() {
           creatorName: formatEventCreatorName(ev.row),
           description: ev.row.ap_description || '',
           appointmentId: ev.row.appointment_id,
+          isJoined: Number(ev.row.joined_by_viewer || 0) > 0,
+          attendeeCount: Number(ev.row.attendee_count || 0),
+          capacity: Number(ev.row.capacity || 1),
+          isFull: Number(ev.row.attendee_count || 0) >= Number(ev.row.capacity || 1),
         };
       }).filter(Boolean),
     [eventsMerged]
@@ -257,6 +287,7 @@ export default function CourseDetailPage() {
   const showOwnerTools = Boolean(course?.is_owner);
   /** Owners or course admins (assigned staff) may add/delete course calendar events. */
   const canManageCourseEvents = Boolean(course?.is_owner || course?.is_staff);
+  const canJoinCourseEvents = Boolean(!canManageCourseEvents);
   const currentUserId = userId != null ? String(userId) : '';
   const semesterLabel = course ? `${course.course_term} ${course.course_year}` : '';
 
@@ -400,6 +431,15 @@ export default function CourseDetailPage() {
     cancelAppointment(appointmentId, userId)
       .then(loadCourse)
       .catch((err) => setActionError(err.message || 'Could not cancel event.'));
+  }
+
+  function handleJoinEventById(appointmentId) {
+    if (!canJoinCourseEvents || !appointmentId) return;
+    closeTransientMenus();
+    setActionError('');
+    joinCourseEvent(appointmentId, userId)
+      .then(loadCourse)
+      .catch((err) => setActionError(err.message || 'Could not join event.'));
   }
 
   /** Used when saving course settings; caller runs `loadCourse` after all mutations. */
@@ -687,6 +727,7 @@ export default function CourseDetailPage() {
                               renderInlineEventPopup={(eventData) =>
                                 renderCourseCalendarPopup(eventData, {
                                   canManage: canManageCourseEvents,
+                                  canJoin: canJoinCourseEvents,
                                   onEdit: (evt) => {
                                     const row = (detail?.appointments || []).find(
                                       (a) => Number(a.appointment_id) === Number(evt.appointmentId)
@@ -699,6 +740,7 @@ export default function CourseDetailPage() {
                                     );
                                     if (row) requestDeleteEvent(row);
                                   },
+                                  onJoin: (evt) => handleJoinEventById(evt.appointmentId),
                                 })
                               }
                             />
@@ -730,6 +772,11 @@ export default function CourseDetailPage() {
                                   )}
                                   {ev.row.location ? ` · ${ev.row.location}` : ''}
                                 </div>
+                              {canManageCourseEvents && ev.row.attendee_count != null ? (
+                                <div className="course-detail-event-creator">
+                                  Attendees: {Number(ev.row.attendee_count)}/{Number(ev.row.capacity || 1)}
+                                </div>
+                              ) : null}
                                 {creatorName ? (
                                   <div className="course-detail-event-creator">Created by {creatorName}</div>
                                 ) : null}
@@ -758,6 +805,25 @@ export default function CourseDetailPage() {
                                       </button>
                                     </div>
                                   </details>
+                                </div>
+                              )}
+                              {!canManageCourseEvents && canJoinCourseEvents && (
+                                <div className="course-detail-event-actions">
+                                  <button
+                                    type="button"
+                                    className="course-detail-btn course-detail-btn--small"
+                                    onClick={() => handleJoinEventById(ev.row.appointment_id)}
+                                    disabled={
+                                      Number(ev.row.joined_by_viewer || 0) > 0
+                                      || Number(ev.row.attendee_count || 0) >= Number(ev.row.capacity || 1)
+                                    }
+                                  >
+                                    {Number(ev.row.joined_by_viewer || 0) > 0
+                                      ? 'Joined'
+                                      : Number(ev.row.attendee_count || 0) >= Number(ev.row.capacity || 1)
+                                        ? 'Full'
+                                        : 'Join'}
+                                  </button>
                                 </div>
                               )}
                             </li>

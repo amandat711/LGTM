@@ -50,6 +50,21 @@ export async function updateAppointment(appointmentId, payload) {
   return parseJson(res);
 }
 
+export async function joinCourseEvent(appointmentId, userId) {
+  const res = await fetch(`${API_BASE}/appointments/${appointmentId}/join`, {
+    ...fetchOpts,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      user_id: Number(userId),
+    }),
+  });
+
+  return parseJson(res);
+}
+
 export async function createAppointment(availabilityId, bookedBy) {
   const res = await fetch(`${API_BASE}/appointments`, {
     ...fetchOpts,
