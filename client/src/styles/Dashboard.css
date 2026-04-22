@@ -77,13 +77,13 @@
  */
 
 .side-panel {
-  width: 300px;
+  width: clamp(220px, 24vw, 300px);
   flex-shrink: 0;           /* never squish the panel when space is tight */
   display: flex;
   flex-direction: column;
   overflow-y: auto;         /* scroll when content overflows */
   background: #fff;
-  padding: 16px;
+  padding: clamp(10px, 1.2vw, 16px);
   gap: 20px;
   min-height: 0;            /* allows the panel to scroll within a flex parent */
 }
@@ -619,7 +619,7 @@
 @media (max-width: 900px) {
   /* Give the calendar more room on tablet-sized screens. */
   .side-panel {
-    width: 240px;
+    width: clamp(200px, 28vw, 240px);
   }
 }
 

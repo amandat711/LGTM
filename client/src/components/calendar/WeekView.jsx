@@ -230,8 +230,6 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
                     hour: 'numeric',
                     minute: '2-digit',
                   });
-                  const durationMinutes = (new Date(appt.endTime) - new Date(appt.startTime)) / 60000;
-                  const shortEvent = durationMinutes <= 30;
                   const eventTop = top + 2;
                   const eventHeight = Math.max(height - 4, 24);
                   const stacked = eventHeight >= 40;
