@@ -20,6 +20,7 @@ import {
   statusLabel,
   mapAppointmentToCalendarEvent,
   includeAppointmentOnWeekCalendar,
+  formatRecurrenceSubtitleLine,
 } from '../components/calendar/calendarUtils';
 import { getMyAppointments, cancelAppointment, updateMyParticipantStatus } from '../api/appointments';
 import { getHeatmaps } from '../api/heatmaps';
@@ -126,17 +127,43 @@ export default function StudentDashboard() {
       .slice(0, 10);
   }, [appointments]);
 
+  // Side panel shows one card per recurring series to avoid repetition.
+  const upcomingPanelAppts = useMemo(() => {
+    const grouped = [];
+    const recurringIndexByGroup = new Map();
+
+    upcomingAppts.forEach((appt) => {
+      const recurringGroupId = appt.recurrence_group_id;
+
+      if (!recurringGroupId) {
+        grouped.push({
+          appt,
+          seriesCount: 1,
+          isSeriesCard: false,
+        });
+        return;
+      }
+
+      if (!recurringIndexByGroup.has(recurringGroupId)) {
+        recurringIndexByGroup.set(recurringGroupId, grouped.length);
+        grouped.push({
+          appt,
+          seriesCount: 1,
+          isSeriesCard: true,
+        });
+        return;
+      }
+
+      const idx = recurringIndexByGroup.get(recurringGroupId);
+      grouped[idx].seriesCount += 1;
+    });
+
+    return grouped;
+  }, [upcomingAppts]);
+
   /*CODE GENERATED FROM ChatGPT ENDS HERE*/
   /*__________________________________________________________________________*/
 
-
-  // Keeps older appointments visible as a simple history list in the side panel.
-  const pastAppts = useMemo(() => {
-    const now = new Date();
-    return appointments
-      .filter((a) => includeAppointmentOnWeekCalendar(a) && new Date(a.startTime) < now)
-      .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
-  }, [appointments]);
 
   const weekCalendarAppointments = useMemo(
     () => appointments.filter(includeAppointmentOnWeekCalendar),
@@ -302,140 +329,119 @@ export default function StudentDashboard() {
             {rightPanelOpen && (
               <aside className="side-panel">
                 {/* Upcoming items are shown first because they matter the most day-to-day. */}
-              <div>
+              <div className="side-panel-section side-panel-section-upcoming">
                 <div className="side-panel-title">Upcoming appointments</div>
-                {upcomingAppts.length === 0 ? (
-                  // Empty state keeps the panel from looking broken when there is no data.
-                  <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
-                ) : (
-                  upcomingAppts.map((appt) => {
-                    // Convert raw status into label + CSS class for the pill.
-                    const { label, cls } = statusLabel(appt.status);
+                <div className="side-panel-scroll">
+                  {upcomingPanelAppts.length === 0 ? (
+                    // Empty state keeps the panel from looking broken when there is no data.
+                    <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
+                  ) : (
+                    upcomingPanelAppts.map(({ appt, seriesCount, isSeriesCard }) => {
+                      // Convert raw status into label + CSS class for the pill.
+                      const { label, cls } = statusLabel(appt.status);
+                      const recurrenceSummary = formatRecurrenceSubtitleLine({
+                        recurrence_rule: appt.recurrence_rule,
+                        recurrence_group_id: appt.recurrence_group_id,
+                      });
 
-                    return (
-                      // Each card is clickable so students can review or cancel from the modal.
-                      <div
-                        key={appt.id}
-                        className="appointment-item"
-                        onClick={() => {
-                          setActiveAppt(appt);
-                          setModal('detail');
-                        }}
-                      >
-                        <div className="appointment-color-dot" style={{ background: appt.color }} />
-                        <div>
-                          <h4>{appt.title || 'Untitled appointment'}</h4>
-                          <h6>{appt.ownerName}</h6>
-                          <p>{formatDate(appt.startTime)}</p>
-                          <p>{appt.location}</p>
-                        </div>
-                        <span className={`appointment-status-pill ${cls}`}>{label}</span>
-                        {appt.attendeeStatus === 'pending' && (
-                          <div style={{ display: 'grid', gap: 6 }}>
-                            <button
-                              type="button"
-                              className="invite-action-button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUpdateMyStatus(appt.id, 'confirmed');
-                              }}
-                              title="Set your status to confirmed"
-                            >
-                              ✓
-                            </button>
-                            <button
-                              type="button"
-                              className="invite-action-button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleUpdateMyStatus(appt.id, 'cancelled');
-                              }}
-                              title="Set your status to cancelled"
-                            >
-                              ×
-                            </button>
+                      return (
+                        // Each card is clickable so students can review or cancel from the modal.
+                        <div
+                          key={appt.id}
+                          className="appointment-item"
+                          onClick={() => {
+                            setActiveAppt(appt);
+                            setModal('detail');
+                          }}
+                        >
+                          <div className="appointment-color-dot" style={{ background: appt.color }} />
+                          <div>
+                            <h4>{appt.title || 'Untitled appointment'}</h4>
+                            <h6>{appt.ownerName}</h6>
+                            <p>{formatDate(appt.startTime)}</p>
+                            <p>{appt.location}</p>
+                            {appt.recurrence_group_id && (
+                              <p className="appointment-recurrence-line">
+                                {recurrenceSummary || 'Part of a recurring series'}
+                                {isSeriesCard && seriesCount > 1 ? ` • +${seriesCount - 1} more` : ''}
+                              </p>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              <div className="side-panel-divider" />
-
-              {/* Past appointments stay available as a simple history list. */}
-              <div>
-                <div className="side-panel-title">Past appointments</div>
-                {pastAppts.length === 0 ? (
-                  <p style={{ fontSize: 12, color: '#aaa' }}>No past appointments yet.</p>
-                ) : (
-                  pastAppts.map((appt) => {
-                    // Reuse the same status pill treatment as upcoming appointments.
-                    const { label, cls } = statusLabel(appt.status);
-
-                    return (
-                      <div
-                        key={appt.id}
-                        className="appointment-item"
-                        onClick={() => {
-                          setActiveAppt(appt);
-                          setModal('detail');
-                        }}
-                      >
-                        <div className="appointment-color-dot" style={{ background: appt.color }} />
-                        <div>
-                          <h4>{appt.title || 'Untitled appointment'}</h4>
-                          <h6>{appt.ownerName}</h6>
-                          <p>{formatDate(appt.startTime)}</p>
-                          <p>{appt.location}</p>
+                          <span className={`appointment-status-pill ${cls}`}>{label}</span>
+                          {appt.attendeeStatus === 'pending' && (
+                            <div style={{ display: 'grid', gap: 6 }}>
+                              <button
+                                type="button"
+                                className="invite-action-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateMyStatus(appt.id, 'confirmed');
+                                }}
+                                title="Set your status to confirmed"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                type="button"
+                                className="invite-action-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateMyStatus(appt.id, 'cancelled');
+                                }}
+                                title="Set your status to cancelled"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
                         </div>
-                        <span className={`appointment-status-pill ${cls}`}>{label}</span>
-                      </div>
-                    );
-                  })
-                )}
+                      );
+                    })
+                  )}
+                </div>
               </div>
 
               <div className="side-panel-divider" />
 
-              {/* Heatmap invites are shown last as action items the student may still need to respond to. */}
-              <div>
+              {/* Heatmap invites are shown as action items the student may still need to respond to. */}
+              <div className="side-panel-section side-panel-section-heatmap">
                 <div className="side-panel-title">Heatmap invitations</div>
-                {heatmapInvites.length === 0 ? (
-                  <p style={{ fontSize: 12, color: '#aaa' }}>No heatmap invitations right now.</p>
-                ) : (
-                  heatmapInvites.map((inv) => (
-                    // One invitation card per heatmap the student can view or respond to.
-                    <div key={inv.id} className="invite-item">
-                      <div className={`invite-dot${inv.responded ? ' responded' : ''}`} />
-                      <div>
-                        <h4>{inv.profName}</h4>
-                        <p>{inv.title}</p>
-                        <p style={{ color: inv.responded ? '#888' : '#E31429' }}>
-                          {inv.responded
-                            ? inv.status === 'approved'
-                              ? 'Approved'
-                              : inv.status === 'declined'
-                                ? 'Declined'
-                                : 'Responded'
-                            : `Open ${new Date(inv.dueDate).toLocaleDateString('en-CA', {
-                                month: 'short',
-                                day: 'numeric',
-                              })}`}
-                        </p>
+                <div className="side-panel-scroll">
+                  {heatmapInvites.length === 0 ? (
+                    <p style={{ fontSize: 12, color: '#aaa' }}>No heatmap invitations right now.</p>
+                  ) : (
+                    heatmapInvites.map((inv) => (
+                      // One invitation card per heatmap the student can view or respond to.
+                      <div key={inv.id} className="invite-item">
+                        <div className={`invite-dot${inv.responded ? ' responded' : ''}`} />
+                        <div>
+                          <h4>{inv.profName}</h4>
+                          <p>{inv.title}</p>
+                          <p style={{ color: inv.responded ? '#888' : '#E31429' }}>
+                            {inv.responded
+                              ? inv.status === 'approved'
+                                ? 'Approved'
+                                : inv.status === 'declined'
+                                  ? 'Declined'
+                                  : 'Responded'
+                              : `Open ${new Date(inv.dueDate).toLocaleDateString('en-CA', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}`}
+                          </p>
+                        </div>
+                        <button
+                          className="invite-action-button"
+                          onClick={() => navigate(`/heatmap/student/${inv.id}`)}
+                          title={inv.responded ? 'View heatmap' : 'Respond to heatmap'}
+                        >
+                          {/* Plus means action needed; arrow means they already responded. */}
+                          {inv.responded ? '>' : '+'}
+                        </button>
                       </div>
-                      <button
-                        className="invite-action-button"
-                        onClick={() => navigate(`/heatmap/student/${inv.id}`)}
-                        title={inv.responded ? 'View heatmap' : 'Respond to heatmap'}
-                      >
-                        {/* Plus means action needed; arrow means they already responded. */}
-                        {inv.responded ? '>' : '+'}
-                      </button>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
             </aside>
           )}

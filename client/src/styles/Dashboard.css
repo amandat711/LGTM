@@ -253,6 +253,13 @@
   word-break: break-word;
 }
 
+.appointment-recurrence-line {
+  color: #5b6470;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
 /* Status pill pushed to the far right of the appointment card.
    Colour variant is applied by the status-* classes below. */
 .appointment-status-pill {
