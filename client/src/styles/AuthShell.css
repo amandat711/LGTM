@@ -1,0 +1,30 @@
+.auth-shell {
+    min-height: 100vh;
+    background: #fff;
+    color: #0f0f0f;
+    font-family: inherit;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.auth-header {
+    height: 54px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 1px 0 #e4e4e4;
+}
+
+.auth-main {
+    height: calc(100vh - 54px);
+    display: grid;
+    place-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 16px;
+}
+
+@media (min-width: 640px) {
+    .auth-main {
+        padding: 48px 40px;
+    }
+}

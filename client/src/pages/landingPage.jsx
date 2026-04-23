@@ -1,7 +1,7 @@
 //AMANDA TRAN
 
 import { useState, useRef } from "react";
-import logo1 from "../assets/logo1.png";
+import LGTMLogo2 from "../assets/LGTMLogo2.png";
 import header from "../assets/header.png";
 import heatmapPreview from "../assets/HeatmapPreview.png";
 import { useNavigate } from "react-router-dom";
@@ -27,17 +27,15 @@ export default function LandingPage() {
   return (
     <div className="landing-page">
       {/* Top navigation bar */}
-      <nav className="landing-top-bar">
-        <div className="landing-top-bar-content">
+      <div className="landing-top-bar">
           <Navbar
-            logo={logo1}
-            onLeftClick={() => navigate("/")}
+            logo={LGTMLogo2}
+            onLeftClick={() => navigate('/')}
             actions={[
               { label: "Login", onClick: () => navigate("/login") },
             ]}
           />
-        </div>
-      </nav>
+      </div>
 
       {/* Hero section with image, title, and main button */}
       <div className="hero-section">
@@ -288,7 +286,7 @@ export default function LandingPage() {
           <div className="footer-sub-inner">
             <div className="footer-copyright">
               <div className="footer-brand-lockup">
-                <img src={logo1} alt="McGill logo" className="footer-logo-mark" />
+                <img src={LGTMLogo2} alt="McGill logo" className="footer-logo-mark" />
                 
               </div>
               <div>Copyright &copy; 2026 McGill University.</div>
