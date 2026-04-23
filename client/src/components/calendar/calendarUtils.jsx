@@ -15,6 +15,37 @@ export const HOURS = Array.from(
   (_, i) => i + CALENDAR_START_HOUR
 );
 
+export function getCalendarTimeZone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+}
+
+export function getCalendarTimeZoneLabel(date = new Date()) {
+  const timeZone = getCalendarTimeZone();
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    timeZoneName: 'short',
+  });
+  const zonePart = formatter.formatToParts(date).find((part) => part.type === 'timeZoneName');
+  return zonePart?.value || timeZone;
+}
+
+export function toLocalDateInputValue(value = new Date()) {
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function toLocalTimeInputValue(value = new Date()) {
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+  const hour = String(d.getHours()).padStart(2, '0');
+  const minute = String(d.getMinutes()).padStart(2, '0');
+  return `${hour}:${minute}`;
+}
+
 export function formatTime(iso) {
   const d = new Date(iso);
   const h = d.getHours();
@@ -36,6 +67,77 @@ export function isSameDay(d1, d2) {
   );
 }
 
+/** Bookings with row status cancelled are hidden from week calendars (still available via GET /:id if needed). */
+export function includeAppointmentOnWeekCalendar(event) {
+  if (!event || event.type === 'availability') return true;
+  return event.appointmentStatus !== 'cancelled';
+}
+
+const WEEKDAY_ORDER = { MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6, SU: 7 };
+const WEEKDAY_LABEL = { MO: 'Mon', TU: 'Tue', WE: 'Wed', TH: 'Thu', FR: 'Fri', SA: 'Sat', SU: 'Sun' };
+
+function weekdayOrder(code) {
+  return WEEKDAY_ORDER[code] ?? 999;
+}
+
+function weekdayLabel(code) {
+  return WEEKDAY_LABEL[code] || code;
+}
+
+function summarizeParsedRecurrence(recurrence) {
+  if (!recurrence?.enabled) return '';
+
+  const sortedDays = [...(recurrence.byWeekdays || [])].sort((a, b) => weekdayOrder(a) - weekdayOrder(b));
+  const dayNames = sortedDays.map(weekdayLabel);
+
+  let summary = `Repeats every ${recurrence.interval} week${recurrence.interval > 1 ? 's' : ''}`;
+  if (dayNames.length > 0) {
+    summary += dayNames.length <= 2 ? ` on ${dayNames.join(' and ')}` : ` on ${dayNames.join(', ')}`;
+  }
+
+  if (recurrence.endType === 'on' && recurrence.until) {
+    summary += ` until ${recurrence.until}`;
+  } else if (recurrence.endType === 'after' && recurrence.count) {
+    summary += ` for ${recurrence.count} occurrence${recurrence.count !== 1 ? 's' : ''}`;
+  }
+
+  return summary;
+}
+
+function parseRecurrenceRulePayload(rule) {
+  if (rule == null || rule === '') return null;
+  if (typeof rule === 'object' && !Array.isArray(rule)) return rule;
+  if (typeof rule === 'string') {
+    const t = rule.trim();
+    if (!t) return null;
+    try {
+      const p = JSON.parse(t);
+      return typeof p === 'object' && p !== null ? p : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * One-line human summary for under date/time in modals (matches app recurrence JSON shape).
+ */
+export function formatRecurrenceSubtitleLine({ recurrence_rule, recurrence_group_id } = {}) {
+  const parsed = parseRecurrenceRulePayload(recurrence_rule);
+  if (parsed?.enabled) {
+    return summarizeParsedRecurrence(parsed);
+  }
+  if (typeof recurrence_rule === 'string' && recurrence_rule.trim() && !parsed) {
+    const t = recurrence_rule.trim();
+    return t.length > 100 ? `${t.slice(0, 97)}…` : t;
+  }
+  if (Number(recurrence_group_id) > 0) {
+    return 'Part of a recurring series';
+  }
+  return '';
+}
+
 export function statusLabel(status) {
   if (status === 'confirmed') return { label: 'Confirmed', cls: 'status-confirmed' };
   if (status === 'pending') return { label: 'Pending', cls: 'status-pending' };
@@ -47,27 +149,47 @@ export function statusLabel(status) {
 export function getEventStyle(appt, slotHeight = 64) {
   const start = new Date(appt.startTime);
   const end = new Date(appt.endTime);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+    return { top: 0, height: 0, isVisible: false };
+  }
 
-  const minutesFromTop =
-    (start.getHours() - CALENDAR_START_HOUR) * 60 + start.getMinutes();
+  const totalMinutes = (CALENDAR_END_HOUR - CALENDAR_START_HOUR + 1) * 60;
+  const startMinutes = (start.getHours() - CALENDAR_START_HOUR) * 60 + start.getMinutes();
+  const endMinutes = (end.getHours() - CALENDAR_START_HOUR) * 60 + end.getMinutes();
+  const visibleStart = Math.max(startMinutes, 0);
+  const visibleEnd = Math.min(endMinutes, totalMinutes);
 
-  const durationMinutes = (end - start) / 60000;
+  if (visibleEnd <= visibleStart) {
+    return { top: 0, height: 0, isVisible: false };
+  }
 
-  const top = (minutesFromTop / 60) * slotHeight;
-  const height = Math.max((durationMinutes / 60) * slotHeight, 28);
+  const top = (visibleStart / 60) * slotHeight;
+  const height = Math.max(((visibleEnd - visibleStart) / 60) * slotHeight, 18);
 
-  return { top, height };
+  return { top, height, isVisible: true };
 }
 
-export function mapAppointmentToCalendarEvent(appt) {
+export function mapAppointmentToCalendarEvent(appt, viewerUserId = null) {
   const host = appt.participants?.find((p) => p.participant_role === 'host');
   const attendee = appt.participants?.find((p) => p.participant_role === 'attendee');
+  const participantStatuses = (appt.participants || []).map((p) => ({
+    userId: p.user_id,
+    name: `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Unknown user',
+    email: p.mcgill_email || '',
+    role: p.participant_role,
+    status:
+      p.participant_status ||
+      (p.response_status === 'accepted'
+        ? 'confirmed'
+        : p.response_status === 'declined'
+          ? 'cancelled'
+          : 'pending'),
+  }));
+  const attendeeStatuses = participantStatuses.filter((p) => p.role === 'attendee');
 
-  let color = '#1565a8';
-  if (appt.status === 'confirmed') color = '#2a8c5f';
-  else if (appt.status === 'pending') color = '#f59e0b';
-  else if (appt.status === 'waiting_approval') color = '#3b82f6';
-  else if (appt.status === 'cancelled') color = '#dc2626';
+  const myParticipant = participantStatuses.find((p) => Number(p.userId) === Number(viewerUserId));
+  const myStatus = appt.status === 'cancelled' ? 'cancelled' : (myParticipant?.status || appt.status || 'pending');
+  const color = appt.ap_color || '#1565A8';
 
   return {
     id: appt.appointment_id,
@@ -76,12 +198,31 @@ export function mapAppointmentToCalendarEvent(appt) {
     ownerEmail: host?.mcgill_email || '',
     attendeeName: attendee ? `${attendee.first_name} ${attendee.last_name}` : '',
     attendeeEmail: attendee?.mcgill_email || '',
+    attendeeStatus:
+      attendee?.participant_status ||
+      (attendee?.response_status === 'accepted'
+        ? 'confirmed'
+        : attendee?.response_status === 'declined'
+          ? 'cancelled'
+          : 'pending'),
     startTime: appt.start_time,
     endTime: appt.end_time,
+    description: appt.ap_description || '',
+    notes: appt.ap_description || '',
+    capacity: Number(appt.capacity ?? 1),
+    visibility: appt.visibility || 'private',
+    recurrence_group_id:
+      appt.recurrence_group_id ?? appt.source_recurrence_group_id ?? null,
+    recurrence_instance_date: appt.source_recurrence_instance_date ?? appt.recurrence_instance_date ?? null,
+    recurrence_rule: appt.recurrence_rule ?? appt.source_recurrence_rule ?? null,
+    course_id: appt.course_id ?? null,
     location: appt.location || 'TBD',
-    status: appt.status,
+    status: myStatus,
+    appointmentStatus: appt.status,
     color,
     participants: appt.participants || [],
+    participantStatuses,
+    attendeeStatuses,
   };
 }
 
@@ -94,6 +235,9 @@ export function mapAvailabilityToCalendarEvent(slot, currentUserName = 'You') {
     id: `availability-${slot.availability_id}`,
     rawId: slot.availability_id,
     type: 'availability',
+    recurrence_group_id: slot.recurrence_group_id || null,
+    recurrence_instance_date: slot.recurrence_instance_date || null,
+    is_recurrence_exception: Number(slot.is_recurrence_exception || 0),
     title: slot.av_title || 'Availability',
     description: slot.av_description || '',
     startTime: slot.start_time,
@@ -106,6 +250,8 @@ export function mapAvailabilityToCalendarEvent(slot, currentUserName = 'You') {
     visibility: slot.visibility,
     capacity,
     bookedCount,
+    recurrence_rule: slot.recurrence_rule,
+    course_id: slot.course_id ?? null,
     color: '#6B7280',
   };
 }

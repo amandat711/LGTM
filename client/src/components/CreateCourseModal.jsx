@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import Button from '@mui/material/Button';
 import '../styles/CreateAvailabilityModal.css';
+import { Modal } from './Modals';
 
 const TERMS = ['Winter', 'Fall', 'Summer'];
 
@@ -55,37 +57,14 @@ export default function CreateCourseModal({ onClose, onSubmit }) {
     }
   }
 
-  function handleOverlayMouseDown(e) {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  }
-
   return (
-    <div
-      className="availability-modal-overlay"
-      onMouseDown={handleOverlayMouseDown}
+    <Modal
+      title="Create course"
+      onClose={onClose}
+      className="availability-modal create-item-modal"
+      meta={<span className="modal-kind-pill modal-kind-pill--event">Course</span>}
     >
-      <div
-        className="availability-modal"
-        onMouseDown={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="create-course-title"
-      >
-        <div className="availability-modal-header">
-          <h2 id="create-course-title">Create course</h2>
-          <button
-            type="button"
-            className="availability-close-btn"
-            onClick={onClose}
-            aria-label="Close modal"
-          >
-            ×
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="availability-form-grid">
+      <form onSubmit={handleSubmit} className="availability-form-grid">
           <div className="form-group">
             <label htmlFor="course_code">Course code</label>
             <input
@@ -151,20 +130,19 @@ export default function CreateCourseModal({ onClose, onSubmit }) {
           )}
 
           <div className="availability-modal-footer form-group-full">
-            <button
+            <Button
               type="button"
-              className="modal-btn secondary"
+              variant="text"
               onClick={onClose}
               disabled={saving}
             >
               Cancel
-            </button>
-            <button type="submit" className="modal-btn primary" disabled={saving}>
+            </Button>
+            <Button type="submit" variant="contained" disabled={saving}>
               {saving ? 'Creating…' : 'Create course'}
-            </button>
+            </Button>
           </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }

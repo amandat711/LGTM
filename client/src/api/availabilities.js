@@ -23,12 +23,27 @@ export async function createAvailability(payload) {
   return handleResponse(res);
 }
 
-export async function deleteAvailability(availabilityId, deletedBy) {
+export async function deleteAvailability(availabilityId, deletedBy, options = {}) {
   const res = await fetch(`${API_BASE}/availabilities/${availabilityId}`, {
     ...fetchOpts,
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ deleted_by: deletedBy }),
+    body: JSON.stringify({
+      deleted_by: deletedBy,
+      recurrence_scope: options.recurrence_scope,
+      pivot_instance_date: options.pivot_instance_date,
+    }),
+  });
+
+  return handleResponse(res);
+}
+
+export async function updateAvailability(availabilityId, payload) {
+  const res = await fetch(`${API_BASE}/availabilities/${availabilityId}`, {
+    ...fetchOpts,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
   });
 
   return handleResponse(res);

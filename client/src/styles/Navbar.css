@@ -14,21 +14,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-
   height: 54px;
-  width: 100vw;
-  max-width: none;
-
+  width: 100%;
   margin: 0;
-  padding: 0 24px 0 0;
-  padding-left: 16px;
+  padding: 0 20px;
   box-sizing: border-box;
+  flex-shrink: 0;
+  z-index: 10;
+  position: relative;
 }
 
 .top-bar-left,
 .top-bar-right {
   display: flex;
   align-items: center;
+  min-width: 0;
   margin: 0;
   padding: 0;
 }
@@ -42,6 +42,11 @@
   padding: 0;
   margin: 0;
   cursor: pointer;
+  min-width: 0;
+}
+
+.top-bar-logo-button.is-static {
+  cursor: default;
 }
 
 /* troubleshooting navbar logo */
@@ -57,8 +62,9 @@
 }
 
 .top-bar-logo {
-  height: 72px;
-  width: 72px;
+  height: 32px;
+  width: auto;
+  max-width: 32px;
   object-fit: contain;
   display: block;
   margin: 0;
@@ -70,6 +76,9 @@
   font-size: 15px;
   font-weight: 600;
   color: #0f0f0f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .top-bar-user {

@@ -89,22 +89,66 @@ CREATE TABLE course_ownerships (
     FOREIGN KEY (general_admin_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
-CREATE TABLE availabilities (
-    availability_id      INTEGER PRIMARY KEY AUTOINCREMENT,
-    created_by           INTEGER NOT NULL,
-    location             TEXT,
-    capacity             INTEGER NOT NULL DEFAULT 1 CHECK (capacity >= 1),
-    start_time           TEXT NOT NULL,
-    end_time             TEXT NOT NULL,
-    visibility           TEXT NOT NULL DEFAULT 'private'
-                         CHECK (visibility IN ('public', 'private')),
-    recurrence_rule      TEXT,
-    av_title             TEXT,
-    av_description       TEXT,
-    created_at           TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CHECK (datetime(end_time) > datetime(start_time)),
-    FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE CASCADE
+CREATE TABLE recurrence_series (
+    recurrence_group_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_by            INTEGER NOT NULL,
+    course_id             INTEGER,
+    frequency             TEXT NOT NULL
+                          CHECK (frequency IN ('weekly', 'monthly')),
+    interval_value        INTEGER NOT NULL DEFAULT 1
+                          CHECK (interval_value >= 1),
+    by_weekdays           TEXT,
+    by_month_day          INTEGER,
+    monthly_pattern       TEXT,
+    end_type              TEXT NOT NULL
+                          CHECK (end_type IN ('never', 'on', 'after')),
+    until_date            TEXT,
+    occurrence_count      INTEGER,
+    exception_dates       TEXT,
+    series_start_time     TEXT NOT NULL,
+    series_end_time       TEXT NOT NULL,
+    slot_duration_minutes INTEGER NOT NULL DEFAULT 30
+                          CHECK (slot_duration_minutes >= 1),
+    location              TEXT,
+    capacity              INTEGER NOT NULL DEFAULT 1
+                          CHECK (capacity >= 1),
+    visibility            TEXT NOT NULL DEFAULT 'private'
+                          CHECK (visibility IN ('public', 'private')),
+    av_title              TEXT,
+    av_description        TEXT,
+    recurrence_rule       TEXT,
+    created_at            TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE
 );
+
+CREATE TABLE availabilities (
+    availability_id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    created_by                 INTEGER NOT NULL,
+    course_id                  INTEGER,
+    recurrence_group_id        INTEGER,
+    recurrence_instance_date   TEXT,
+    is_recurrence_exception    INTEGER NOT NULL DEFAULT 0
+                               CHECK (is_recurrence_exception IN (0, 1)),
+    location                   TEXT,
+    capacity                   INTEGER NOT NULL DEFAULT 1 CHECK (capacity >= 1),
+    start_time                 TEXT NOT NULL,
+    end_time                   TEXT NOT NULL,
+    visibility                 TEXT NOT NULL DEFAULT 'private'
+                               CHECK (visibility IN ('public', 'private')),
+    recurrence_rule            TEXT,
+    av_title                   TEXT,
+    av_description             TEXT,
+    created_at                 TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK (datetime(end_time) > datetime(start_time)),
+    FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE CASCADE,
+    FOREIGN KEY (recurrence_group_id) REFERENCES recurrence_series(recurrence_group_id) ON DELETE SET NULL
+);
+
+CREATE INDEX idx_recurrence_series_creator ON recurrence_series(created_by);
+CREATE INDEX idx_availabilities_recurrence_group ON availabilities(recurrence_group_id);
+CREATE INDEX idx_availabilities_instance_date ON availabilities(recurrence_instance_date);
 
 CREATE TABLE appointments (
     appointment_id            INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -119,10 +163,13 @@ CREATE TABLE appointments (
                               CHECK (visibility IN ('public', 'private')),
     ap_title                  TEXT,
     ap_description            TEXT,
+    ap_color                  TEXT NOT NULL DEFAULT '#1565A8',
     scheduling_mode           TEXT NOT NULL
                               CHECK (scheduling_mode IN ('calendar', 'heatmap', 'direct_request')),
     status                    TEXT NOT NULL DEFAULT 'pending'
                               CHECK (status IN ('pending', 'waiting_confirmation', 'confirmed', 'cancelled', 'rescheduled')),
+    recurrence_rule           TEXT,
+    recurrence_group_id       INTEGER,
     created_at                TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CHECK (datetime(end_time) > datetime(start_time)),
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE SET NULL,

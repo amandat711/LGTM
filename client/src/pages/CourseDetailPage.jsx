@@ -26,6 +26,10 @@ import InfoIcon from '../assets/infoIcon.png';
 import '../styles/Dashboard.css';
 import '../styles/CourseDetailPage.css';
 
+// #region agent log
+fetch('http://127.0.0.1:7735/ingest/cc35f6a7-c18d-4c61-b5e2-47ecdd6bdfac',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'35f1ac'},body:JSON.stringify({sessionId:'35f1ac',runId:'run1',hypothesisId:'H3',location:'client/src/pages/CourseDetailPage.jsx:30',message:'course detail module evaluated',data:{joinCourseEventType:typeof joinCourseEvent},timestamp:Date.now()})}).catch(()=>{});
+// #endregion
+
 function formatRange(startIso, endIso) {
   if (!startIso) return '';
   const start = new Date(normalizeDateTime(startIso));
@@ -66,19 +70,8 @@ function mergeEvents(detail) {
   return out;
 }
 
-function eventAccentClass(title, kind) {
-  const t = (title || '').toLowerCase();
-  if (t.includes('office') || t.includes(' oh') || /\boh\b/.test(t)) return 'course-detail-event--accent-green';
-  if (t.includes('tutorial')) return 'course-detail-event--accent-purple';
-  if (t.includes('lecture')) return 'course-detail-event--accent-blue';
-  if (kind === 'appointment') return 'course-detail-event--accent-purple';
-  return 'course-detail-event--accent-blue';
-}
-
-function calendarColorForEvent(title, kind) {
-  const accent = eventAccentClass(title, kind);
-  if (accent === 'course-detail-event--accent-green') return '#2a8c5f';
-  if (accent === 'course-detail-event--accent-purple') return '#7c3aed';
+function calendarColorForEvent(_title, _kind, persistedColor) {
+  if (persistedColor) return persistedColor;
   return '#1565a8';
 }
 
@@ -269,7 +262,7 @@ export default function CourseDetailPage() {
           endTime,
           location: ev.row.location || '',
           status: ev.row.status || '',
-          color: calendarColorForEvent(title, ev.kind),
+          color: calendarColorForEvent(title, ev.kind, ev.row.ap_color),
           creatorName: formatEventCreatorName(ev.row),
           description: ev.row.ap_description || '',
           appointmentId: ev.row.appointment_id,
@@ -759,14 +752,15 @@ export default function CourseDetailPage() {
                         {eventsMerged.map((ev) => {
                           const title =
                             ev.row.ap_title || 'Appointment';
-                          const accent = eventAccentClass(title, ev.kind);
+                          const eventColor = ev.row.ap_color || calendarColorForEvent(title, ev.kind, ev.row.ap_color);
                           const creatorName = formatEventCreatorName(ev.row);
                           return (
                             <li
                               key={
                                 `ap-${ev.row.appointment_id}`
                               }
-                              className={`course-detail-event ${accent}`}
+                              className="course-detail-event"
+                              style={{ '--course-event-accent': eventColor }}
                             >
                               <div className="course-detail-event-body">
                                 <div className="course-detail-event-title">{title}</div>

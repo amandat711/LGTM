@@ -30,6 +30,66 @@
   overflow: hidden;
 }
 
+/* Floating status: errors, confirmations, loading — does not consume main-content width */
+.dashboard-toast {
+  position: fixed;
+  top: 62px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  max-width: min(560px, calc(100vw - 32px));
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  pointer-events: auto;
+}
+
+.dashboard-toast-text {
+  flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+}
+
+.dashboard-toast--error {
+  background: #fff5f5;
+  border: 1px solid #f1c1c1;
+  color: #8f1d23;
+}
+
+.dashboard-toast--success {
+  background: #e8f7ec;
+  border: 1px solid #b7e4c0;
+  color: #1a5c2a;
+}
+
+.dashboard-toast--loading {
+  background: #f8f9fa;
+  border: 1px solid #e4e4e4;
+  color: #444;
+}
+
+.dashboard-toast-dismiss {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 2px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.dashboard-toast-dismiss:hover {
+  opacity: 1;
+}
+
 /*  TOP NAVIGATION BAR  */
 /* Navbar styles live in Navbar.css — imported by Navbar.jsx */
 
@@ -77,15 +137,36 @@
  */
 
 .side-panel {
-  width: 300px;
+  width: clamp(220px, 24vw, 300px);
   flex-shrink: 0;           /* never squish the panel when space is tight */
   display: flex;
   flex-direction: column;
-  overflow-y: auto;         /* scroll when content overflows */
+  overflow: hidden;         /* panel stays fixed; inner sections can scroll */
   background: #fff;
-  padding: 16px;
+  padding: clamp(10px, 1.2vw, 16px);
   gap: 20px;
   min-height: 0;            /* allows the panel to scroll within a flex parent */
+}
+
+.side-panel-section {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-panel-section-upcoming {
+  flex: 5 1 0;
+}
+
+.side-panel-section-heatmap {
+  flex: 3 1 0;
+}
+
+.side-panel-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
 }
 
 /* Section headings inside the side panel e.g. "Upcoming appointments" */
@@ -111,9 +192,20 @@
   margin-bottom: 8px;
   cursor: pointer;
   transition: box-shadow 0.15s, border-color 0.15s;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 6px;
+  align-items: start;
+  position: relative;
+}
+
+.appointment-item > div:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+  flex: 1;
+  min-width: 0;
+  padding-right: 90px;
 }
 
 .appointment-item:hover {
@@ -129,7 +221,9 @@
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
-  margin-top: 4px;   /* aligns the dot with the first line of text */
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  margin-top: 6px;   /* aligns the dot with the first line of text */
 }
 
 /* Appointment title — the meeting name */
@@ -138,26 +232,61 @@
   font-weight: 500;
   color: #0f0f0f;
   margin: 0 0 3px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.appointment-item h6 {
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* Secondary info: date, location, participant name */
 .appointment-item p {
+  display: block;
+  width: 100%;
+  max-width: 100%;
   font-size: 11px;
   color: #888;
   margin: 0;
   line-height: 1.5;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+}
+
+.appointment-recurrence-line {
+  color: #5b6470;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 4px;
 }
 
 /* Status pill pushed to the far right of the appointment card.
    Colour variant is applied by the status-* classes below. */
 .appointment-status-pill {
-  margin-left: auto;
+  margin-left: 0;
   flex-shrink: 0;
   padding: 4px 10px;
   border-radius: 9999px;
   font-size: 10px;
   font-weight: 500;
   border: 1px solid transparent;
+}
+
+.side-panel .appointment-item .appointment-status-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
 }
 
 /* Green — the appointment is locked in */
@@ -295,18 +424,33 @@
 
 .modal {
   width: 100%;
-  max-width: 460px;
+  max-width: 560px;
   background: #fff;
-  border-radius: 12px;
-  padding: 28px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 16px 56px rgba(15, 23, 42, 0.2);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+.modal-header-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .modal-header h3 {
@@ -336,7 +480,161 @@
 }
 
 .modal-body {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+  overflow-y: auto;
+  padding-top: 2px;
+}
+
+.modal-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.modal-titleblock {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+}
+
+.modal-titleblock-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.modal-recurrence-line {
+  font-size: 13px;
+  color: #5b6470;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.modal-recurrence-line--spaced {
+  margin: 0 0 14px;
+}
+
+.modal-subtitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: #444;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.modal-subtitle-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-subtitle-sep {
+  color: #bbb;
+}
+
+.modal-kind-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.modal-kind-pill--availability {
+  background: #f3f4f6;
+  color: #4b5563;
+  border-color: #e5e7eb;
+}
+
+.modal-kind-pill--event {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.modal-kind-pill--appointment {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.modal-kind-pill--course {
+  background: #fff8e1;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.modal-titleblock-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-section {
+  margin-top: 14px;
+}
+
+.modal-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #666;
+  margin: 0 0 10px;
+}
+
+.modal-section-title-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-row-label-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-inline-icon {
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.modal-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: #f5f5f5;
+  color: #444;
+}
+
+.modal-row-multiline {
+  align-items: flex-start;
+}
+
+.modal-row-value-block {
+  text-align: left;
+  font-weight: 500;
+  white-space: pre-wrap;
+  max-width: 280px;
 }
 
 .modal-row {
@@ -361,6 +659,123 @@
   color: #111;
   font-weight: 600;
   text-align: right;
+}
+
+.participant-list {
+  display: grid;
+  gap: 10px;
+}
+
+.participant-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.participant-row:last-child {
+  border-bottom: none;
+}
+
+.participant-avatar-wrap {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.participant-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.participant-status-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+.participant-status-confirmed {
+  background: #2a8c5f;
+}
+
+.participant-status-pending {
+  background: #f59e0b;
+}
+
+.participant-status-cancelled {
+  background: #dc2626;
+}
+
+.participant-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.participant-name {
+  font-size: 13px;
+  color: #111;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.participant-email {
+  font-size: 11px;
+  color: #666;
+}
+
+.participant-role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #374151;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.participant-status-actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.participant-status-edit-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.participant-status-icon {
+  color: #6b7280;
+}
+
+.participant-status-select {
+  height: 24px;
+  border: 1px solid #d6d6d6;
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 11px;
+  color: #444;
+  background: #fff;
 }
 
 .modal-footer {
@@ -448,6 +863,10 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.create-item-modal {
+  max-width: 940px;
 }
 
 .help-guide-modal .modal-body {
@@ -554,7 +973,7 @@
 @media (max-width: 900px) {
   /* Give the calendar more room on tablet-sized screens. */
   .side-panel {
-    width: 240px;
+    width: clamp(200px, 28vw, 240px);
   }
 }
 

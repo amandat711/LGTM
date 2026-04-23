@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllProfessors } from '../api/users';
+import { logout } from '../api/auth';
 import useAppShellSession from '../hooks/useAppShellSession';
-import { resolvePath } from '../auth/authUtils';
+import { isFacultyAdmin, resolvePath } from '../auth/authUtils';
 import Navbar from '../components/Navbar';
+import AppSidebar from '../components/AppSidebar';
+import logo from '../assets/logo1.png';
+import '../styles/Dashboard.css';
 
 function mapOwnerToProfessor(owner) {
   const firstName = owner.firstName ?? owner.first_name ?? '';
@@ -28,6 +32,18 @@ export default function BookingDiscovery() {
   const [professors, setProfessors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const firstName = user?.first_name || 'User';
+  const lastName = user?.last_name || '';
+  const userRole = isFacultyAdmin(user?.user_type) ? 'professor' : 'student';
+  const initials = `${firstName?.[0] || 'U'}${lastName?.[0] || ''}`;
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } finally {
+      navigate('/', { replace: true });
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -70,50 +86,61 @@ export default function BookingDiscovery() {
   return (
     <div className="dashboard-page">
       <Navbar
-        title="Back to dashboard"
+        logo={logo}
+        title="Search"
         onLeftClick={() => navigate(resolvePath('dashboard', user))}
-        user={{ displayName: 'Booking discovery' }}
+        user={{
+          displayName: `${lastName}, ${firstName}`,
+          role: userRole,
+          initials,
+        }}
+        actions={[{ label: 'Log Out', onClick: handleLogout }]}
       />
 
-      <div className="booking-page">
-        <section className="booking-box">
-          <h1>Find a professor to book with</h1>
-          <p className="booking-help-text">
-            Search professors by name, department, or email to view booking availability.
-          </p>
-          <input
-            className="booking-search-box"
-            type="search"
-            placeholder="Search for a professor"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-          />
-          {loading && <p style={{ marginTop: 12, color: '#666' }}>Loading professors...</p>}
-          {error && <p style={{ marginTop: 12, color: '#d13434' }}>{error}</p>}
-        </section>
+      <div className="dashboard-layout">
+        <AppSidebar activeId="search" user={user} navigate={navigate} canCreate={userRole === 'professor'} />
+        <div className="main-content">
+          <div className="booking-page">
+            <section className="booking-box">
+              <h1>Find a professor to book with</h1>
+              <p className="booking-help-text">
+                Search professors by name, department, or email to view booking availability.
+              </p>
+              <input
+                className="booking-search-box"
+                type="search"
+                placeholder="Search for a professor"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              {loading && <p style={{ marginTop: 12, color: '#666' }}>Loading professors...</p>}
+              {error && <p style={{ marginTop: 12, color: '#d13434' }}>{error}</p>}
+            </section>
 
-        <section className="professor-list">
-          {filteredProfessors.length === 0 ? (
-            <p className="booking-empty-message">No matching professors found.</p>
-          ) : (
-            filteredProfessors.map((prof) => (
-              <div key={prof.id} className="professor-card">
-                <div>
-                  <h2>{prof.name}</h2>
-                  <p className="professor-card-subtitle">{prof.department}</p>
-                  <p className="professor-card-email">{prof.email}</p>
-                  <p className="professor-card-description">{prof.bio}</p>
-                </div>
-                <button
-                  className="professor-card-button"
-                  onClick={() => navigate(`/booking/professor/${prof.id}`)}
-                >
-                  View availability
-                </button>
-              </div>
-            ))
-          )}
-        </section>
+            <section className="professor-list">
+              {filteredProfessors.length === 0 ? (
+                <p className="booking-empty-message">No matching professors found.</p>
+              ) : (
+                filteredProfessors.map((prof) => (
+                  <div key={prof.id} className="professor-card">
+                    <div>
+                      <h2>{prof.name}</h2>
+                      <p className="professor-card-subtitle">{prof.department}</p>
+                      <p className="professor-card-email">{prof.email}</p>
+                      <p className="professor-card-description">{prof.bio}</p>
+                    </div>
+                    <button
+                      className="professor-card-button"
+                      onClick={() => navigate(`/booking/professor/${prof.id}`)}
+                    >
+                      View availability
+                    </button>
+                  </div>
+                ))
+              )}
+            </section>
+          </div>
+        </div>
       </div>
     </div>
   );

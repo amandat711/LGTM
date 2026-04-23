@@ -38,8 +38,11 @@ router.get('/', (req, res) => {
 
   const qTrim = q != null && String(q).trim() ? String(q).trim() : '';
   if (qTrim) {
-    conditions.push('LOWER(mcgill_email) LIKE ?');
-    params.push(`%${qTrim.toLowerCase()}%`);
+    conditions.push(
+      `(LOWER(mcgill_email) LIKE ? OR LOWER(first_name) LIKE ? OR LOWER(last_name) LIKE ? OR LOWER(first_name || ' ' || last_name) LIKE ?)`
+    );
+    const qLike = `%${qTrim.toLowerCase()}%`;
+    params.push(qLike, qLike, qLike, qLike);
   }
 
   if (conditions.length) {

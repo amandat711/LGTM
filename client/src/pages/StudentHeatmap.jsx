@@ -7,8 +7,10 @@ import '../styles/Heatmap.css';
 // Shared page chrome and session helpers.
 import logo from '../assets/logo1.png';
 import Navbar from '../components/Navbar';
+import AppSidebar from '../components/AppSidebar';
 import useAppShellSession from '../hooks/useAppShellSession';
-import { sessionUserToNavUser } from '../auth/authUtils';
+import { isFacultyAdmin, sessionUserToNavUser } from '../auth/authUtils';
+import { logout } from '../api/auth';
 // Student view uses the professor-availability grid, where only professor slots are selectable.
 import { ProfAvailGrid, GridPager } from '../components/HeatmapGrid';
 // Backend helpers for loading a heatmap and saving the student's response.
@@ -47,6 +49,7 @@ export default function StudentHeatmap() {
   // Session data is converted into the smaller shape this page needs.
   const { user: sessionUser } = useAppShellSession();
   const sessionNav = useMemo(() => sessionUserToNavUser(sessionUser), [sessionUser]);
+  const canCreate = isFacultyAdmin(sessionUser?.user_type);
 
   // Local user object used for nav display and saving student availability.
   const user = useMemo(() => {
@@ -62,6 +65,14 @@ export default function StudentHeatmap() {
   const userInitials = user?.name
     ? user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
     : '';
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } finally {
+      navigate('/', { replace: true });
+    }
+  }
 
   // Controls which dates and hours are visible in the heatmap grid.
   const defaultRange = useMemo(() => getDefaultHeatmapRange(), []);
@@ -229,16 +240,23 @@ export default function StudentHeatmap() {
   }
 
   return (
-    <>
-      {/* Shared top navbar for returning to dashboard and showing student identity. */}
+    <div className="dashboard-page">
       <Navbar
         logo={logo}
-        title="Heatmap Booking"
+        title="Heatmap"
         user={user ? { displayName: user.name, role: user.role, initials: userInitials } : undefined}
-        actions={[{ label: 'Back to dashboard', onClick: () => navigate(buildDashboardPath(user)) }]}
+        onLeftClick={() => navigate(buildDashboardPath(user))}
+        actions={[{ label: 'Log Out', onClick: handleLogout }]}
       />
-
-      <div className="heatmap-page">
+      <div className="dashboard-layout">
+        <AppSidebar
+          activeId="search"
+          user={sessionUser}
+          navigate={navigate}
+          canCreate={canCreate}
+        />
+        <div className="main-content">
+          <div className="heatmap-page" style={{ width: '100%' }}>
         {/* Page intro explains whose availability the student is responding to. */}
         <div className="page-header">
           <div className="page-label">Student View</div>
@@ -390,7 +408,9 @@ export default function StudentHeatmap() {
             {profSaved.size === 0 && <span style={{ color: '#cc8800', marginLeft: 8 }}>(Professor hasn't published slots yet)</span>}
           </span>
         </div>
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

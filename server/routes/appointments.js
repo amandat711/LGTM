@@ -1,7 +1,133 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
-const { parseDate } = require('../utils/dateTime');
+const { routeLog } = require('../utils/routeLog');
+
+const {
+  parseDate,
+  toSqliteDateTime,
+  parseAndValidateWeeklyRecurrenceRule,
+  expandOccurrences,
+} = require('../utils/recurrence');
+
+function normalizeCourseId(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const n = parseInt(value, 10);
+  if (Number.isNaN(n) || n < 1) return 'invalid';
+  return n;
+}
+
+function normalizeInviteeIds(input) {
+  if (input == null) return [];
+  if (!Array.isArray(input)) return 'invalid';
+  const ids = input.map((v) => Number(v)).filter((n) => Number.isInteger(n));
+  if (ids.length !== input.length) return 'invalid';
+  return ids;
+}
+
+function uniqueInts(ints) {
+  const seen = new Set();
+  const out = [];
+  for (const n of ints) {
+    if (!seen.has(n)) {
+      seen.add(n);
+      out.push(n);
+    }
+  }
+  return out;
+}
+
+function normalizeRecurrenceScope(scope) {
+  if (!scope) return 'single';
+  const normalized = String(scope).trim().toLowerCase();
+  const allowed = ['single', 'this_and_following', 'all'];
+  if (!allowed.includes(normalized)) return null;
+  return normalized;
+}
+
+function toParticipantStatus(responseStatus) {
+  if (responseStatus === 'accepted') return 'confirmed';
+  if (responseStatus === 'declined') return 'cancelled';
+  return 'pending';
+}
+
+function toResponseStatus(participantStatus) {
+  if (participantStatus === 'confirmed') return 'accepted';
+  if (participantStatus === 'cancelled') return 'declined';
+  return 'pending';
+}
+
+async function recalculateAppointmentStatus(appointmentId) {
+  const appointment = await dbGet(
+    `SELECT appointment_id, status FROM appointments WHERE appointment_id = ?`,
+    [appointmentId]
+  );
+  if (!appointment || appointment.status === 'cancelled') return;
+
+  const participants = await dbAll(
+    `
+    SELECT response_status
+    FROM appointment_participants
+    WHERE appointment_id = ?
+    `,
+    [appointmentId]
+  );
+
+  // No participants means no workflow; keep it confirmed.
+  if (participants.length === 0) {
+    if (appointment.status !== 'confirmed') {
+      routeLog('appointments', 'appointment_status_recalculated', {
+        appointment_id: appointmentId,
+        old_status: appointment.status,
+        new_status: 'confirmed',
+        reason: 'no_participants',
+      });
+    }
+    await dbRun(`UPDATE appointments SET status = 'confirmed' WHERE appointment_id = ?`, [appointmentId]);
+    return;
+  }
+
+  const anyPending = participants.some((p) => p.response_status === 'pending');
+  const anyCancelled = participants.some((p) => p.response_status === 'declined');
+  const nextStatus = anyPending ? 'pending' : anyCancelled ? 'cancelled' : 'confirmed';
+
+  if (appointment.status !== nextStatus) {
+    routeLog('appointments', 'appointment_status_recalculated', {
+      appointment_id: appointmentId,
+      old_status: appointment.status,
+      new_status: nextStatus,
+    });
+  }
+
+  await dbRun(`UPDATE appointments SET status = ? WHERE appointment_id = ?`, [nextStatus, appointmentId]);
+}
+
+function dbRun(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (err) {
+      if (err) return reject(err);
+      resolve({ lastID: this.lastID, changes: this.changes });
+    });
+  });
+}
+
+function dbGet(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.get(sql, params, (err, row) => {
+      if (err) return reject(err);
+      resolve(row);
+    });
+  });
+}
+
+function dbAll(sql, params = []) {
+  return new Promise((resolve, reject) => {
+    db.all(sql, params, (err, rows) => {
+      if (err) return reject(err);
+      resolve(rows);
+    });
+  });
+}
 
 router.post('/', (req, res) => {
   const { availability_id, booked_by } = req.body;
@@ -103,7 +229,6 @@ router.post('/', (req, res) => {
                     INSERT INTO appointments
                     (
                         course_id,
-                        created_by,
                         created_from_availability,
                         capacity,
                         location,
@@ -115,13 +240,12 @@ router.post('/', (req, res) => {
                         scheduling_mode,
                         status
                     )
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `;
                   db.run(
                     insertAppointment,
                     [
-                    null,
-                    booked_by,
+                    availability.course_id ?? null,
                     availability.availability_id,
                     availability.capacity,
                     availability.location || null,
@@ -131,7 +255,7 @@ router.post('/', (req, res) => {
                     availability.av_title || 'Booked Appointment',
                     availability.av_description || null,
                     'calendar',
-                    'confirmed'
+                    'pending'
                     ],
                     function (err) {
                       if (err) return res.status(500).json({ error: err.message });
@@ -145,7 +269,7 @@ router.post('/', (req, res) => {
                         (appointment_id, user_id, participant_role, response_status)
                         VALUES (?, ?, ?, ?)
                         `,
-                        [appointmentId, availability.created_by, 'host', 'accepted'],
+                        [appointmentId, availability.created_by, 'host', 'pending'],
                         (err) => {
                           if (err) return res.status(500).json({ error: err.message });
 
@@ -160,43 +284,62 @@ router.post('/', (req, res) => {
                             (err) => {
                               if (err) return res.status(500).json({ error: err.message });
 
-                              // Add history row
+                              // Create invitation from student to professor.
                               db.run(
                                 `
-                                INSERT INTO appointment_history
-                                (
-                                  appointment_id,
-                                  changed_by,
-                                  old_status,
-                                  new_status,
-                                  changed_at,
-                                  note
-                                )
-                                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+                                INSERT INTO invitations
+                                (appointment_id, inviter_user_id, invitee_user_id, status)
+                                VALUES (?, ?, ?, 'sent')
                                 `,
-                                [
-                                  appointmentId,
-                                  booked_by,
-                                  null,
-                                  'confirmed',
-                                  'Appointment created from availability booking'
-                                ],
+                                [appointmentId, booked_by, availability.created_by],
                                 (err) => {
                                   if (err) return res.status(500).json({ error: err.message });
 
-                                  // Return created appointment
-                                  db.get(
-                                    `SELECT * FROM appointments WHERE appointment_id = ?`,
-                                    [appointmentId],
-                                    (err, appointmentRow) => {
-                                      if (err) {
-                                        return res.status(500).json({ error: err.message });
-                                      }
+                                  // Add history row
+                                  db.run(
+                                    `
+                                    INSERT INTO appointment_history
+                                    (
+                                      appointment_id,
+                                      changed_by,
+                                      old_status,
+                                      new_status,
+                                      changed_at,
+                                      note
+                                    )
+                                    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+                                    `,
+                                    [
+                                      appointmentId,
+                                      booked_by,
+                                      null,
+                                      'pending',
+                                      'Booking request created from availability (awaiting host response)'
+                                    ],
+                                    (err) => {
+                                      if (err) return res.status(500).json({ error: err.message });
 
-                                      res.status(201).json({
-                                        message: 'Appointment booked successfully',
-                                        appointment: appointmentRow
-                                      });
+                                      // Return created appointment
+                                      db.get(
+                                        `SELECT * FROM appointments WHERE appointment_id = ?`,
+                                        [appointmentId],
+                                        (err, appointmentRow) => {
+                                          if (err) {
+                                            return res.status(500).json({ error: err.message });
+                                          }
+
+                                          routeLog('appointments', 'booked_from_availability', {
+                                            appointment_id: appointmentId,
+                                            booked_by,
+                                            availability_id,
+                                          });
+
+                                          res.status(201).json({
+                                            message: 'Booking request sent successfully',
+                                            appointment: appointmentRow
+                                          });
+                                        }
+                                      );
                                     }
                                   );
                                 }
@@ -217,79 +360,177 @@ router.post('/', (req, res) => {
   );
 });
 
-router.post('/direct', (req, res) => {
+router.post('/direct', async (req, res) => {
   const {
     created_by,
-    course_id,
+    course_id: bodyCourseId,
     start_time,
     end_time,
     location,
-    capacity,
     visibility,
+    capacity,
     ap_title,
     ap_description,
-    scheduling_mode,
-    status,
+    ap_color,
+    invitee_user_ids,
+    recurrence_rule,
   } = req.body || {};
 
-  if (!created_by || !start_time || !end_time) {
-    return res.status(400).json({
-      error: 'created_by, start_time, and end_time are required',
+  try {
+    const courseIdNorm = normalizeCourseId(bodyCourseId);
+    if (courseIdNorm === 'invalid') {
+      return res.status(400).json({ error: 'course_id must be a positive integer or null/omitted.' });
+    }
+
+    if (!created_by || !start_time || !end_time) {
+      return res.status(400).json({
+        error: 'created_by, start_time, and end_time are required',
+      });
+    }
+
+    const creatorId = Number(created_by);
+    if (!Number.isInteger(creatorId) || creatorId < 1) {
+      return res.status(400).json({ error: 'created_by must be a positive integer' });
+    }
+
+    const finalCapacity = capacity ?? 1;
+    if (!Number.isInteger(finalCapacity) || finalCapacity < 1) {
+      return res.status(400).json({ error: 'capacity must be >= 1' });
+    }
+
+    const finalVisibility = visibility ?? 'private';
+    if (!['public', 'private'].includes(finalVisibility)) {
+      return res.status(400).json({ error: 'visibility must be public or private' });
+    }
+    const finalColor = ap_color == null || String(ap_color).trim() === '' ? '#1565A8' : String(ap_color).trim();
+    if (!/^#[0-9A-Fa-f]{6}$/.test(finalColor)) {
+      return res.status(400).json({ error: 'ap_color must be a hex color like #1565A8' });
+    }
+
+    const startDate = parseDate(start_time);
+    const endDate = parseDate(end_time);
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: 'start_time and end_time must be valid datetimes' });
+    }
+    if (endDate <= startDate) {
+      return res.status(400).json({ error: 'end_time must be after start_time' });
+    }
+
+    const inviteeIdsNorm = normalizeInviteeIds(invitee_user_ids);
+    if (inviteeIdsNorm === 'invalid') {
+      return res.status(400).json({ error: 'invitee_user_ids must be an array of integers' });
+    }
+
+    const uniqueInvitees = uniqueInts(inviteeIdsNorm);
+    if (uniqueInvitees.length !== inviteeIdsNorm.length) {
+      return res.status(400).json({ error: 'Duplicate invitees are not allowed' });
+    }
+
+    if (uniqueInvitees.some((id) => id === creatorId)) {
+      return res.status(400).json({ error: 'You cannot invite yourself' });
+    }
+
+    const creator = await dbGet(`SELECT user_id, user_type FROM users WHERE user_id = ?`, [
+      creatorId,
+    ]);
+    if (!creator) {
+      return res.status(404).json({ error: 'Creator not found' });
+    }
+    if (!['course_admin', 'general_admin'].includes(creator.user_type)) {
+      return res.status(403).json({ error: 'Not allowed to create direct appointments' });
+    }
+
+    if (uniqueInvitees.length > 0) {
+      const placeholders = uniqueInvitees.map(() => '?').join(',');
+      const invitees = await dbAll(
+        `SELECT user_id FROM users WHERE user_id IN (${placeholders})`,
+        uniqueInvitees
+      );
+      if (invitees.length !== uniqueInvitees.length) {
+        return res.status(404).json({ error: 'One or more invitees were not found' });
+      }
+    }
+
+    let parsedRecurrence = null;
+    let recurrenceRuleForDb = null;
+    try {
+      const parsed = parseAndValidateWeeklyRecurrenceRule(recurrence_rule);
+      parsedRecurrence = parsed.rule;
+      recurrenceRuleForDb = parsed.ruleForDb;
+    } catch (e) {
+      const code = e.statusCode || 500;
+      return res.status(code).json({ error: e.message });
+    }
+
+    const occurrences = expandOccurrences({
+      baseStartDate: startDate,
+      baseEndDate: endDate,
+      recurrenceRule: parsedRecurrence,
     });
-  }
 
-  const hostId = Number(created_by);
-  if (!Number.isInteger(hostId) || hostId < 1) {
-    return res.status(400).json({ error: 'created_by must be a positive integer' });
-  }
+    if (!occurrences.length) {
+      return res.status(400).json({ error: 'No occurrences could be generated' });
+    }
 
-  const parsedCourseId =
-    course_id === undefined || course_id === null || course_id === ''
-      ? null
-      : Number(course_id);
-  if (parsedCourseId != null && (!Number.isInteger(parsedCourseId) || parsedCourseId < 1)) {
-    return res.status(400).json({ error: 'course_id must be a positive integer or null' });
-  }
+    const overlapHostedQuery = `
+      SELECT a.appointment_id, a.start_time, a.end_time
+      FROM appointments a
+      JOIN appointment_participants ap
+        ON a.appointment_id = ap.appointment_id
+      WHERE ap.user_id = ?
+        AND ap.participant_role = 'host'
+        AND a.status != 'cancelled'
+        AND datetime(a.start_time) < datetime(?)
+        AND datetime(a.end_time) > datetime(?)
+      LIMIT 1
+    `;
 
-  const finalCapacity = capacity == null ? 1 : Number(capacity);
-  if (!Number.isInteger(finalCapacity) || finalCapacity < 1) {
-    return res.status(400).json({ error: 'capacity must be a positive integer' });
-  }
+    const overlapAvailabilityQuery = `
+      SELECT availability_id, start_time, end_time
+      FROM availabilities
+      WHERE created_by = ?
+        AND datetime(start_time) < datetime(?)
+        AND datetime(end_time) > datetime(?)
+      LIMIT 1
+    `;
 
-  const finalVisibility = visibility || 'private';
-  if (!['public', 'private'].includes(finalVisibility)) {
-    return res.status(400).json({ error: 'visibility must be public or private' });
-  }
+    for (const occ of occurrences) {
+      const occStart = toSqliteDateTime(occ.start);
+      const occEnd = toSqliteDateTime(occ.end);
 
-  const finalSchedulingMode = scheduling_mode || 'calendar';
-  if (!['calendar', 'heatmap', 'direct_request'].includes(finalSchedulingMode)) {
-    return res.status(400).json({ error: 'scheduling_mode is invalid' });
-  }
+      const overlapAppt = await dbGet(overlapHostedQuery, [creatorId, occEnd, occStart]);
+      if (overlapAppt) {
+        return res.status(400).json({
+          error: 'Direct appointment overlaps with an existing hosted appointment',
+          conflicting_occurrence: { start_time: occStart, end_time: occEnd },
+          existing_appointment: overlapAppt,
+        });
+      }
 
-  const finalStatus = status || 'confirmed';
-  if (!['pending', 'waiting_confirmation', 'confirmed', 'cancelled', 'rescheduled'].includes(finalStatus)) {
-    return res.status(400).json({ error: 'status is invalid' });
-  }
+      const overlapAv = await dbGet(overlapAvailabilityQuery, [creatorId, occEnd, occStart]);
+      if (overlapAv) {
+        return res.status(400).json({
+          error: 'Direct appointment overlaps with an existing availability',
+          conflicting_occurrence: { start_time: occStart, end_time: occEnd },
+          existing_availability: overlapAv,
+        });
+      }
+    }
 
-  const startDate = parseDate(start_time);
-  const endDate = parseDate(end_time);
-  if (!startDate || !endDate) {
-    return res.status(400).json({ error: 'start_time and end_time must be valid datetimes' });
-  }
-  if (endDate <= startDate) {
-    return res.status(400).json({ error: 'end_time must be after start_time' });
-  }
+    await dbRun('BEGIN');
+    const createdAppointmentIds = [];
+    let directSeriesRecurrenceGroupId = null;
 
-  db.get('SELECT user_id FROM users WHERE user_id = ?', [hostId], (hostErr, hostRow) => {
-    if (hostErr) return res.status(500).json({ error: hostErr.message });
-    if (!hostRow) return res.status(404).json({ error: 'Host user not found' });
+    try {
+      for (const occ of occurrences) {
+        const occStart = toSqliteDateTime(occ.start);
+        const occEnd = toSqliteDateTime(occ.end);
 
-    const continueInsert = () => {
-      db.run(
-        `INSERT INTO appointments
+        const insert = await dbRun(
+          `
+          INSERT INTO appointments
           (
             course_id,
-            created_by,
             created_from_availability,
             capacity,
             location,
@@ -298,450 +539,72 @@ router.post('/direct', (req, res) => {
             visibility,
             ap_title,
             ap_description,
+            ap_color,
             scheduling_mode,
-            status
+            status,
+            recurrence_rule,
+            recurrence_group_id
           )
-          VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          parsedCourseId,
-          hostId,
-          finalCapacity,
-          location || null,
-          start_time,
-          end_time,
-          finalVisibility,
-          ap_title || null,
-          ap_description || null,
-          finalSchedulingMode,
-          finalStatus,
-        ],
-        function onInsert(insertErr) {
-          if (insertErr) return res.status(500).json({ error: insertErr.message });
+          VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `,
+          [
+            courseIdNorm,
+            finalCapacity,
+            location || null,
+            occStart,
+            occEnd,
+            finalVisibility,
+            ap_title || null,
+            ap_description || null,
+            finalColor,
+            'calendar',
+            uniqueInvitees.length > 0 ? 'pending' : 'confirmed',
+            recurrenceRuleForDb,
+            directSeriesRecurrenceGroupId,
+          ]
+        );
 
-          const appointmentId = this.lastID;
-          db.run(
-            `INSERT INTO appointment_participants
-              (appointment_id, user_id, participant_role, response_status)
-              VALUES (?, ?, 'host', 'accepted')`,
-            [appointmentId, hostId],
-            (partErr) => {
-              if (partErr) return res.status(500).json({ error: partErr.message });
+        const appointmentId = insert.lastID;
+        createdAppointmentIds.push(appointmentId);
 
-              db.run(
-                `INSERT INTO appointment_history
-                  (appointment_id, changed_by, old_status, new_status, changed_at, note)
-                  VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)`,
-                [appointmentId, hostId, null, finalStatus, 'Appointment created directly'],
-                (historyErr) => {
-                  if (historyErr) return res.status(500).json({ error: historyErr.message });
-
-                  db.get(
-                    'SELECT * FROM appointments WHERE appointment_id = ?',
-                    [appointmentId],
-                    (getErr, appointmentRow) => {
-                      if (getErr) return res.status(500).json({ error: getErr.message });
-                      return res.status(201).json({
-                        message: 'Appointment created successfully',
-                        appointment: appointmentRow,
-                      });
-                    }
-                  );
-                }
-              );
-            }
+        if (parsedRecurrence?.enabled && directSeriesRecurrenceGroupId === null) {
+          directSeriesRecurrenceGroupId = appointmentId;
+          await dbRun(
+            `UPDATE appointments SET recurrence_group_id = ? WHERE appointment_id = ?`,
+            [directSeriesRecurrenceGroupId, appointmentId]
           );
         }
-      );
-    };
 
-    if (parsedCourseId == null) {
-      return continueInsert();
-    }
+        await dbRun(
+          `
+          INSERT INTO appointment_participants
+          (appointment_id, user_id, participant_role, response_status)
+          VALUES (?, ?, 'host', 'accepted')
+          `,
+          [appointmentId, creatorId]
+        );
 
-    db.get('SELECT course_id FROM courses WHERE course_id = ?', [parsedCourseId], (courseErr, courseRow) => {
-      if (courseErr) return res.status(500).json({ error: courseErr.message });
-      if (!courseRow) return res.status(404).json({ error: 'Course not found' });
-      continueInsert();
-    });
-  });
-});
+        for (const inviteeId of uniqueInvitees) {
+          await dbRun(
+            `
+            INSERT INTO appointment_participants
+            (appointment_id, user_id, participant_role, response_status)
+            VALUES (?, ?, 'attendee', 'pending')
+            `,
+            [appointmentId, inviteeId]
+          );
 
-router.get('/my', (req, res) => {
-  const { user_id } = req.query;
-
-  if (!user_id) {
-    return res.status(400).json({ error: 'user_id is required' });
-  }
-
-  const query = `
-    SELECT DISTINCT a.*
-    FROM appointments a
-    JOIN appointment_participants ap
-      ON a.appointment_id = ap.appointment_id
-    WHERE ap.user_id = ?
-    ORDER BY datetime(a.start_time) ASC
-  `;
-
-  db.all(query, [user_id], (err, appointments) => {
-    if (err) return res.status(500).json({ error: err.message });
-
-    if (appointments.length === 0) {
-      return res.json([]);
-    }
-
-    const appointmentIds = appointments.map(a => a.appointment_id);
-    const placeholders = appointmentIds.map(() => '?').join(',');
-
-    const participantsQuery = `
-      SELECT
-        ap.appointment_id,
-        ap.user_id,
-        ap.participant_role,
-        ap.response_status,
-        u.first_name,
-        u.last_name,
-        u.mcgill_email,
-        u.user_type
-      FROM appointment_participants ap
-      JOIN users u
-        ON ap.user_id = u.user_id
-      WHERE ap.appointment_id IN (${placeholders})
-    `;
-
-    db.all(participantsQuery, appointmentIds, (err, participants) => {
-      if (err) return res.status(500).json({ error: err.message });
-
-      const result = appointments.map(appt => ({
-        ...appt,
-        participants: participants.filter(
-          p => p.appointment_id === appt.appointment_id
-        )
-      }));
-
-      res.json(result);
-    });
-  });
-});
-
-router.get('/hosting', (req, res) => {
-  const { user_id } = req.query;
-
-  if (!user_id) {
-    return res.status(400).json({ error: 'user_id is required' });
-  }
-
-  const query = `
-    SELECT DISTINCT a.*
-    FROM appointments a
-    JOIN appointment_participants ap
-      ON a.appointment_id = ap.appointment_id
-    WHERE ap.user_id = ?
-      AND ap.participant_role = 'host'
-    ORDER BY datetime(a.start_time) ASC
-  `;
-
-  db.all(query, [user_id], (err, appointments) => {
-    if (err) return res.status(500).json({ error: err.message });
-
-    if (appointments.length === 0) {
-      return res.json([]);
-    }
-
-    const appointmentIds = appointments.map(a => a.appointment_id);
-    const placeholders = appointmentIds.map(() => '?').join(',');
-
-    const participantsQuery = `
-      SELECT
-        ap.appointment_id,
-        ap.user_id,
-        ap.participant_role,
-        ap.response_status,
-        u.first_name,
-        u.last_name,
-        u.mcgill_email,
-        u.user_type
-      FROM appointment_participants ap
-      JOIN users u
-        ON ap.user_id = u.user_id
-      WHERE ap.appointment_id IN (${placeholders})
-    `;
-
-    db.all(participantsQuery, appointmentIds, (err, participants) => {
-      if (err) return res.status(500).json({ error: err.message });
-
-      const result = appointments.map(appt => ({
-        ...appt,
-        participants: participants.filter(
-          p => p.appointment_id === appt.appointment_id
-        )
-      }));
-
-      res.json(result);
-    });
-  });
-});
-
-router.get('/attending', (req, res) => {
-  const { user_id } = req.query;
-
-  if (!user_id) {
-    return res.status(400).json({ error: 'user_id is required' });
-  }
-
-  const query = `
-    SELECT DISTINCT a.*
-    FROM appointments a
-    JOIN appointment_participants ap
-      ON a.appointment_id = ap.appointment_id
-    WHERE ap.user_id = ?
-      AND ap.participant_role = 'attendee'
-    ORDER BY datetime(a.start_time) ASC
-  `;
-
-  db.all(query, [user_id], (err, appointments) => {
-    if (err) return res.status(500).json({ error: err.message });
-
-    if (appointments.length === 0) {
-      return res.json([]);
-    }
-
-    const appointmentIds = appointments.map(a => a.appointment_id);
-    const placeholders = appointmentIds.map(() => '?').join(',');
-
-    const participantsQuery = `
-      SELECT
-        ap.appointment_id,
-        ap.user_id,
-        ap.participant_role,
-        ap.response_status,
-        u.first_name,
-        u.last_name,
-        u.mcgill_email,
-        u.user_type
-      FROM appointment_participants ap
-      JOIN users u
-        ON ap.user_id = u.user_id
-      WHERE ap.appointment_id IN (${placeholders})
-    `;
-
-    db.all(participantsQuery, appointmentIds, (err, participants) => {
-      if (err) return res.status(500).json({ error: err.message });
-
-      const result = appointments.map(appt => ({
-        ...appt,
-        participants: participants.filter(
-          p => p.appointment_id === appt.appointment_id
-        )
-      }));
-
-      res.json(result);
-    });
-  });
-});
-
-router.post('/:id/join', (req, res) => {
-  const appointmentId = Number(req.params.id);
-  const { user_id } = req.body || {};
-  const userId = Number(user_id);
-
-  if (!Number.isInteger(appointmentId) || appointmentId < 1) {
-    return res.status(400).json({ error: 'Invalid appointment id' });
-  }
-  if (!Number.isInteger(userId) || userId < 1) {
-    return res.status(400).json({ error: 'user_id must be a positive integer' });
-  }
-
-  db.get(`SELECT user_id FROM users WHERE user_id = ?`, [userId], (userErr, userRow) => {
-    if (userErr) return res.status(500).json({ error: userErr.message });
-    if (!userRow) return res.status(404).json({ error: 'User not found' });
-
-    db.get(`SELECT * FROM appointments WHERE appointment_id = ?`, [appointmentId], (apptErr, appt) => {
-      if (apptErr) return res.status(500).json({ error: apptErr.message });
-      if (!appt) return res.status(404).json({ error: 'Appointment not found' });
-      if (appt.status === 'cancelled') {
-        return res.status(400).json({ error: 'Cancelled appointments cannot be joined' });
-      }
-      if (!appt.course_id) {
-        return res.status(400).json({ error: 'Only course events can be joined from this endpoint' });
-      }
-      if (appt.visibility !== 'public') {
-        return res.status(403).json({ error: 'Only public course events are joinable' });
-      }
-
-      db.get(
-        `
-        SELECT
-          (SELECT COUNT(*) FROM course_admin_assignments ca
-            WHERE ca.course_id = ? AND ca.course_admin_id = ? AND ca.status = 'active') AS is_staff,
-          (SELECT COUNT(*) FROM course_ownerships co
-            WHERE co.course_id = ? AND co.general_admin_id = ? AND co.status = 'active') AS is_owner,
-          (SELECT COUNT(*) FROM course_enrollments ce
-            WHERE ce.course_id = ? AND ce.user_id = ? AND ce.enrollment_status IN ('active', 'completed')) AS is_enrolled
-        `,
-        [appt.course_id, userId, appt.course_id, userId, appt.course_id, userId],
-        (roleErr, roleRow) => {
-          if (roleErr) return res.status(500).json({ error: roleErr.message });
-
-          const isStaff = Number(roleRow?.is_staff) > 0;
-          const isOwner = Number(roleRow?.is_owner) > 0;
-          const isEnrolled = Number(roleRow?.is_enrolled) > 0;
-
-          if (isStaff || isOwner) {
-            return res.status(403).json({ error: 'Course staff cannot join course events as attendees' });
-          }
-          if (!isEnrolled) {
-            return res.status(403).json({ error: 'Only enrolled students can join course events' });
-          }
-
-          db.get(
-            `SELECT participant_role FROM appointment_participants WHERE appointment_id = ? AND user_id = ?`,
-            [appointmentId, userId],
-            (existingErr, existing) => {
-              if (existingErr) return res.status(500).json({ error: existingErr.message });
-              if (existing) {
-                return res.status(400).json({
-                  error:
-                    existing.participant_role === 'host'
-                      ? 'Hosts cannot join as attendees'
-                      : 'You have already joined this event',
-                });
-              }
-
-              db.get(
-                `
-                SELECT COUNT(*) AS attendee_count
-                FROM appointment_participants
-                WHERE appointment_id = ?
-                  AND participant_role = 'attendee'
-                  AND (response_status IS NULL OR response_status != 'declined')
-                `,
-                [appointmentId],
-                (countErr, countRow) => {
-                  if (countErr) return res.status(500).json({ error: countErr.message });
-
-                  if (Number(countRow?.attendee_count || 0) >= Number(appt.capacity || 1)) {
-                    return res.status(400).json({ error: 'This event is full' });
-                  }
-
-                  db.run(
-                    `
-                    INSERT INTO appointment_participants
-                      (appointment_id, user_id, participant_role, response_status)
-                    VALUES (?, ?, 'attendee', 'accepted')
-                    `,
-                    [appointmentId, userId],
-                    (insertErr) => {
-                      if (insertErr) return res.status(500).json({ error: insertErr.message });
-
-                      db.run(
-                        `
-                        INSERT INTO appointment_history
-                          (appointment_id, changed_by, old_status, new_status, changed_at, note)
-                        VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
-                        `,
-                        [appointmentId, userId, appt.status, appt.status, 'Student joined course event'],
-                        (histErr) => {
-                          if (histErr) return res.status(500).json({ error: histErr.message });
-
-                          return res.status(201).json({
-                            message: 'Joined event successfully',
-                            appointment_id: appointmentId,
-                            user_id: userId,
-                          });
-                        }
-                      );
-                    }
-                  );
-                }
-              );
-            }
+          await dbRun(
+            `
+            INSERT INTO invitations
+            (appointment_id, inviter_user_id, invitee_user_id, status)
+            VALUES (?, ?, ?, 'sent')
+            `,
+            [appointmentId, creatorId, inviteeId]
           );
         }
-      );
-    });
-  });
-});
 
-router.patch('/:id', (req, res) => {
-  const appointmentId = Number(req.params.id);
-  const {
-    changed_by,
-    start_time,
-    end_time,
-    location,
-    capacity,
-    visibility,
-    ap_title,
-    ap_description,
-    note,
-  } = req.body || {};
-
-  if (!Number.isInteger(appointmentId) || appointmentId < 1) {
-    return res.status(400).json({ error: 'Invalid appointment id' });
-  }
-
-  if (!changed_by) {
-    return res.status(400).json({ error: 'changed_by is required' });
-  }
-
-  const changedBy = Number(changed_by);
-  if (!Number.isInteger(changedBy) || changedBy < 1) {
-    return res.status(400).json({ error: 'changed_by must be a positive integer' });
-  }
-
-  const startDate = parseDate(start_time);
-  const endDate = parseDate(end_time);
-  if (!startDate || !endDate) {
-    return res.status(400).json({ error: 'start_time and end_time must be valid datetimes' });
-  }
-  if (endDate <= startDate) {
-    return res.status(400).json({ error: 'end_time must be after start_time' });
-  }
-
-  const parsedCapacity = capacity == null ? null : Number(capacity);
-  if (parsedCapacity != null && (!Number.isInteger(parsedCapacity) || parsedCapacity < 1)) {
-    return res.status(400).json({ error: 'capacity must be a positive integer' });
-  }
-
-  const finalVisibility = visibility == null ? null : String(visibility);
-  if (finalVisibility != null && !['public', 'private'].includes(finalVisibility)) {
-    return res.status(400).json({ error: 'visibility must be public or private' });
-  }
-
-  db.get(`SELECT * FROM appointments WHERE appointment_id = ?`, [appointmentId], (getErr, existing) => {
-    if (getErr) return res.status(500).json({ error: getErr.message });
-    if (!existing) return res.status(404).json({ error: 'Appointment not found' });
-    if (existing.status === 'cancelled') {
-      return res.status(400).json({ error: 'Cancelled appointments cannot be edited' });
-    }
-
-    db.run(
-      `
-      UPDATE appointments
-      SET
-        start_time = ?,
-        end_time = ?,
-        location = ?,
-        capacity = ?,
-        visibility = ?,
-        ap_title = ?,
-        ap_description = ?
-      WHERE appointment_id = ?
-      `,
-      [
-        start_time,
-        end_time,
-        location == null || location === '' ? null : String(location),
-        parsedCapacity == null ? Number(existing.capacity || 1) : parsedCapacity,
-        finalVisibility == null ? existing.visibility : finalVisibility,
-        ap_title == null || ap_title === '' ? null : String(ap_title),
-        ap_description == null || ap_description === '' ? null : String(ap_description),
-        appointmentId,
-      ],
-      (updateErr) => {
-        if (updateErr) return res.status(500).json({ error: updateErr.message });
-
-        db.run(
+        await dbRun(
           `
           INSERT INTO appointment_history
           (
@@ -760,39 +623,1037 @@ router.patch('/:id', (req, res) => {
           `,
           [
             appointmentId,
-            changedBy,
-            existing.status,
-            existing.status,
-            existing.start_time,
-            start_time,
-            existing.end_time,
-            end_time,
-            note || 'Appointment details updated',
-          ],
-          (histErr) => {
-            if (histErr) return res.status(500).json({ error: histErr.message });
-
-            db.get(
-              `SELECT * FROM appointments WHERE appointment_id = ?`,
-              [appointmentId],
-              (finalErr, appointment) => {
-                if (finalErr) return res.status(500).json({ error: finalErr.message });
-                return res.json({
-                  message: 'Appointment updated successfully',
-                  appointment,
-                });
-              }
-            );
-          }
+            creatorId,
+            null,
+            'confirmed',
+            null,
+            occStart,
+            null,
+            occEnd,
+            parsedRecurrence?.enabled
+              ? `Direct appointment created (recurring)${recurrenceRuleForDb ? `: ${recurrenceRuleForDb}` : ''}`
+              : 'Direct appointment created',
+          ]
         );
       }
+
+      await dbRun('COMMIT');
+    } catch (e) {
+      await dbRun('ROLLBACK');
+      throw e;
+    }
+
+    const placeholders = createdAppointmentIds.map(() => '?').join(',');
+    const createdAppointments = await dbAll(
+      `SELECT * FROM appointments WHERE appointment_id IN (${placeholders}) ORDER BY datetime(start_time) ASC`,
+      createdAppointmentIds
     );
+
+    routeLog('appointments', 'direct_appointments_created', {
+      created_by: creatorId,
+      created_count: createdAppointments.length,
+      appointment_ids: createdAppointmentIds,
+      recurrence_applied: Boolean(parsedRecurrence?.enabled),
+    });
+
+    return res.status(201).json({
+      message: 'Direct appointment(s) created successfully',
+      created_count: createdAppointments.length,
+      recurrence_applied: Boolean(parsedRecurrence?.enabled),
+      appointments: createdAppointments,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/my', (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  const query = `
+    SELECT DISTINCT
+      a.*,
+      src.recurrence_group_id AS source_recurrence_group_id,
+      src.recurrence_instance_date AS source_recurrence_instance_date,
+      src.recurrence_rule AS source_recurrence_rule
+    FROM appointments a
+    JOIN appointment_participants ap
+      ON a.appointment_id = ap.appointment_id
+    LEFT JOIN availabilities src
+      ON a.created_from_availability = src.availability_id
+    WHERE ap.user_id = ?
+      AND a.status != 'cancelled'
+    ORDER BY datetime(a.start_time) ASC
+  `;
+
+  db.all(query, [user_id], (err, appointments) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    if (appointments.length === 0) {
+      return res.json([]);
+    }
+
+    const appointmentIds = appointments.map(a => a.appointment_id);
+    const placeholders = appointmentIds.map(() => '?').join(',');
+
+    const participantsQuery = `
+      SELECT
+        ap.appointment_id,
+        ap.user_id,
+        ap.participant_role,
+        ap.response_status,
+        u.first_name,
+        u.last_name,
+        u.mcgill_email,
+        u.user_type
+      FROM appointment_participants ap
+      JOIN users u
+        ON ap.user_id = u.user_id
+      WHERE ap.appointment_id IN (${placeholders})
+    `;
+
+    db.all(participantsQuery, appointmentIds, (err, participants) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      const result = appointments.map(appt => ({
+        ...appt,
+        participants: participants
+          .filter((p) => p.appointment_id === appt.appointment_id)
+          .map((p) => ({
+            ...p,
+            participant_status: toParticipantStatus(p.response_status),
+          })),
+      }));
+
+      res.json(result);
+    });
   });
+});
+
+router.get('/hosting', (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  const query = `
+    SELECT DISTINCT
+      a.*,
+      src.recurrence_group_id AS source_recurrence_group_id,
+      src.recurrence_instance_date AS source_recurrence_instance_date,
+      src.recurrence_rule AS source_recurrence_rule
+    FROM appointments a
+    JOIN appointment_participants ap
+      ON a.appointment_id = ap.appointment_id
+    LEFT JOIN availabilities src
+      ON a.created_from_availability = src.availability_id
+    WHERE ap.user_id = ?
+      AND ap.participant_role = 'host'
+      AND a.status != 'cancelled'
+    ORDER BY datetime(a.start_time) ASC
+  `;
+
+  db.all(query, [user_id], (err, appointments) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    if (appointments.length === 0) {
+      return res.json([]);
+    }
+
+    const appointmentIds = appointments.map(a => a.appointment_id);
+    const placeholders = appointmentIds.map(() => '?').join(',');
+
+    const participantsQuery = `
+      SELECT
+        ap.appointment_id,
+        ap.user_id,
+        ap.participant_role,
+        ap.response_status,
+        u.first_name,
+        u.last_name,
+        u.mcgill_email,
+        u.user_type
+      FROM appointment_participants ap
+      JOIN users u
+        ON ap.user_id = u.user_id
+      WHERE ap.appointment_id IN (${placeholders})
+    `;
+
+    db.all(participantsQuery, appointmentIds, (err, participants) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      const result = appointments.map(appt => ({
+        ...appt,
+        participants: participants
+          .filter((p) => p.appointment_id === appt.appointment_id)
+          .map((p) => ({
+            ...p,
+            participant_status: toParticipantStatus(p.response_status),
+          })),
+      }));
+
+      res.json(result);
+    });
+  });
+});
+
+router.get('/attending', (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  const query = `
+    SELECT DISTINCT
+      a.*,
+      src.recurrence_group_id AS source_recurrence_group_id,
+      src.recurrence_instance_date AS source_recurrence_instance_date,
+      src.recurrence_rule AS source_recurrence_rule
+    FROM appointments a
+    JOIN appointment_participants ap
+      ON a.appointment_id = ap.appointment_id
+    LEFT JOIN availabilities src
+      ON a.created_from_availability = src.availability_id
+    WHERE ap.user_id = ?
+      AND ap.participant_role = 'attendee'
+      AND a.status != 'cancelled'
+    ORDER BY datetime(a.start_time) ASC
+  `;
+
+  db.all(query, [user_id], (err, appointments) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    if (appointments.length === 0) {
+      return res.json([]);
+    }
+
+    const appointmentIds = appointments.map(a => a.appointment_id);
+    const placeholders = appointmentIds.map(() => '?').join(',');
+
+    const participantsQuery = `
+      SELECT
+        ap.appointment_id,
+        ap.user_id,
+        ap.participant_role,
+        ap.response_status,
+        u.first_name,
+        u.last_name,
+        u.mcgill_email,
+        u.user_type
+      FROM appointment_participants ap
+      JOIN users u
+        ON ap.user_id = u.user_id
+      WHERE ap.appointment_id IN (${placeholders})
+    `;
+
+    db.all(participantsQuery, appointmentIds, (err, participants) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      const result = appointments.map(appt => ({
+        ...appt,
+        participants: participants
+          .filter((p) => p.appointment_id === appt.appointment_id)
+          .map((p) => ({
+            ...p,
+            participant_status: toParticipantStatus(p.response_status),
+          })),
+      }));
+
+      res.json(result);
+    });
+  });
+});
+
+router.get('/invitations/my', (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  const query = `
+    SELECT
+      i.*,
+      a.start_time,
+      a.end_time,
+      a.location,
+      a.visibility,
+      a.ap_title,
+      a.ap_description,
+      a.status AS appointment_status,
+      u.first_name AS inviter_first_name,
+      u.last_name AS inviter_last_name,
+      u.mcgill_email AS inviter_email
+    FROM invitations i
+    JOIN appointments a
+      ON i.appointment_id = a.appointment_id
+    JOIN users u
+      ON i.inviter_user_id = u.user_id
+    WHERE i.invitee_user_id = ?
+      AND i.status IN ('sent')
+      AND a.status != 'cancelled'
+    ORDER BY datetime(a.start_time) ASC
+  `;
+
+  db.all(query, [user_id], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    return res.json(rows);
+  });
+});
+
+router.patch('/invitations/:id/accept', async (req, res) => {
+  const invitationId = Number(req.params.id);
+  const { user_id, recurrence_scope, pivot_instance_date } = req.body || {};
+  const inviteeUserId = Number(user_id);
+
+  if (!Number.isInteger(invitationId) || invitationId < 1) {
+    return res.status(400).json({ error: 'Invalid invitation id' });
+  }
+  if (!Number.isInteger(inviteeUserId) || inviteeUserId < 1) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  const hasScopeInput =
+    recurrence_scope !== undefined && recurrence_scope !== null && String(recurrence_scope).trim() !== '';
+  const parsedScope = hasScopeInput ? normalizeRecurrenceScope(recurrence_scope) : null;
+  if (hasScopeInput && !parsedScope) {
+    return res.status(400).json({ error: 'recurrence_scope must be single, this_and_following, or all' });
+  }
+
+  try {
+    const invitation = await dbGet(
+      `
+      SELECT
+        i.*,
+        a.recurrence_group_id,
+        a.start_time AS appointment_start_time,
+        a.status AS appointment_status
+      FROM invitations i
+      JOIN appointments a
+        ON i.appointment_id = a.appointment_id
+      WHERE i.invitation_id = ?
+      `,
+      [invitationId]
+    );
+
+    if (!invitation) return res.status(404).json({ error: 'Invitation not found' });
+    if (Number(invitation.invitee_user_id) !== inviteeUserId) {
+      return res.status(403).json({ error: 'Not allowed to accept this invitation' });
+    }
+    if (invitation.appointment_status === 'cancelled') {
+      return res.status(400).json({ error: 'Cannot accept invitation for a cancelled appointment' });
+    }
+
+    const effectiveScope =
+      parsedScope || (invitation.recurrence_group_id ? 'all' : 'single');
+
+    let targetInvitations = [];
+    if (!invitation.recurrence_group_id || effectiveScope === 'single') {
+      targetInvitations = [invitation];
+    } else if (effectiveScope === 'all') {
+      targetInvitations = await dbAll(
+        `
+        SELECT i.invitation_id, i.appointment_id
+        FROM invitations i
+        JOIN appointments a
+          ON i.appointment_id = a.appointment_id
+        WHERE i.invitee_user_id = ?
+          AND i.status = 'sent'
+          AND a.status != 'cancelled'
+          AND a.recurrence_group_id = ?
+        `,
+        [inviteeUserId, invitation.recurrence_group_id]
+      );
+    } else {
+      const pivotDate = pivot_instance_date || invitation.appointment_start_time;
+      targetInvitations = await dbAll(
+        `
+        SELECT i.invitation_id, i.appointment_id
+        FROM invitations i
+        JOIN appointments a
+          ON i.appointment_id = a.appointment_id
+        WHERE i.invitee_user_id = ?
+          AND i.status = 'sent'
+          AND a.status != 'cancelled'
+          AND a.recurrence_group_id = ?
+          AND datetime(a.start_time) >= datetime(?)
+        `,
+        [inviteeUserId, invitation.recurrence_group_id, pivotDate]
+      );
+    }
+
+    if (!targetInvitations.length) {
+      return res.status(400).json({ error: 'No pending invitations found in selected recurrence scope' });
+    }
+
+    const invitationIds = targetInvitations.map((row) => row.invitation_id);
+    const appointmentIds = uniqueInts(targetInvitations.map((row) => row.appointment_id));
+    const invitePlaceholders = invitationIds.map(() => '?').join(',');
+    const appointmentPlaceholders = appointmentIds.map(() => '?').join(',');
+
+    await dbRun('BEGIN');
+    try {
+      await dbRun(
+        `UPDATE invitations SET status = 'accepted' WHERE invitation_id IN (${invitePlaceholders})`,
+        invitationIds
+      );
+
+      await dbRun(
+        `
+        UPDATE appointment_participants
+        SET response_status = 'accepted'
+        WHERE user_id = ?
+          AND appointment_id IN (${appointmentPlaceholders})
+        `,
+        [inviteeUserId, ...appointmentIds]
+      );
+
+      await dbRun('COMMIT');
+    } catch (e) {
+      await dbRun('ROLLBACK');
+      throw e;
+    }
+
+    for (const apptId of appointmentIds) {
+      await recalculateAppointmentStatus(apptId);
+    }
+
+    const updated = await dbGet(`SELECT * FROM invitations WHERE invitation_id = ?`, [invitationId]);
+    routeLog('appointments', 'invitation_accepted', {
+      invitation_id: invitationId,
+      user_id: inviteeUserId,
+      appointment_ids: appointmentIds,
+      scope: effectiveScope,
+      accepted_count: invitationIds.length,
+    });
+    return res.json({
+      message: 'Invitation accepted',
+      invitation: updated,
+      scope: effectiveScope,
+      accepted_count: invitationIds.length,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+router.patch('/invitations/:id/decline', async (req, res) => {
+  const invitationId = Number(req.params.id);
+  const { user_id, recurrence_scope, pivot_instance_date } = req.body || {};
+  const inviteeUserId = Number(user_id);
+
+  if (!Number.isInteger(invitationId) || invitationId < 1) {
+    return res.status(400).json({ error: 'Invalid invitation id' });
+  }
+  if (!Number.isInteger(inviteeUserId) || inviteeUserId < 1) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  const hasScopeInput =
+    recurrence_scope !== undefined && recurrence_scope !== null && String(recurrence_scope).trim() !== '';
+  const parsedScope = hasScopeInput ? normalizeRecurrenceScope(recurrence_scope) : null;
+  if (hasScopeInput && !parsedScope) {
+    return res.status(400).json({ error: 'recurrence_scope must be single, this_and_following, or all' });
+  }
+
+  try {
+    const invitation = await dbGet(
+      `
+      SELECT
+        i.*,
+        a.recurrence_group_id,
+        a.start_time AS appointment_start_time,
+        a.status AS appointment_status
+      FROM invitations i
+      JOIN appointments a
+        ON i.appointment_id = a.appointment_id
+      WHERE i.invitation_id = ?
+      `,
+      [invitationId]
+    );
+
+    if (!invitation) return res.status(404).json({ error: 'Invitation not found' });
+    if (Number(invitation.invitee_user_id) !== inviteeUserId) {
+      return res.status(403).json({ error: 'Not allowed to decline this invitation' });
+    }
+    if (invitation.appointment_status === 'cancelled') {
+      return res.status(400).json({ error: 'Cannot decline invitation for a cancelled appointment' });
+    }
+
+    const effectiveScope =
+      parsedScope || (invitation.recurrence_group_id ? 'all' : 'single');
+
+    let targetInvitations = [];
+    if (!invitation.recurrence_group_id || effectiveScope === 'single') {
+      targetInvitations = [invitation];
+    } else if (effectiveScope === 'all') {
+      targetInvitations = await dbAll(
+        `
+        SELECT i.invitation_id, i.appointment_id
+        FROM invitations i
+        JOIN appointments a
+          ON i.appointment_id = a.appointment_id
+        WHERE i.invitee_user_id = ?
+          AND i.status = 'sent'
+          AND a.status != 'cancelled'
+          AND a.recurrence_group_id = ?
+        `,
+        [inviteeUserId, invitation.recurrence_group_id]
+      );
+    } else {
+      const pivotDate = pivot_instance_date || invitation.appointment_start_time;
+      targetInvitations = await dbAll(
+        `
+        SELECT i.invitation_id, i.appointment_id
+        FROM invitations i
+        JOIN appointments a
+          ON i.appointment_id = a.appointment_id
+        WHERE i.invitee_user_id = ?
+          AND i.status = 'sent'
+          AND a.status != 'cancelled'
+          AND a.recurrence_group_id = ?
+          AND datetime(a.start_time) >= datetime(?)
+        `,
+        [inviteeUserId, invitation.recurrence_group_id, pivotDate]
+      );
+    }
+
+    if (!targetInvitations.length) {
+      return res.status(400).json({ error: 'No pending invitations found in selected recurrence scope' });
+    }
+
+    const invitationIds = targetInvitations.map((row) => row.invitation_id);
+    const appointmentIds = uniqueInts(targetInvitations.map((row) => row.appointment_id));
+    const invitePlaceholders = invitationIds.map(() => '?').join(',');
+    const appointmentPlaceholders = appointmentIds.map(() => '?').join(',');
+
+    await dbRun('BEGIN');
+    try {
+      await dbRun(
+        `UPDATE invitations SET status = 'declined' WHERE invitation_id IN (${invitePlaceholders})`,
+        invitationIds
+      );
+
+      await dbRun(
+        `
+        UPDATE appointment_participants
+        SET response_status = 'declined'
+        WHERE user_id = ?
+          AND appointment_id IN (${appointmentPlaceholders})
+        `,
+        [inviteeUserId, ...appointmentIds]
+      );
+
+      await dbRun('COMMIT');
+    } catch (e) {
+      await dbRun('ROLLBACK');
+      throw e;
+    }
+
+    for (const apptId of appointmentIds) {
+      await recalculateAppointmentStatus(apptId);
+    }
+
+    const updated = await dbGet(`SELECT * FROM invitations WHERE invitation_id = ?`, [invitationId]);
+    routeLog('appointments', 'invitation_declined', {
+      invitation_id: invitationId,
+      user_id: inviteeUserId,
+      appointment_ids: appointmentIds,
+      scope: effectiveScope,
+      declined_count: invitationIds.length,
+    });
+    return res.json({
+      message: 'Invitation declined',
+      invitation: updated,
+      scope: effectiveScope,
+      declined_count: invitationIds.length,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/:id/join', async (req, res) => {
+  const appointmentId = Number(req.params.id);
+  const userId = Number(req.body?.user_id);
+
+  if (!Number.isInteger(appointmentId) || appointmentId < 1) {
+    return res.status(400).json({ error: 'Invalid appointment id' });
+  }
+  if (!Number.isInteger(userId) || userId < 1) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  try {
+    const appointment = await dbGet(
+      `
+      SELECT appointment_id, capacity, status
+      FROM appointments
+      WHERE appointment_id = ?
+      `,
+      [appointmentId]
+    );
+    if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
+    if (appointment.status === 'cancelled') {
+      return res.status(400).json({ error: 'Cannot join a cancelled appointment' });
+    }
+
+    const existing = await dbGet(
+      `
+      SELECT appointment_id, user_id, participant_role, response_status
+      FROM appointment_participants
+      WHERE appointment_id = ? AND user_id = ?
+      `,
+      [appointmentId, userId]
+    );
+
+    if (existing) {
+      if (existing.participant_role === 'host') {
+        return res.status(400).json({ error: 'Host is already part of this appointment' });
+      }
+      await dbRun(
+        `
+        UPDATE appointment_participants
+        SET response_status = 'accepted'
+        WHERE appointment_id = ? AND user_id = ?
+        `,
+        [appointmentId, userId]
+      );
+    } else {
+      const counts = await dbGet(
+        `
+        SELECT
+          SUM(CASE WHEN participant_role = 'attendee' AND response_status = 'accepted' THEN 1 ELSE 0 END) AS accepted_count
+        FROM appointment_participants
+        WHERE appointment_id = ?
+        `,
+        [appointmentId]
+      );
+      const acceptedCount = Number(counts?.accepted_count || 0);
+      const capacity = Number(appointment.capacity || 1);
+      if (acceptedCount >= capacity) {
+        return res.status(409).json({ error: 'Appointment is full' });
+      }
+
+      await dbRun(
+        `
+        INSERT INTO appointment_participants
+        (appointment_id, user_id, participant_role, response_status)
+        VALUES (?, ?, 'attendee', 'accepted')
+        `,
+        [appointmentId, userId]
+      );
+    }
+
+    await recalculateAppointmentStatus(appointmentId);
+
+    const participant = await dbGet(
+      `
+      SELECT appointment_id, user_id, participant_role, response_status
+      FROM appointment_participants
+      WHERE appointment_id = ? AND user_id = ?
+      `,
+      [appointmentId, userId]
+    );
+
+    return res.json({
+      message: 'Joined appointment successfully',
+      participant: {
+        ...participant,
+        participant_status: toParticipantStatus(participant.response_status),
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+router.patch('/:id/participants/:userId/status', async (req, res) => {
+  const appointmentId = Number(req.params.id);
+  const participantUserId = Number(req.params.userId);
+  const { user_id, status } = req.body || {};
+  const requesterUserId = Number(user_id);
+
+  if (!Number.isInteger(appointmentId) || appointmentId < 1) {
+    return res.status(400).json({ error: 'Invalid appointment id' });
+  }
+  if (!Number.isInteger(participantUserId) || participantUserId < 1) {
+    return res.status(400).json({ error: 'Invalid participant user id' });
+  }
+  if (!Number.isInteger(requesterUserId) || requesterUserId < 1) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+  if (requesterUserId !== participantUserId) {
+    return res.status(403).json({ error: 'You can only update your own status' });
+  }
+  if (!['pending', 'confirmed', 'cancelled'].includes(status)) {
+    return res.status(400).json({ error: 'status must be pending, confirmed, or cancelled' });
+  }
+
+  try {
+    const appt = await dbGet(`SELECT appointment_id, status FROM appointments WHERE appointment_id = ?`, [appointmentId]);
+    if (!appt) return res.status(404).json({ error: 'Appointment not found' });
+    if (appt.status === 'cancelled') {
+      return res.status(400).json({ error: 'Cannot update participant status on a cancelled appointment' });
+    }
+
+    const participant = await dbGet(
+      `
+      SELECT appointment_id, user_id, participant_role
+      FROM appointment_participants
+      WHERE appointment_id = ? AND user_id = ?
+      `,
+      [appointmentId, participantUserId]
+    );
+    if (!participant) return res.status(404).json({ error: 'Participant not found for this appointment' });
+    const responseStatus = toResponseStatus(status);
+    await dbRun(
+      `
+      UPDATE appointment_participants
+      SET response_status = ?
+      WHERE appointment_id = ? AND user_id = ?
+      `,
+      [responseStatus, appointmentId, participantUserId]
+    );
+
+    await dbRun(
+      `
+      UPDATE invitations
+      SET status = CASE
+        WHEN ? = 'pending' THEN 'sent'
+        WHEN ? = 'confirmed' THEN 'accepted'
+        ELSE 'declined'
+      END
+      WHERE appointment_id = ? AND invitee_user_id = ?
+      `,
+      [status, status, appointmentId, participantUserId]
+    );
+
+    await recalculateAppointmentStatus(appointmentId);
+
+    const updated = await dbGet(
+      `
+      SELECT appointment_id, user_id, participant_role, response_status
+      FROM appointment_participants
+      WHERE appointment_id = ? AND user_id = ?
+      `,
+      [appointmentId, participantUserId]
+    );
+
+    routeLog('appointments', 'participant_status_updated', {
+      appointment_id: appointmentId,
+      participant_user_id: participantUserId,
+      status,
+    });
+
+    return res.json({
+      message: 'Participant status updated',
+      participant: {
+        ...updated,
+        participant_status: toParticipantStatus(updated.response_status),
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/:id', (req, res) => {
+  const appointmentId = req.params.id;
+
+  db.get(
+    `SELECT * FROM appointments WHERE appointment_id = ?`,
+    [appointmentId],
+    (err, appointment) => {
+      if (err) return res.status(500).json({ error: err.message });
+      if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
+
+      db.all(
+        `
+        SELECT
+          ap.appointment_id,
+          ap.user_id,
+          ap.participant_role,
+          ap.response_status,
+          u.first_name,
+          u.last_name,
+          u.mcgill_email,
+          u.user_type
+        FROM appointment_participants ap
+        JOIN users u
+          ON ap.user_id = u.user_id
+        WHERE ap.appointment_id = ?
+        ORDER BY ap.participant_role ASC, lower(u.last_name) ASC, lower(u.first_name) ASC
+        `,
+        [appointmentId],
+        (e2, participants) => {
+          if (e2) return res.status(500).json({ error: e2.message });
+          const participantsWithStatus = participants.map((p) => ({
+            ...p,
+            participant_status: toParticipantStatus(p.response_status),
+          }));
+
+          db.all(
+            `
+            SELECT
+              i.*,
+              inviter.first_name AS inviter_first_name,
+              inviter.last_name AS inviter_last_name,
+              inviter.mcgill_email AS inviter_email,
+              invitee.first_name AS invitee_first_name,
+              invitee.last_name AS invitee_last_name,
+              invitee.mcgill_email AS invitee_email
+            FROM invitations i
+            JOIN users inviter
+              ON i.inviter_user_id = inviter.user_id
+            JOIN users invitee
+              ON i.invitee_user_id = invitee.user_id
+            WHERE i.appointment_id = ?
+            ORDER BY i.invitation_id ASC
+            `,
+            [appointmentId],
+            (e3, invitations) => {
+              if (e3) return res.status(500).json({ error: e3.message });
+
+              return res.json({
+                appointment,
+                participants: participantsWithStatus,
+                invitations,
+              });
+            }
+          );
+        }
+      );
+    }
+  );
+});
+
+router.patch('/:id', async (req, res) => {
+  const appointmentId = Number(req.params.id);
+  const {
+    changed_by,
+    start_time,
+    end_time,
+    location,
+    capacity,
+    visibility,
+    ap_title,
+    ap_description,
+    ap_color,
+    course_id,
+    note,
+    recurrence_scope,
+    pivot_instance_date,
+  } = req.body || {};
+
+  if (!Number.isInteger(appointmentId) || appointmentId < 1) {
+    return res.status(400).json({ error: 'Invalid appointment id' });
+  }
+  const changedBy = Number(changed_by);
+  if (!Number.isInteger(changedBy) || changedBy < 1) {
+    return res.status(400).json({ error: 'changed_by is required' });
+  }
+
+  const scope = normalizeRecurrenceScope(recurrence_scope);
+  if (!scope) {
+    return res.status(400).json({ error: 'recurrence_scope must be single, this_and_following, or all' });
+  }
+
+  try {
+    const appointment = await dbGet(`SELECT * FROM appointments WHERE appointment_id = ?`, [appointmentId]);
+    if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
+    if (appointment.status === 'cancelled') {
+      return res.status(400).json({ error: 'Cancelled appointments cannot be edited' });
+    }
+
+    const host = await dbGet(
+      `
+      SELECT 1 AS ok
+      FROM appointment_participants
+      WHERE appointment_id = ?
+        AND user_id = ?
+        AND participant_role = 'host'
+      `,
+      [appointmentId, changedBy]
+    );
+    if (!host) return res.status(403).json({ error: 'Only the host can edit this appointment' });
+
+    const parsedCapacity = capacity === undefined ? undefined : Number(capacity);
+    if (parsedCapacity !== undefined && (!Number.isInteger(parsedCapacity) || parsedCapacity < 1)) {
+      return res.status(400).json({ error: 'capacity must be a positive integer' });
+    }
+
+    if (visibility !== undefined && visibility !== null && !['public', 'private'].includes(String(visibility))) {
+      return res.status(400).json({ error: 'visibility must be public or private' });
+    }
+    if (ap_color !== undefined && ap_color !== null && String(ap_color).trim() !== '') {
+      if (!/^#[0-9A-Fa-f]{6}$/.test(String(ap_color).trim())) {
+        return res.status(400).json({ error: 'ap_color must be a hex color like #1565A8' });
+      }
+    }
+
+    const parsedCourseId = course_id === undefined ? undefined : normalizeCourseId(course_id);
+    if (parsedCourseId === 'invalid') {
+      return res.status(400).json({ error: 'course_id must be a positive integer or null/omitted.' });
+    }
+
+    let parsedStartIso;
+    if (start_time !== undefined) {
+      const parsed = parseDate(start_time);
+      if (!parsed) return res.status(400).json({ error: 'start_time must be a valid datetime' });
+      parsedStartIso = toSqliteDateTime(parsed);
+    }
+
+    let parsedEndIso;
+    if (end_time !== undefined) {
+      const parsed = parseDate(end_time);
+      if (!parsed) return res.status(400).json({ error: 'end_time must be a valid datetime' });
+      parsedEndIso = toSqliteDateTime(parsed);
+    }
+
+    const nextStart = parsedStartIso || appointment.start_time;
+    const nextEnd = parsedEndIso || appointment.end_time;
+    if (new Date(nextEnd) <= new Date(nextStart)) {
+      return res.status(400).json({ error: 'end_time must be after start_time' });
+    }
+
+    const hasRecurringSeries = Number(appointment.recurrence_group_id) > 0;
+    let targetWhere = 'appointment_id = ?';
+    let targetParams = [appointmentId];
+    if (hasRecurringSeries && scope !== 'single') {
+      if (scope === 'all') {
+        targetWhere = 'recurrence_group_id = ?';
+        targetParams = [appointment.recurrence_group_id];
+      } else {
+        const pivotDate = pivot_instance_date || appointment.start_time;
+        targetWhere = 'recurrence_group_id = ? AND datetime(start_time) >= datetime(?)';
+        targetParams = [appointment.recurrence_group_id, pivotDate];
+      }
+    }
+
+    const updateFields = [];
+    const updateParams = [];
+
+    if (parsedStartIso !== undefined) {
+      updateFields.push('start_time = ?');
+      updateParams.push(parsedStartIso);
+    }
+    if (parsedEndIso !== undefined) {
+      updateFields.push('end_time = ?');
+      updateParams.push(parsedEndIso);
+    }
+    if (location !== undefined) {
+      updateFields.push('location = ?');
+      updateParams.push(location === null || location === '' ? null : String(location));
+    }
+    if (parsedCapacity !== undefined) {
+      updateFields.push('capacity = ?');
+      updateParams.push(parsedCapacity);
+    }
+    if (visibility !== undefined) {
+      updateFields.push('visibility = ?');
+      updateParams.push(visibility === null || visibility === '' ? 'private' : String(visibility));
+    }
+    if (ap_title !== undefined) {
+      updateFields.push('ap_title = ?');
+      updateParams.push(ap_title === null || ap_title === '' ? null : String(ap_title));
+    }
+    if (ap_description !== undefined) {
+      updateFields.push('ap_description = ?');
+      updateParams.push(ap_description === null || ap_description === '' ? null : String(ap_description));
+    }
+    if (ap_color !== undefined) {
+      updateFields.push('ap_color = ?');
+      updateParams.push(ap_color === null || String(ap_color).trim() === '' ? '#1565A8' : String(ap_color).trim());
+    }
+    if (parsedCourseId !== undefined) {
+      updateFields.push('course_id = ?');
+      updateParams.push(parsedCourseId);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({ error: 'No valid fields provided for update' });
+    }
+
+    const targets = await dbAll(
+      `SELECT appointment_id, status, start_time, end_time FROM appointments WHERE ${targetWhere}`,
+      targetParams
+    );
+    if (!targets.length) {
+      return res.status(404).json({ error: 'No appointments matched selected recurrence scope' });
+    }
+
+    await dbRun(`UPDATE appointments SET ${updateFields.join(', ')} WHERE ${targetWhere}`, [
+      ...updateParams,
+      ...targetParams,
+    ]);
+
+    for (const t of targets) {
+      const newStart = parsedStartIso !== undefined ? parsedStartIso : t.start_time;
+      const newEnd = parsedEndIso !== undefined ? parsedEndIso : t.end_time;
+      await dbRun(
+        `
+        INSERT INTO appointment_history
+        (
+          appointment_id,
+          changed_by,
+          old_status,
+          new_status,
+          old_start_time,
+          new_start_time,
+          old_end_time,
+          new_end_time,
+          changed_at,
+          note
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+        `,
+        [
+          t.appointment_id,
+          changedBy,
+          t.status,
+          t.status,
+          t.start_time,
+          newStart,
+          t.end_time,
+          newEnd,
+          note || `Appointment updated (${hasRecurringSeries ? scope : 'single'})`,
+        ]
+      );
+    }
+
+    const updatedRows = await dbAll(
+      `SELECT * FROM appointments WHERE ${targetWhere} ORDER BY datetime(start_time) ASC`,
+      targetParams
+    );
+    const updated = updatedRows[0] || null;
+    routeLog('appointments', 'appointment_updated', {
+      appointment_id: appointmentId,
+      changed_by: changedBy,
+      scope: hasRecurringSeries ? scope : 'single',
+      updated_count: updatedRows.length,
+    });
+    return res.json({
+      message: 'Appointment updated successfully',
+      scope: hasRecurringSeries ? scope : 'single',
+      updated_count: updatedRows.length,
+      appointment: updated,
+      appointments: updatedRows,
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 router.patch('/:id/cancel', (req, res) => {
   const appointmentId = req.params.id;
-  const { changed_by, note } = req.body;
+  const { changed_by, note, recurrence_scope, pivot_instance_date } = req.body;
 
   if (!changed_by) {
     return res.status(400).json({
@@ -817,54 +1678,183 @@ router.patch('/:id/cancel', (req, res) => {
         });
       }
 
-      const oldStatus = appointment.status;
+      const scope = normalizeRecurrenceScope(recurrence_scope);
+      if (!scope) {
+        return res.status(400).json({ error: 'recurrence_scope must be single, this_and_following, or all' });
+      }
 
-      // 2. Update status
-      db.run(
-        `
-        UPDATE appointments
-        SET status = 'cancelled'
-        WHERE appointment_id = ?
-        `,
-        [appointmentId],
-        function (err) {
-          if (err) return res.status(500).json({ error: err.message });
+      const runSingleCancel = () => {
+        const oldStatus = appointment.status;
 
-          // 3. Add history entry
-          db.run(
-            `
-            INSERT INTO appointment_history
-            (
-              appointment_id,
-              changed_by,
-              old_status,
-              new_status,
-              changed_at,
-              note
-            )
-            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
-            `,
-            [
-              appointmentId,
-              changed_by,
-              oldStatus,
-              'cancelled',
-              note || 'Appointment cancelled'
-            ],
-            (err) => {
-              if (err) return res.status(500).json({ error: err.message });
+        db.run(
+          `
+          UPDATE appointments
+          SET status = 'cancelled'
+          WHERE appointment_id = ?
+          `,
+          [appointmentId],
+          function (err) {
+            if (err) return res.status(500).json({ error: err.message });
 
-              // 4. Return updated appointment
-              db.get(
-                `SELECT * FROM appointments WHERE appointment_id = ?`,
-                [appointmentId],
-                (err, updatedAppointment) => {
-                  if (err) return res.status(500).json({ error: err.message });
+            db.run(
+              `
+              INSERT INTO appointment_history
+              (
+                appointment_id,
+                changed_by,
+                old_status,
+                new_status,
+                changed_at,
+                note
+              )
+              VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+              `,
+              [
+                appointmentId,
+                changed_by,
+                oldStatus,
+                'cancelled',
+                note || 'Appointment cancelled'
+              ],
+              (err) => {
+                if (err) return res.status(500).json({ error: err.message });
 
-                  res.json({
-                    message: 'Appointment cancelled successfully',
-                    appointment: updatedAppointment
-                  });
+                db.get(
+                  `SELECT * FROM appointments WHERE appointment_id = ?`,
+                  [appointmentId],
+                  (err, updatedAppointment) => {
+                    if (err) return res.status(500).json({ error: err.message });
+
+                    routeLog('appointments', 'appointment_cancelled', {
+                      appointment_id: appointmentId,
+                      changed_by,
+                      scope: 'single',
+                    });
+
+                    res.json({
+                      message: 'Appointment cancelled successfully',
+                      appointment: updatedAppointment
+                    });
+                  }
+                );
+              }
+            );
+          }
+        );
+      };
+
+      const resolveRecurringSource = (callback) => {
+        if (Number(appointment.recurrence_group_id) > 0) {
+          return callback(null, {
+            source_type: 'appointments',
+            recurrence_group_id: appointment.recurrence_group_id,
+            recurrence_instance_date: appointment.start_time,
+          });
+        }
+        if (!appointment.created_from_availability) {
+          return callback(null, null);
+        }
+        db.get(
+          `SELECT recurrence_group_id, recurrence_instance_date FROM availabilities WHERE availability_id = ?`,
+          [appointment.created_from_availability],
+          callback
+        );
+      };
+
+      resolveRecurringSource((srcErr, sourceAvailability) => {
+          if (srcErr) return res.status(500).json({ error: srcErr.message });
+
+          const recurrenceGroupId = sourceAvailability?.recurrence_group_id || null;
+          if (!recurrenceGroupId || scope === 'single') {
+            return runSingleCancel();
+          }
+
+          const pivotDate = pivot_instance_date || sourceAvailability?.recurrence_instance_date || appointment.start_time;
+          let scopedWhere = sourceAvailability?.source_type === 'appointments'
+            ? `a.recurrence_group_id = ?`
+            : `a.created_from_availability IN (
+              SELECT availability_id
+              FROM availabilities
+              WHERE recurrence_group_id = ?
+            )`;
+          const scopedParams = [recurrenceGroupId];
+          if (scope === 'this_and_following') {
+            scopedWhere = sourceAvailability?.source_type === 'appointments'
+              ? `a.recurrence_group_id = ? AND datetime(a.start_time) >= datetime(?)`
+              : `a.created_from_availability IN (
+              SELECT availability_id
+              FROM availabilities
+              WHERE recurrence_group_id = ?
+                AND recurrence_instance_date IS NOT NULL
+                AND date(recurrence_instance_date) >= date(?)
+            )`;
+            scopedParams.push(pivotDate);
+          }
+
+          db.all(
+            `SELECT a.appointment_id, a.status
+             FROM appointments a
+             WHERE ${scopedWhere}
+               AND a.status != 'cancelled'`,
+            scopedParams,
+            (targetErr, targets) => {
+              if (targetErr) return res.status(500).json({ error: targetErr.message });
+              if (!targets.length) {
+                return res.status(400).json({ error: 'No active appointments found in selected recurrence scope' });
+              }
+
+              const ids = targets.map((t) => t.appointment_id);
+              const placeholders = ids.map(() => '?').join(',');
+
+              db.run(
+                `UPDATE appointments SET status = 'cancelled' WHERE appointment_id IN (${placeholders})`,
+                ids,
+                function (updateErr) {
+                  if (updateErr) return res.status(500).json({ error: updateErr.message });
+
+                  const insertOneHistory = (index) => {
+                    if (index >= targets.length) {
+                      routeLog('appointments', 'appointment_cancelled', {
+                        appointment_ids: ids,
+                        changed_by,
+                        scope,
+                        cancelled_count: ids.length,
+                      });
+                      return res.json({
+                        message: 'Recurring appointments cancelled successfully',
+                        scope,
+                        cancelled_count: ids.length,
+                      });
+                    }
+                    const target = targets[index];
+                    db.run(
+                      `
+                      INSERT INTO appointment_history
+                      (
+                        appointment_id,
+                        changed_by,
+                        old_status,
+                        new_status,
+                        changed_at,
+                        note
+                      )
+                      VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
+                      `,
+                      [
+                        target.appointment_id,
+                        changed_by,
+                        target.status,
+                        'cancelled',
+                        note || `Appointment cancelled (${scope})`,
+                      ],
+                      (historyErr) => {
+                        if (historyErr) return res.status(500).json({ error: historyErr.message });
+                        insertOneHistory(index + 1);
+                      }
+                    );
+                  };
+
+                  insertOneHistory(0);
                 }
               );
             }

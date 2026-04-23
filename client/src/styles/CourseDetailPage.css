@@ -471,19 +471,7 @@
   content: '';
   width: 5px;
   flex-shrink: 0;
-  background: #5c6bc0;
-}
-
-.course-detail-event--accent-blue::before {
-  background: #3949ab;
-}
-
-.course-detail-event--accent-green::before {
-  background: #43a047;
-}
-
-.course-detail-event--accent-purple::before {
-  background: #8e24aa;
+  background: var(--course-event-accent, #5c6bc0);
 }
 
 .course-detail-event-body {

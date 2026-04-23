@@ -19,8 +19,10 @@ import {
   formatTime,
   statusLabel,
   mapAppointmentToCalendarEvent,
+  includeAppointmentOnWeekCalendar,
+  formatRecurrenceSubtitleLine,
 } from '../components/calendar/calendarUtils';
-import { getMyAppointments, cancelAppointment } from '../api/appointments';
+import { getMyAppointments, cancelAppointment, updateMyParticipantStatus } from '../api/appointments';
 import { getHeatmaps } from '../api/heatmaps';
 import { logout } from '../api/auth';
 import { DASHBOARD_HELP_GUIDES } from '../data/helpGuides';
@@ -62,6 +64,7 @@ export default function StudentDashboard() {
   // Basic page status flags for loading, errors, and the right-side panel toggle.
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
   // When the logged-in student changes, fetch their appointments and heatmap invites from the server.
@@ -79,12 +82,14 @@ export default function StudentDashboard() {
         ]);
 
         // The API shape is not exactly what the calendar wants, so we normalize it first.
-        setAppointments(data.map(mapAppointmentToCalendarEvent));
+        setAppointments(data.map((appt) => mapAppointmentToCalendarEvent(appt, userId)));
         setHeatmaps(heatmapData);
         setError('');
+        setInfoMessage('');
       } catch (err) {
         // If anything fails, keep the page alive and show the message instead of crashing.
         setError(err.message);
+        setInfoMessage('');
       } finally {
         // Always stop the loading state, even if the request fails.
         setLoading(false);
@@ -94,6 +99,12 @@ export default function StudentDashboard() {
     loadAppointments();
     // Run again if the logged-in user changes.
   }, [userId]);
+
+  useEffect(() => {
+    if (!infoMessage) return;
+    const t = window.setTimeout(() => setInfoMessage(''), 10000);
+    return () => window.clearTimeout(t);
+  }, [infoMessage]);
 
   // Builds the name shown in the navbar, with a fallback in case session data is missing.
   const currentUser = !user
@@ -111,22 +122,53 @@ export default function StudentDashboard() {
     const now = new Date();
 
     return appointments
-      .filter((a) => new Date(a.startTime) >= now && a.status !== 'cancelled')
+      .filter((a) => includeAppointmentOnWeekCalendar(a) && new Date(a.startTime) >= now)
       .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
       .slice(0, 10);
   }, [appointments]);
+
+  // Side panel shows one card per recurring series to avoid repetition.
+  const upcomingPanelAppts = useMemo(() => {
+    const grouped = [];
+    const recurringIndexByGroup = new Map();
+
+    upcomingAppts.forEach((appt) => {
+      const recurringGroupId = appt.recurrence_group_id;
+
+      if (!recurringGroupId) {
+        grouped.push({
+          appt,
+          seriesCount: 1,
+          isSeriesCard: false,
+        });
+        return;
+      }
+
+      if (!recurringIndexByGroup.has(recurringGroupId)) {
+        recurringIndexByGroup.set(recurringGroupId, grouped.length);
+        grouped.push({
+          appt,
+          seriesCount: 1,
+          isSeriesCard: true,
+        });
+        return;
+      }
+
+      const idx = recurringIndexByGroup.get(recurringGroupId);
+      grouped[idx].seriesCount += 1;
+    });
+
+    return grouped;
+  }, [upcomingAppts]);
 
   /*CODE GENERATED FROM ChatGPT ENDS HERE*/
   /*__________________________________________________________________________*/
 
 
-  // Keeps older appointments visible as a simple history list in the side panel.
-  const pastAppts = useMemo(() => {
-    const now = new Date();
-    return appointments
-      .filter((a) => new Date(a.startTime) < now && a.status !== 'cancelled')
-      .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
-  }, [appointments]);
+  const weekCalendarAppointments = useMemo(
+    () => appointments.filter(includeAppointmentOnWeekCalendar),
+    [appointments]
+  );
 
   // Shrinks raw heatmap data down to just the fields this page actually needs.
   const heatmapInvites = heatmaps.map((heatmap) => ({
@@ -148,7 +190,7 @@ export default function StudentDashboard() {
       setAppointments((prev) =>
         prev.map((a) =>
           a.id === activeAppt.id
-            ? { ...a, status: 'cancelled', color: '#777777' }
+            ? { ...a, status: 'cancelled', appointmentStatus: 'cancelled', color: '#777777' }
             : a
         )
       );
@@ -156,7 +198,43 @@ export default function StudentDashboard() {
       setActiveAppt(null);
       setModal(null);
       setError('');
+      setInfoMessage('Appointment cancelled.');
     } catch (err) {
+      setInfoMessage('');
+      setError(err.message);
+    }
+  }
+
+  async function handleUpdateMyStatus(appointmentId, nextStatus) {
+    try {
+      await updateMyParticipantStatus(appointmentId, userId, nextStatus);
+
+      const mergeParticipantUpdate = (appt) => {
+        if (appt.id !== appointmentId) return appt;
+        const participantStatuses = (appt.participantStatuses || []).map((p) =>
+          Number(p.userId) === Number(userId) ? { ...p, status: nextStatus } : p
+        );
+        const attendeeStatuses = participantStatuses.filter((p) => p.role === 'attendee');
+        const allConfirmed = attendeeStatuses.length > 0 && attendeeStatuses.every((p) => p.status === 'confirmed');
+        const allCancelled = attendeeStatuses.length > 0 && attendeeStatuses.every((p) => p.status === 'cancelled');
+        const nextApptStatus = allConfirmed ? 'confirmed' : allCancelled ? 'cancelled' : 'pending';
+
+        return {
+          ...appt,
+          attendeeStatus: nextStatus,
+          participantStatuses,
+          attendeeStatuses,
+          status: nextApptStatus,
+          appointmentStatus: nextApptStatus,
+        };
+      };
+
+      setAppointments((prev) => prev.map(mergeParticipantUpdate));
+      setActiveAppt((prev) => (prev && prev.id === appointmentId ? mergeParticipantUpdate(prev) : prev));
+      setError('');
+      setInfoMessage('Your response was saved.');
+    } catch (err) {
+      setInfoMessage('');
       setError(err.message);
     }
   }
@@ -164,9 +242,38 @@ export default function StudentDashboard() {
   // Small initials badge used by the navbar profile area.
   const initials = `${currentUser.firstName?.[0] || 'U'}${currentUser.lastName?.[0] || ''}`;
 
+  const showFloatingToast = loading || Boolean(error) || Boolean(infoMessage);
+  const floatingToastType = loading ? 'loading' : error ? 'error' : 'success';
+  const floatingToastText = loading
+    ? 'Loading appointments…'
+    : error || infoMessage;
+
   return (
     <>
       <div className="dashboard-page">
+        {showFloatingToast && (
+          <div
+            className={`dashboard-toast dashboard-toast--${floatingToastType}`}
+            role={floatingToastType === 'error' ? 'alert' : 'status'}
+            aria-live={floatingToastType === 'error' ? 'assertive' : 'polite'}
+          >
+            <span className="dashboard-toast-text">{floatingToastText}</span>
+            {floatingToastType !== 'loading' && (
+              <button
+                type="button"
+                className="dashboard-toast-dismiss"
+                aria-label="Dismiss"
+                onClick={() => {
+                  setError('');
+                  setInfoMessage('');
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Whole dashboard shell: navbar on top, sidebar/calendar/panel underneath. */}
         {/* Top navigation bar with the page title, profile badge, and quick actions. */}
         <Navbar
@@ -206,15 +313,11 @@ export default function StudentDashboard() {
 
           {/* Main dashboard body: calendar in the middle, extra info on the right. */}
           <div className="main-content">
-            {/* Simple feedback while the page is loading or if something goes wrong. */}
-            {loading && <p style={{ padding: 16 }}>Loading appointments...</p>}
-            {error && <p style={{ padding: 16, color: 'red' }}>{error}</p>}
-
             {!loading && (
               // Main week calendar. Clicking any event opens the detail modal below.
               <Calendar
                 view="week"
-                appointments={appointments}
+                appointments={weekCalendarAppointments}
                 onEventClick={(appt) => {
                   setActiveAppt(appt);
                   setModal('detail');
@@ -226,114 +329,119 @@ export default function StudentDashboard() {
             {rightPanelOpen && (
               <aside className="side-panel">
                 {/* Upcoming items are shown first because they matter the most day-to-day. */}
-              <div>
+              <div className="side-panel-section side-panel-section-upcoming">
                 <div className="side-panel-title">Upcoming appointments</div>
-                {upcomingAppts.length === 0 ? (
-                  // Empty state keeps the panel from looking broken when there is no data.
-                  <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
-                ) : (
-                  upcomingAppts.map((appt) => {
-                    // Convert raw status into label + CSS class for the pill.
-                    const { label, cls } = statusLabel(appt.status);
+                <div className="side-panel-scroll">
+                  {upcomingPanelAppts.length === 0 ? (
+                    // Empty state keeps the panel from looking broken when there is no data.
+                    <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
+                  ) : (
+                    upcomingPanelAppts.map(({ appt, seriesCount, isSeriesCard }) => {
+                      // Convert raw status into label + CSS class for the pill.
+                      const { label, cls } = statusLabel(appt.status);
+                      const recurrenceSummary = formatRecurrenceSubtitleLine({
+                        recurrence_rule: appt.recurrence_rule,
+                        recurrence_group_id: appt.recurrence_group_id,
+                      });
 
-                    return (
-                      // Each card is clickable so students can review or cancel from the modal.
-                      <div
-                        key={appt.id}
-                        className="appointment-item"
-                        onClick={() => {
-                          setActiveAppt(appt);
-                          setModal('detail');
-                        }}
-                      >
-                        <div className="appointment-color-dot" style={{ background: appt.color }} />
-                        <div>
-                          <h4>{appt.title || 'Untitled appointment'}</h4>
-                          <h6>{appt.ownerName}</h6>
-                          <p>{formatDate(appt.startTime)}</p>
-                          <p>{appt.location}</p>
+                      return (
+                        // Each card is clickable so students can review or cancel from the modal.
+                        <div
+                          key={appt.id}
+                          className="appointment-item"
+                          onClick={() => {
+                            setActiveAppt(appt);
+                            setModal('detail');
+                          }}
+                        >
+                          <div className="appointment-color-dot" style={{ background: appt.color }} />
+                          <div>
+                            <h4>{appt.title || 'Untitled appointment'}</h4>
+                            <h6>{appt.ownerName}</h6>
+                            <p>{formatDate(appt.startTime)}</p>
+                            <p>{appt.location}</p>
+                            {appt.recurrence_group_id && (
+                              <p className="appointment-recurrence-line">
+                                {recurrenceSummary || 'Part of a recurring series'}
+                                {isSeriesCard && seriesCount > 1 ? ` • +${seriesCount - 1} more` : ''}
+                              </p>
+                            )}
+                          </div>
+                          <span className={`appointment-status-pill ${cls}`}>{label}</span>
+                          {appt.attendeeStatus === 'pending' && (
+                            <div style={{ display: 'grid', gap: 6 }}>
+                              <button
+                                type="button"
+                                className="invite-action-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateMyStatus(appt.id, 'confirmed');
+                                }}
+                                title="Set your status to confirmed"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                type="button"
+                                className="invite-action-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdateMyStatus(appt.id, 'cancelled');
+                                }}
+                                title="Set your status to cancelled"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          )}
                         </div>
-                        <span className={`appointment-status-pill ${cls}`}>{label}</span>
-                      </div>
-                    );
-                  })
-                )}
+                      );
+                    })
+                  )}
+                </div>
               </div>
 
               <div className="side-panel-divider" />
 
-              {/* Past appointments stay available as a simple history list. */}
-              <div>
-                <div className="side-panel-title">Past appointments</div>
-                {pastAppts.length === 0 ? (
-                  <p style={{ fontSize: 12, color: '#aaa' }}>No past appointments yet.</p>
-                ) : (
-                  pastAppts.map((appt) => {
-                    // Reuse the same status pill treatment as upcoming appointments.
-                    const { label, cls } = statusLabel(appt.status);
-
-                    return (
-                      <div
-                        key={appt.id}
-                        className="appointment-item"
-                        onClick={() => {
-                          setActiveAppt(appt);
-                          setModal('detail');
-                        }}
-                      >
-                        <div className="appointment-color-dot" style={{ background: appt.color }} />
-                        <div>
-                          <h4>{appt.title || 'Untitled appointment'}</h4>
-                          <h6>{appt.ownerName}</h6>
-                          <p>{formatDate(appt.startTime)}</p>
-                          <p>{appt.location}</p>
-                        </div>
-                        <span className={`appointment-status-pill ${cls}`}>{label}</span>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              <div className="side-panel-divider" />
-
-              {/* Heatmap invites are shown last as action items the student may still need to respond to. */}
-              <div>
+              {/* Heatmap invites are shown as action items the student may still need to respond to. */}
+              <div className="side-panel-section side-panel-section-heatmap">
                 <div className="side-panel-title">Heatmap invitations</div>
-                {heatmapInvites.length === 0 ? (
-                  <p style={{ fontSize: 12, color: '#aaa' }}>No heatmap invitations right now.</p>
-                ) : (
-                  heatmapInvites.map((inv) => (
-                    // One invitation card per heatmap the student can view or respond to.
-                    <div key={inv.id} className="invite-item">
-                      <div className={`invite-dot${inv.responded ? ' responded' : ''}`} />
-                      <div>
-                        <h4>{inv.profName}</h4>
-                        <p>{inv.title}</p>
-                        <p style={{ color: inv.responded ? '#888' : '#E31429' }}>
-                          {inv.responded
-                            ? inv.status === 'approved'
-                              ? 'Approved'
-                              : inv.status === 'declined'
-                                ? 'Declined'
-                                : 'Responded'
-                            : `Open ${new Date(inv.dueDate).toLocaleDateString('en-CA', {
-                                month: 'short',
-                                day: 'numeric',
-                              })}`}
-                        </p>
+                <div className="side-panel-scroll">
+                  {heatmapInvites.length === 0 ? (
+                    <p style={{ fontSize: 12, color: '#aaa' }}>No heatmap invitations right now.</p>
+                  ) : (
+                    heatmapInvites.map((inv) => (
+                      // One invitation card per heatmap the student can view or respond to.
+                      <div key={inv.id} className="invite-item">
+                        <div className={`invite-dot${inv.responded ? ' responded' : ''}`} />
+                        <div>
+                          <h4>{inv.profName}</h4>
+                          <p>{inv.title}</p>
+                          <p style={{ color: inv.responded ? '#888' : '#E31429' }}>
+                            {inv.responded
+                              ? inv.status === 'approved'
+                                ? 'Approved'
+                                : inv.status === 'declined'
+                                  ? 'Declined'
+                                  : 'Responded'
+                              : `Open ${new Date(inv.dueDate).toLocaleDateString('en-CA', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                })}`}
+                          </p>
+                        </div>
+                        <button
+                          className="invite-action-button"
+                          onClick={() => navigate(`/heatmap/student/${inv.id}`)}
+                          title={inv.responded ? 'View heatmap' : 'Respond to heatmap'}
+                        >
+                          {/* Plus means action needed; arrow means they already responded. */}
+                          {inv.responded ? '>' : '+'}
+                        </button>
                       </div>
-                      <button
-                        className="invite-action-button"
-                        onClick={() => navigate(`/heatmap/student/${inv.id}`)}
-                        title={inv.responded ? 'View heatmap' : 'Respond to heatmap'}
-                      >
-                        {/* Plus means action needed; arrow means they already responded. */}
-                        {inv.responded ? '>' : '+'}
-                      </button>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
+                </div>
               </div>
             </aside>
           )}
@@ -347,6 +455,8 @@ export default function StudentDashboard() {
         <SlotDetailModal
           appointment={{
             title: activeAppt.title,
+            startTime: activeAppt.startTime,
+            endTime: activeAppt.endTime,
             day: new Date(activeAppt.startTime).toLocaleDateString('en-CA', {
               weekday: 'long',
               month: 'long',
@@ -355,10 +465,27 @@ export default function StudentDashboard() {
             time: `${formatTime(activeAppt.startTime)} – ${formatTime(activeAppt.endTime)}`,
             owner: activeAppt.ownerName,
             ownerEmail: activeAppt.ownerEmail,
+            attendeeName: activeAppt.attendeeName,
+            attendeeEmail: activeAppt.attendeeEmail,
+            bookedBy: activeAppt.attendeeName,
             location: activeAppt.location,
+            description: activeAppt.description,
+            notes: activeAppt.notes || activeAppt.description,
+            capacity: activeAppt.capacity,
+            visibility: activeAppt.visibility,
+            bookedCount: activeAppt.bookedCount,
             status: activeAppt.status,
+            type: activeAppt.type,
+            participants: activeAppt.participantStatuses || [],
+            myStatus: activeAppt.attendeeStatus,
+            currentUserId: userId,
+            recurrence_rule: activeAppt.recurrence_rule,
+            recurrence_group_id: activeAppt.recurrence_group_id,
+            recurrence_instance_date: activeAppt.recurrence_instance_date,
+            course_id: activeAppt.course_id,
           }}
           isOwner={false}
+          onUpdateMyStatus={(nextStatus) => handleUpdateMyStatus(activeAppt.id, nextStatus)}
           onDelete={() => setModal('delete')}
           onClose={() => {
             setModal(null);
@@ -375,6 +502,14 @@ export default function StudentDashboard() {
             day: new Date(activeAppt.startTime).toLocaleDateString(),
             time: formatTime(activeAppt.startTime),
             notifyEmail: activeAppt.ownerEmail,
+            type: activeAppt.type,
+            participants: activeAppt.participantStatuses || [],
+            attendeeName: activeAppt.attendeeName,
+            attendeeEmail: activeAppt.attendeeEmail,
+            bookedBy: activeAppt.attendeeName,
+            recurrence_rule: activeAppt.recurrence_rule,
+            recurrence_group_id: activeAppt.recurrence_group_id,
+            course_id: activeAppt.course_id,
           }}
           onConfirm={handleDelete}
           onClose={() => setModal('detail')}

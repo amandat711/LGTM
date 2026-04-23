@@ -7,8 +7,9 @@ import '../styles/Heatmap.css';
 // Shared page chrome and session helpers.
 import logo from '../assets/logo1.png';
 import Navbar from '../components/Navbar';
+import AppSidebar from '../components/AppSidebar';
 import useAppShellSession from '../hooks/useAppShellSession';
-import { sessionUserToNavUser } from '../auth/authUtils';
+import { isFacultyAdmin, sessionUserToNavUser } from '../auth/authUtils';
 // Grid components used by professor view: personal availability and group heatmap.
 import { PersonalGrid, GroupGrid, HeatmapLegend, GridPager } from '../components/HeatmapGrid';
 // Reusable modal components for confirmations, sharing, and appointment details.
@@ -28,6 +29,7 @@ import {
   saveHeatmapSubmission,
   updateHeatmap,
 } from '../api/heatmaps';
+import { logout } from '../api/auth';
 // Calendar-grid helpers that produce the visible day and time labels.
 import { generateDays, generateTimes } from '../utils/generateDays';
 // Shared conversion helpers used by both professor and student heatmap pages.
@@ -67,6 +69,7 @@ export default function ProfessorHeatmap() {
   // Session data is converted into the smaller shape this page needs.
   const { user: sessionUser } = useAppShellSession();
   const sessionNav = useMemo(() => sessionUserToNavUser(sessionUser), [sessionUser]);
+  const canCreate = isFacultyAdmin(sessionUser?.user_type);
   const isNewHeatmapRoute = eventId === 'new';
 
   // Local user object used for nav display and backend write actions.
@@ -83,6 +86,14 @@ export default function ProfessorHeatmap() {
   const userInitials = user?.name
     ? user.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
     : '';
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } finally {
+      navigate('/', { replace: true });
+    }
+  }
 
   // Controls which dates and hours are visible in the heatmap grid.
   const defaultRange = useMemo(() => getDefaultHeatmapRange(), []);
@@ -418,16 +429,23 @@ export default function ProfessorHeatmap() {
   }
 
   return (
-    <>
-      {/* Shared top navbar for returning to dashboard and showing professor identity. */}
+    <div className="dashboard-page">
       <Navbar
         logo={logo}
-        title="Heatmap Booking"
+        title="Heatmap"
         user={user ? { displayName: user.name, role: user.role, initials: userInitials } : undefined}
-        actions={[{ label: 'Back to dashboard', onClick: () => navigate(buildDashboardPath(user)) }]}
+        onLeftClick={() => navigate(buildDashboardPath(user))}
+        actions={[{ label: 'Log Out', onClick: handleLogout }]}
       />
-
-      <div className="heatmap-page">
+      <div className="dashboard-layout">
+        <AppSidebar
+          activeId="search"
+          user={sessionUser}
+          navigate={navigate}
+          canCreate={canCreate}
+        />
+        <div className="main-content">
+          <div className="heatmap-page" style={{ width: '100%' }}>
         {isNewHeatmapRoute ? (
           <>
             <div className="page-header">
@@ -883,7 +901,9 @@ export default function ProfessorHeatmap() {
 
           </>
         )}
+          </div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

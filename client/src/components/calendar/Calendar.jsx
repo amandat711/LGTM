@@ -6,16 +6,16 @@ export default function Calendar({
   view = 'week',
   appointments,
   onEventClick,
-  inlineEventPopup = false,
-  renderInlineEventPopup = null,
+  onSlotClick,
+  onSlotSelect,
 }) {
   if (view === 'week') {
     return (
       <WeekView
         appointments={appointments}
         onEventClick={onEventClick}
-        inlineEventPopup={inlineEventPopup}
-        renderInlineEventPopup={renderInlineEventPopup}
+        onSlotClick={onSlotClick}
+        onSlotSelect={onSlotSelect}
       />
     );
   }
@@ -24,8 +24,8 @@ export default function Calendar({
     <WeekView
       appointments={appointments}
       onEventClick={onEventClick}
-      inlineEventPopup={inlineEventPopup}
-      renderInlineEventPopup={renderInlineEventPopup}
+      onSlotClick={onSlotClick}
+      onSlotSelect={onSlotSelect}
     />
   );
 }

@@ -4,9 +4,6 @@
 import React from 'react';
 import '../styles/Navbar.css';
 import NotificationPanel from './dashboard/NotificationPanel';
-import LGTMLogo2 from "../assets/LGTMLogo2.png";
-
-
 
 export default function Navbar({ logo, title, onLeftClick, user, actions = [], appointments = [] }) {
   const badgeClass = user?.role === 'professor' ? 'role-tag-professor' : 'role-tag-student';
@@ -20,16 +17,25 @@ export default function Navbar({ logo, title, onLeftClick, user, actions = [], a
       <div className="top-bar-content">
         {/* ── Left: logo + title  OR  plain back-button ──────── */}
         <div className="top-bar-left">
-          <button onClick={onLeftClick} className="top-bar-left-button">
-            {logo && <img src={LGTMLogo2} alt="logo" className="top-bar-logo" />}
+          <button
+            type="button"
+            onClick={onLeftClick}
+            className="top-bar-left-button"
+            style={{ cursor: onLeftClick ? 'pointer' : 'default' }}
+          >
+            {logo && (
+              <img
+                src={logo}
+                alt="logo"
+                className="top-bar-logo"
+              />
+            )}
             {title && <span className="top-bar-title">{title}</span>}
           </button>
         </div>
-
         {/* ── Right: user info  +  action buttons ────────────── */}
         <div className="top-bar-right">
-          {user && <NotificationPanel user={user} appointments={appointments}/>}
-          
+          {user && <NotificationPanel user={user} appointments={appointments} />}
           {user && (
             <div className="top-bar-user">
               <div className="top-bar-user-info">
@@ -47,7 +53,7 @@ export default function Navbar({ logo, title, onLeftClick, user, actions = [], a
           )}
 
           {actions.map(({ label, onClick }, i) => (
-            <button key={i} className="top-bar-button" onClick={onClick}>
+            <button key={i} type="button" className="top-bar-button" onClick={onClick}>
               {label}
             </button>
           ))}
