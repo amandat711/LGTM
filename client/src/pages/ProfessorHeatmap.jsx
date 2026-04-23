@@ -444,7 +444,7 @@ export default function ProfessorHeatmap() {
           navigate={navigate}
           canCreate={canCreate}
         />
-        <div className="main-content">
+        <div className="heatmap-main-content">
           <div className="heatmap-page" style={{ width: '100%' }}>
         {isNewHeatmapRoute ? (
           <>

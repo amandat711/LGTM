@@ -33,6 +33,15 @@ body {
 }
 
 /* ─── Page layout ────────────────────────────────────────── */
+.heatmap-main-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
 .heatmap-page {
   max-width: 1200px;
   margin: 0 auto;

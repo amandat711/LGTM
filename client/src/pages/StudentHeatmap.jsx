@@ -255,7 +255,7 @@ export default function StudentHeatmap() {
           navigate={navigate}
           canCreate={canCreate}
         />
-        <div className="main-content">
+        <div className="heatmap-main-content">
           <div className="heatmap-page" style={{ width: '100%' }}>
         {/* Page intro explains whose availability the student is responding to. */}
         <div className="page-header">
