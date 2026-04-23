@@ -70,20 +70,8 @@ function mergeEvents(detail) {
   return out;
 }
 
-function eventAccentClass(title, kind) {
-  const t = (title || '').toLowerCase();
-  if (t.includes('office') || t.includes(' oh') || /\boh\b/.test(t)) return 'course-detail-event--accent-green';
-  if (t.includes('tutorial')) return 'course-detail-event--accent-purple';
-  if (t.includes('lecture')) return 'course-detail-event--accent-blue';
-  if (kind === 'appointment') return 'course-detail-event--accent-purple';
-  return 'course-detail-event--accent-blue';
-}
-
-function calendarColorForEvent(title, kind, persistedColor) {
+function calendarColorForEvent(_title, _kind, persistedColor) {
   if (persistedColor) return persistedColor;
-  const accent = eventAccentClass(title, kind);
-  if (accent === 'course-detail-event--accent-green') return '#2a8c5f';
-  if (accent === 'course-detail-event--accent-purple') return '#7c3aed';
   return '#1565a8';
 }
 
@@ -764,14 +752,15 @@ export default function CourseDetailPage() {
                         {eventsMerged.map((ev) => {
                           const title =
                             ev.row.ap_title || 'Appointment';
-                          const accent = eventAccentClass(title, ev.kind);
+                          const eventColor = ev.row.ap_color || calendarColorForEvent(title, ev.kind, ev.row.ap_color);
                           const creatorName = formatEventCreatorName(ev.row);
                           return (
                             <li
                               key={
                                 `ap-${ev.row.appointment_id}`
                               }
-                              className={`course-detail-event ${accent}`}
+                              className="course-detail-event"
+                              style={{ '--course-event-accent': eventColor }}
                             >
                               <div className="course-detail-event-body">
                                 <div className="course-detail-event-title">{title}</div>
