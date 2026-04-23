@@ -163,6 +163,7 @@ CREATE TABLE appointments (
                               CHECK (visibility IN ('public', 'private')),
     ap_title                  TEXT,
     ap_description            TEXT,
+    ap_color                  TEXT NOT NULL DEFAULT '#1565A8',
     scheduling_mode           TEXT NOT NULL
                               CHECK (scheduling_mode IN ('calendar', 'heatmap', 'direct_request')),
     status                    TEXT NOT NULL DEFAULT 'pending'

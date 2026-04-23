@@ -310,6 +310,10 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
               {dayAppointments.map((appt) => {
                   const { top, height, isVisible } = getEventStyle(appt, hourHeight);
                   if (!isVisible) return null;
+                  const eventColor = appt.type === 'availability' ? '#6B7280' : (appt.color || '#1565A8');
+                  const isPending = appt.type !== 'availability' && appt.status === 'pending';
+                  const isCancelled = appt.type !== 'availability' && appt.status === 'cancelled';
+                  const background = isPending || isCancelled ? '#ffffff' : `${eventColor}33`;
                   const compact = height < 40;
                   const startTimeString = new Date(appt.startTime).toLocaleTimeString([], {
                     hour: 'numeric',
@@ -333,12 +337,15 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
                         height: eventHeight,
                         width: `calc(${widthPct}% - 4px)`,
                         left: `calc(${leftPct}% + 2px)`,
-                        background: `${appt.color}33`,
-                        border: `1px solid ${appt.color}33`,
-                        borderLeft: `4px solid ${appt.color}`,
-                        color: appt.color,
+                        background,
+                        border: `1px solid ${eventColor}66`,
+                        borderLeft: `4px solid ${eventColor}`,
+                        color: eventColor,
                         boxShadow: '0 1px 2px rgba(15, 23, 42, 0.08)',
                         zIndex: 3 + layout.lane,
+                        textDecoration: isCancelled ? 'line-through' : 'none',
+                        textDecorationThickness: isCancelled ? '1.5px' : undefined,
+                        textDecorationColor: isCancelled ? eventColor : undefined,
                       }}
                       onClick={() => onEventClick(appt)}
                       title={`${appt.title} • ${startTimeString}`}

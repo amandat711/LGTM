@@ -303,6 +303,25 @@
   color: #fff;
 }
 
+.event-color-picker {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.event-color-swatch {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(17, 24, 39, 0.08);
+}
+
+.event-color-swatch.selected {
+  border-color: #111827;
+}
+
 .availability-tab-btn {
   border: 1px solid #d1d5db;
   border-radius: 999px;

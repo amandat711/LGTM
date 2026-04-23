@@ -92,6 +92,7 @@ export default function ProfessorDashboard() {
   const [error, setError] = useState('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [infoMessage, setInfoMessage] = useState('');
+  const [dismissedCancelledIds, setDismissedCancelledIds] = useState([]);
 
 
   // Main dashboard load:
@@ -203,10 +204,15 @@ export default function ProfessorDashboard() {
   const upcomingAppts = useMemo(() => {
     const now = new Date();
     return appointments
-      .filter((a) => includeAppointmentOnWeekCalendar(a) && new Date(a.startTime) >= now)
+      .filter(
+        (a) =>
+          includeAppointmentOnWeekCalendar(a)
+          && new Date(a.startTime) >= now
+          && !(a.status === 'cancelled' && dismissedCancelledIds.includes(a.id))
+      )
       .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
       .slice(0, 5);
-  }, [appointments]);
+  }, [appointments, dismissedCancelledIds]);
 
   function isRecurringSeriesEvent(appt) {
     return Boolean(appt?.recurrence_group_id);
@@ -422,18 +428,11 @@ export default function ProfessorDashboard() {
             Number(p.userId) === Number(userId) ? { ...p, status: nextStatus } : p
           );
           const status = toDisplayStatus(participantStatuses, appt.status);
-          const color =
-            status === 'confirmed'
-              ? '#2a8c5f'
-              : status === 'cancelled'
-                ? '#dc2626'
-                : '#f59e0b';
 
           return {
             ...appt,
             participantStatuses,
             status,
-            color,
           };
         })
       );
@@ -598,6 +597,21 @@ export default function ProfessorDashboard() {
                               </button>
                             </div>
                           )}
+                          {appt.status === 'cancelled' && (
+                            <button
+                              type="button"
+                              className="invite-action-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDismissedCancelledIds((prev) => (
+                                  prev.includes(appt.id) ? prev : [...prev, appt.id]
+                                ));
+                              }}
+                              title="Dismiss cancelled item"
+                            >
+                              Dismiss
+                            </button>
+                          )}
                         </div>
                       );
                     })
@@ -714,6 +728,7 @@ export default function ProfessorDashboard() {
             capacity: activeAppt.capacity,
             visibility: activeAppt.visibility,
             course_id: activeAppt.course_id,
+            ap_color: activeAppt.color,
           }}
           onClose={() => setModal('detail')}
           onSubmit={handleUpdateAppointment}

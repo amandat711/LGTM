@@ -79,7 +79,8 @@ function eventAccentClass(title, kind) {
   return 'course-detail-event--accent-blue';
 }
 
-function calendarColorForEvent(title, kind) {
+function calendarColorForEvent(title, kind, persistedColor) {
+  if (persistedColor) return persistedColor;
   const accent = eventAccentClass(title, kind);
   if (accent === 'course-detail-event--accent-green') return '#2a8c5f';
   if (accent === 'course-detail-event--accent-purple') return '#7c3aed';
@@ -273,7 +274,7 @@ export default function CourseDetailPage() {
           endTime,
           location: ev.row.location || '',
           status: ev.row.status || '',
-          color: calendarColorForEvent(title, ev.kind),
+          color: calendarColorForEvent(title, ev.kind, ev.row.ap_color),
           creatorName: formatEventCreatorName(ev.row),
           description: ev.row.ap_description || '',
           appointmentId: ev.row.appointment_id,

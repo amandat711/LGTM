@@ -371,6 +371,7 @@ router.post('/direct', async (req, res) => {
     capacity,
     ap_title,
     ap_description,
+    ap_color,
     invitee_user_ids,
     recurrence_rule,
   } = req.body || {};
@@ -400,6 +401,10 @@ router.post('/direct', async (req, res) => {
     const finalVisibility = visibility ?? 'private';
     if (!['public', 'private'].includes(finalVisibility)) {
       return res.status(400).json({ error: 'visibility must be public or private' });
+    }
+    const finalColor = ap_color == null || String(ap_color).trim() === '' ? '#1565A8' : String(ap_color).trim();
+    if (!/^#[0-9A-Fa-f]{6}$/.test(finalColor)) {
+      return res.status(400).json({ error: 'ap_color must be a hex color like #1565A8' });
     }
 
     const startDate = parseDate(start_time);
@@ -534,12 +539,13 @@ router.post('/direct', async (req, res) => {
             visibility,
             ap_title,
             ap_description,
+            ap_color,
             scheduling_mode,
             status,
             recurrence_rule,
             recurrence_group_id
           )
-          VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `,
           [
             courseIdNorm,
@@ -550,6 +556,7 @@ router.post('/direct', async (req, res) => {
             finalVisibility,
             ap_title || null,
             ap_description || null,
+            finalColor,
             'calendar',
             uniqueInvitees.length > 0 ? 'pending' : 'confirmed',
             recurrenceRuleForDb,
@@ -1438,6 +1445,7 @@ router.patch('/:id', async (req, res) => {
     visibility,
     ap_title,
     ap_description,
+    ap_color,
     course_id,
     note,
     recurrence_scope,
@@ -1483,6 +1491,11 @@ router.patch('/:id', async (req, res) => {
 
     if (visibility !== undefined && visibility !== null && !['public', 'private'].includes(String(visibility))) {
       return res.status(400).json({ error: 'visibility must be public or private' });
+    }
+    if (ap_color !== undefined && ap_color !== null && String(ap_color).trim() !== '') {
+      if (!/^#[0-9A-Fa-f]{6}$/.test(String(ap_color).trim())) {
+        return res.status(400).json({ error: 'ap_color must be a hex color like #1565A8' });
+      }
     }
 
     const parsedCourseId = course_id === undefined ? undefined : normalizeCourseId(course_id);
@@ -1554,6 +1567,10 @@ router.patch('/:id', async (req, res) => {
     if (ap_description !== undefined) {
       updateFields.push('ap_description = ?');
       updateParams.push(ap_description === null || ap_description === '' ? null : String(ap_description));
+    }
+    if (ap_color !== undefined) {
+      updateFields.push('ap_color = ?');
+      updateParams.push(ap_color === null || String(ap_color).trim() === '' ? '#1565A8' : String(ap_color).trim());
     }
     if (parsedCourseId !== undefined) {
       updateFields.push('course_id = ?');

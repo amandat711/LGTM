@@ -24,6 +24,13 @@ function ensureAppointmentRecurrenceColumns(database) {
         }
       });
     }
+    if (!names.has('ap_color')) {
+      database.run("ALTER TABLE appointments ADD COLUMN ap_color TEXT NOT NULL DEFAULT '#1565A8'", (e) => {
+        if (e && !String(e.message).includes('duplicate column')) {
+          console.error('ALTER appointments ap_color:', e.message);
+        }
+      });
+    }
   });
 }
 

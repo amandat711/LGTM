@@ -7,6 +7,17 @@ import {
   toLocalTimeInputValue,
 } from './calendar/calendarUtils';
 
+const EVENT_COLORS = [
+  '#1565A8',
+  '#2A8C5F',
+  '#7C3AED',
+  '#C2410C',
+  '#BE123C',
+  '#0F766E',
+  '#4F46E5',
+  '#334155',
+];
+
 function toIsoLocal(date, time) {
   return `${date}T${time}:00`;
 }
@@ -72,6 +83,7 @@ export default function CreateAppointmentForm({
     location: initialData?.location || '',
     capacity: initialData?.capacity ?? 1,
     visibility: initialData?.visibility || defaultVisibility,
+    ap_color: initialData?.ap_color || '#1565A8',
     course_id:
       forcedCourse?.course_id != null
         ? String(forcedCourse.course_id)
@@ -255,6 +267,7 @@ export default function CreateAppointmentForm({
         course_id: form.course_id ? Number(form.course_id) : null,
         invitee_user_ids: selectedInvitees.map((u) => u.id),
         recurrence_rule: recurrencePayload,
+        ap_color: form.ap_color,
       });
     } catch (err) {
       setError(err?.message || `Failed to ${mode === 'edit' ? 'update' : 'create'} appointment.`);
@@ -383,6 +396,26 @@ export default function CreateAppointmentForm({
               onChange={(e) => updateField('location', e.target.value)}
               placeholder="Trottier 3xxx or Zoom"
             />
+          </div>
+
+          <div className="form-group">
+            <label>Color</label>
+            <div className="event-color-picker" role="radiogroup" aria-label="Event color">
+              {EVENT_COLORS.map((hex) => {
+                const selected = form.ap_color === hex;
+                return (
+                  <button
+                    key={hex}
+                    type="button"
+                    className={`event-color-swatch${selected ? ' selected' : ''}`}
+                    style={{ backgroundColor: hex }}
+                    aria-label={`Select color ${hex}`}
+                    aria-pressed={selected}
+                    onClick={() => updateField('ap_color', hex)}
+                  />
+                );
+              })}
+            </div>
           </div>
 
           <div className="form-group">

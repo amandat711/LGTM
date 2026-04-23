@@ -189,12 +189,7 @@ export function mapAppointmentToCalendarEvent(appt, viewerUserId = null) {
 
   const myParticipant = participantStatuses.find((p) => Number(p.userId) === Number(viewerUserId));
   const myStatus = appt.status === 'cancelled' ? 'cancelled' : (myParticipant?.status || appt.status || 'pending');
-
-  let color = '#1565a8';
-  if (myStatus === 'confirmed') color = '#2a8c5f';
-  else if (myStatus === 'pending') color = '#f59e0b';
-  else if (myStatus === 'waiting_approval') color = '#3b82f6';
-  else if (myStatus === 'cancelled') color = '#dc2626';
+  const color = appt.ap_color || '#1565A8';
 
   return {
     id: appt.appointment_id,
