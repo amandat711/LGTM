@@ -262,7 +262,7 @@ export default function BookingProfessor() {
         <Navbar
           logo={logo}
           title="Book professor"
-          onLeftClick={() => navigate('/')}
+          onLeftClick={() => navigate(resolvePath('dashboard', user))}
           user={{
             displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
             role: 'student',
@@ -288,7 +288,7 @@ export default function BookingProfessor() {
         <Navbar
           logo={logo}
           title="Book professor"
-          onLeftClick={() => navigate('/')}
+          onLeftClick={() => navigate(resolvePath('dashboard', user))}
           user={{
             displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
             role: 'student',
@@ -313,7 +313,7 @@ export default function BookingProfessor() {
       <Navbar
         logo={logo}
         title="Book professor"
-        onLeftClick={() => navigate('/')}
+        onLeftClick={() => navigate(resolvePath('dashboard', user))}
         user={{
           displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
           role: 'student',
