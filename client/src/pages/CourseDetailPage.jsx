@@ -26,6 +26,10 @@ import InfoIcon from '../assets/infoIcon.png';
 import '../styles/Dashboard.css';
 import '../styles/CourseDetailPage.css';
 
+// #region agent log
+fetch('http://127.0.0.1:7735/ingest/cc35f6a7-c18d-4c61-b5e2-47ecdd6bdfac',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'35f1ac'},body:JSON.stringify({sessionId:'35f1ac',runId:'run1',hypothesisId:'H3',location:'client/src/pages/CourseDetailPage.jsx:30',message:'course detail module evaluated',data:{joinCourseEventType:typeof joinCourseEvent},timestamp:Date.now()})}).catch(()=>{});
+// #endregion
+
 function formatRange(startIso, endIso) {
   if (!startIso) return '';
   const start = new Date(normalizeDateTime(startIso));

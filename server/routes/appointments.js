@@ -1172,6 +1172,101 @@ router.patch('/invitations/:id/decline', async (req, res) => {
   }
 });
 
+router.post('/:id/join', async (req, res) => {
+  const appointmentId = Number(req.params.id);
+  const userId = Number(req.body?.user_id);
+
+  if (!Number.isInteger(appointmentId) || appointmentId < 1) {
+    return res.status(400).json({ error: 'Invalid appointment id' });
+  }
+  if (!Number.isInteger(userId) || userId < 1) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  try {
+    const appointment = await dbGet(
+      `
+      SELECT appointment_id, capacity, status
+      FROM appointments
+      WHERE appointment_id = ?
+      `,
+      [appointmentId]
+    );
+    if (!appointment) return res.status(404).json({ error: 'Appointment not found' });
+    if (appointment.status === 'cancelled') {
+      return res.status(400).json({ error: 'Cannot join a cancelled appointment' });
+    }
+
+    const existing = await dbGet(
+      `
+      SELECT appointment_id, user_id, participant_role, response_status
+      FROM appointment_participants
+      WHERE appointment_id = ? AND user_id = ?
+      `,
+      [appointmentId, userId]
+    );
+
+    if (existing) {
+      if (existing.participant_role === 'host') {
+        return res.status(400).json({ error: 'Host is already part of this appointment' });
+      }
+      await dbRun(
+        `
+        UPDATE appointment_participants
+        SET response_status = 'accepted'
+        WHERE appointment_id = ? AND user_id = ?
+        `,
+        [appointmentId, userId]
+      );
+    } else {
+      const counts = await dbGet(
+        `
+        SELECT
+          SUM(CASE WHEN participant_role = 'attendee' AND response_status = 'accepted' THEN 1 ELSE 0 END) AS accepted_count
+        FROM appointment_participants
+        WHERE appointment_id = ?
+        `,
+        [appointmentId]
+      );
+      const acceptedCount = Number(counts?.accepted_count || 0);
+      const capacity = Number(appointment.capacity || 1);
+      if (acceptedCount >= capacity) {
+        return res.status(409).json({ error: 'Appointment is full' });
+      }
+
+      await dbRun(
+        `
+        INSERT INTO appointment_participants
+        (appointment_id, user_id, participant_role, response_status)
+        VALUES (?, ?, 'attendee', 'accepted')
+        `,
+        [appointmentId, userId]
+      );
+    }
+
+    await recalculateAppointmentStatus(appointmentId);
+
+    const participant = await dbGet(
+      `
+      SELECT appointment_id, user_id, participant_role, response_status
+      FROM appointment_participants
+      WHERE appointment_id = ? AND user_id = ?
+      `,
+      [appointmentId, userId]
+    );
+
+    return res.json({
+      message: 'Joined appointment successfully',
+      participant: {
+        ...participant,
+        participant_status: toParticipantStatus(participant.response_status),
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+});
+
 router.patch('/:id/participants/:userId/status', async (req, res) => {
   const appointmentId = Number(req.params.id);
   const participantUserId = Number(req.params.userId);

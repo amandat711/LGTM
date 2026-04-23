@@ -2,6 +2,10 @@ import { API_BASE } from '../constants/config';
 
 const fetchOpts = { credentials: 'include' };
 
+// #region agent log
+fetch('http://127.0.0.1:7735/ingest/cc35f6a7-c18d-4c61-b5e2-47ecdd6bdfac',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'35f1ac'},body:JSON.stringify({sessionId:'35f1ac',runId:'run1',hypothesisId:'H1',location:'client/src/api/appointments.js:5',message:'appointments module evaluated with export contract',data:{exports:['getMyAppointments','getHostingAppointments','cancelAppointment','updateAppointment','createAppointment','createDirectAppointment','getMyInvitations','acceptInvitation','declineInvitation','updateMyParticipantStatus']},timestamp:Date.now()})}).catch(()=>{});
+// #endregion
+
 async function parseJson(res) {
   const data = await res.json().catch(() => ({}));
 
@@ -62,6 +66,21 @@ export async function createAppointment(availabilityId, bookedBy) {
     body: JSON.stringify({
       availability_id: Number(availabilityId),
       booked_by: Number(bookedBy),
+    }),
+  });
+
+  return parseJson(res);
+}
+
+export async function joinCourseEvent(appointmentId, userId) {
+  const res = await fetch(`${API_BASE}/appointments/${appointmentId}/join`, {
+    ...fetchOpts,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      user_id: Number(userId),
     }),
   });
 
