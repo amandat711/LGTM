@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { getAllProfessors } from '../api/users';
 import { logout } from '../api/auth';
 import useAppShellSession from '../hooks/useAppShellSession';
-import { resolvePath } from '../auth/authUtils';
+import { isFacultyAdmin, resolvePath } from '../auth/authUtils';
 import Navbar from '../components/Navbar';
 import AppSidebar from '../components/AppSidebar';
 import logo from '../assets/logo1.png';
@@ -34,7 +34,7 @@ export default function BookingDiscovery() {
   const [error, setError] = useState('');
   const firstName = user?.first_name || 'User';
   const lastName = user?.last_name || '';
-  const userRole = user?.user_type === 'professor' ? 'professor' : 'student';
+  const userRole = isFacultyAdmin(user?.user_type) ? 'professor' : 'student';
   const initials = `${firstName?.[0] || 'U'}${lastName?.[0] || ''}`;
 
   async function handleLogout() {

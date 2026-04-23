@@ -57,6 +57,11 @@ function getInitialRecurrence(initialData, baseDate) {
   }
 }
 
+function normalizeNullableString(value) {
+  const trimmed = String(value || '').trim();
+  return trimmed || null;
+}
+
 export default function CreateAppointmentForm({
   mode = 'event',
   onSubmit,
@@ -256,19 +261,63 @@ export default function CreateAppointmentForm({
 
     try {
       setSaving(true);
-      await onSubmit({
-        ap_title: form.ap_title.trim() || null,
-        ap_description: form.ap_description.trim() || null,
+      const normalized = {
+        ap_title: normalizeNullableString(form.ap_title),
+        ap_description: normalizeNullableString(form.ap_description),
         start_time: start,
         end_time: end,
-        location: form.location.trim() || null,
+        location: normalizeNullableString(form.location),
         capacity: Number(form.capacity),
         visibility: form.visibility,
         course_id: form.course_id ? Number(form.course_id) : null,
         invitee_user_ids: selectedInvitees.map((u) => u.id),
         recurrence_rule: recurrencePayload,
         ap_color: form.ap_color,
-      });
+      };
+
+      if (mode === 'edit' && initialData) {
+        const original = {
+          ap_title: normalizeNullableString(initialData.ap_title),
+          ap_description: normalizeNullableString(initialData.ap_description),
+          start_time: initialData.start_time
+            ? toIsoLocal(
+              toLocalDateInputValue(initialData.start_time),
+              toLocalTimeInputValue(initialData.start_time)
+            )
+            : null,
+          end_time: initialData.end_time
+            ? toIsoLocal(
+              toLocalDateInputValue(initialData.end_time),
+              toLocalTimeInputValue(initialData.end_time)
+            )
+            : null,
+          location: normalizeNullableString(initialData.location),
+          capacity: Number(initialData.capacity ?? 1),
+          visibility: initialData.visibility || defaultVisibility,
+          course_id: initialData.course_id != null ? Number(initialData.course_id) : null,
+          ap_color: initialData.ap_color || '#1565A8',
+        };
+
+        const patchPayload = {};
+        if (normalized.ap_title !== original.ap_title) patchPayload.ap_title = normalized.ap_title;
+        if (normalized.ap_description !== original.ap_description) patchPayload.ap_description = normalized.ap_description;
+        if (normalized.start_time !== original.start_time) patchPayload.start_time = normalized.start_time;
+        if (normalized.end_time !== original.end_time) patchPayload.end_time = normalized.end_time;
+        if (normalized.location !== original.location) patchPayload.location = normalized.location;
+        if (normalized.capacity !== original.capacity) patchPayload.capacity = normalized.capacity;
+        if (normalized.visibility !== original.visibility) patchPayload.visibility = normalized.visibility;
+        if (normalized.course_id !== original.course_id) patchPayload.course_id = normalized.course_id;
+        if (normalized.ap_color !== original.ap_color) patchPayload.ap_color = normalized.ap_color;
+
+        if (Object.keys(patchPayload).length === 0) {
+          setError('No changes to save.');
+          return;
+        }
+
+        await onSubmit(patchPayload);
+      } else {
+        await onSubmit(normalized);
+      }
     } catch (err) {
       setError(err?.message || `Failed to ${mode === 'edit' ? 'update' : 'create'} appointment.`);
     } finally {

@@ -5,7 +5,7 @@ import { getAllProfessors } from '../api/users';
 import { createAppointment } from '../api/appointments';
 import { logout } from '../api/auth';
 import useAppShellSession from '../hooks/useAppShellSession';
-import { resolvePath } from '../auth/authUtils';
+import { isFacultyAdmin, resolvePath } from '../auth/authUtils';
 import logo from '../assets/logo1.png';
 import calendarIcon from '../assets/calendarIcon.png';
 import coursesIcon from '../assets/courseIcon.png';
@@ -120,6 +120,7 @@ export default function BookingProfessor() {
       : { firstName: user.first_name || 'User', lastName: user.last_name || '' },
     [user]
   );
+  const navRole = isFacultyAdmin(user?.user_type) ? 'professor' : 'student';
   const initials = `${currentUser.firstName?.[0] || 'U'}${currentUser.lastName?.[0] || ''}`;
 
   async function handleLogout() {
@@ -265,7 +266,7 @@ export default function BookingProfessor() {
           onLeftClick={() => navigate(resolvePath('dashboard', user))}
           user={{
             displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
-            role: 'student',
+            role: navRole,
             initials,
           }}
           actions={[{ label: 'Log Out', onClick: handleLogout }]}
@@ -291,7 +292,7 @@ export default function BookingProfessor() {
           onLeftClick={() => navigate(resolvePath('dashboard', user))}
           user={{
             displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
-            role: 'student',
+            role: navRole,
             initials,
           }}
           actions={[{ label: 'Log Out', onClick: handleLogout }]}
@@ -316,7 +317,7 @@ export default function BookingProfessor() {
         onLeftClick={() => navigate(resolvePath('dashboard', user))}
         user={{
           displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
-          role: 'student',
+          role: navRole,
           initials,
         }}
         actions={[{ label: 'Log Out', onClick: handleLogout }]}

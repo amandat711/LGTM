@@ -78,6 +78,11 @@ function getInitialRecurrence(initialData, baseDate) {
   }
 }
 
+function normalizeNullableString(value) {
+  const trimmed = String(value || '').trim();
+  return trimmed || null;
+}
+
 export default function CreateAvailabilityForm({
   onSubmit,
   onCancel,
@@ -208,17 +213,65 @@ export default function CreateAvailabilityForm({
           }
         : null;
 
-      await onSubmit({
-        av_title: form.av_title.trim() || null,
-        av_description: form.av_description.trim() || null,
+      const normalized = {
+        av_title: normalizeNullableString(form.av_title),
+        av_description: normalizeNullableString(form.av_description),
         start_time: start,
         end_time: end,
-        location: form.location.trim() || null,
+        location: normalizeNullableString(form.location),
         capacity: Number(form.capacity),
         visibility: form.visibility,
         recurrence_rule: recurrencePayload,
         slot_duration_minutes: Number(form.slot_duration_minutes),
-      });
+      };
+
+      if (initialData) {
+        const original = {
+          av_title: normalizeNullableString(initialData.av_title),
+          av_description: normalizeNullableString(initialData.av_description),
+          start_time: initialData.start_time
+            ? toIsoLocal(
+              toLocalDateInputValue(initialData.start_time),
+              toLocalTimeInputValue(initialData.start_time)
+            )
+            : null,
+          end_time: initialData.end_time
+            ? toIsoLocal(
+              toLocalDateInputValue(initialData.end_time),
+              toLocalTimeInputValue(initialData.end_time)
+            )
+            : null,
+          location: normalizeNullableString(initialData.location),
+          capacity: Number(initialData.capacity ?? 1),
+          visibility: initialData.visibility || defaultVisibility,
+          recurrence_rule: initialData.recurrence_rule || null,
+          slot_duration_minutes: Number(initialData.slot_duration_minutes ?? 30),
+        };
+
+        const patchPayload = {};
+        if (normalized.av_title !== original.av_title) patchPayload.av_title = normalized.av_title;
+        if (normalized.av_description !== original.av_description) patchPayload.av_description = normalized.av_description;
+        if (normalized.start_time !== original.start_time) patchPayload.start_time = normalized.start_time;
+        if (normalized.end_time !== original.end_time) patchPayload.end_time = normalized.end_time;
+        if (normalized.location !== original.location) patchPayload.location = normalized.location;
+        if (normalized.capacity !== original.capacity) patchPayload.capacity = normalized.capacity;
+        if (normalized.visibility !== original.visibility) patchPayload.visibility = normalized.visibility;
+        if (JSON.stringify(normalized.recurrence_rule) !== JSON.stringify(original.recurrence_rule)) {
+          patchPayload.recurrence_rule = normalized.recurrence_rule;
+        }
+        if (normalized.slot_duration_minutes !== original.slot_duration_minutes) {
+          patchPayload.slot_duration_minutes = normalized.slot_duration_minutes;
+        }
+
+        if (Object.keys(patchPayload).length === 0) {
+          setError('No changes to save.');
+          return;
+        }
+
+        await onSubmit(patchPayload);
+      } else {
+        await onSubmit(normalized);
+      }
     } catch (err) {
       setError(err?.message || 'Failed to save availability.');
     } finally {
