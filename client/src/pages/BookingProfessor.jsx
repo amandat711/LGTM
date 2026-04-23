@@ -13,7 +13,6 @@ import searchIcon from '../assets/searchIcon.png';
 import InfoIcon from '../assets/infoIcon.png';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
-import Calendar from '../components/calendar/Calendar';
 import BookingCalendar, { toCalendarDateKey } from '../components/BookingCalendar';
 import { InviteURLModal } from '../components/Modals';
 
@@ -46,25 +45,6 @@ function getSlotDateKey(slot) {
 
 function getSlotTitle(slot, professorName) {
   return slot?.av_title || `Meeting with ${professorName}`;
-}
-
-function mapSlotToCalendarEvent(slot, professorName) {
-  const isFull = slot.booked_count >= slot.capacity;
-
-  return {
-    id: `availability-${slot.availability_id}`,
-    type: 'availability',
-    rawSlot: slot,
-    title: getSlotTitle(slot, professorName),
-    ownerName: professorName,
-    ownerEmail: '',
-    attendeeName: isFull ? 'Full' : 'Open slot',
-    startTime: slot.start_time,
-    endTime: slot.end_time,
-    location: slot.location || 'Online',
-    status: isFull ? 'booked' : 'available',
-    color: isFull ? '#777777' : '#E31429',
-  };
 }
 
 function groupSlotsByDate(slots) {
@@ -192,10 +172,6 @@ export default function BookingProfessor() {
   const groupedSlots = useMemo(() => groupSlotsByDate(slots), [slots]);
   const availableDateSet = useMemo(() => new Set(Object.keys(groupedSlots)), [groupedSlots]);
   const selectedDaySlots = groupedSlots[selectedDate] || [];
-  const calendarEvents = useMemo(
-    () => slots.map((slot) => mapSlotToCalendarEvent(slot, professor?.name || 'Professor')),
-    [slots, professor]
-  );
 
   useEffect(() => {
     if (slots.length === 0) return;
@@ -244,12 +220,6 @@ export default function BookingProfessor() {
       setError(err.message || 'Unable to confirm booking.');
     }
   };
-
-  function handleCalendarEventClick(event) {
-    if (!event.rawSlot || event.rawSlot.booked_count >= event.rawSlot.capacity) return;
-    setSelectedSlot(event.rawSlot);
-    setSelectedDate(getSlotDateKey(event.rawSlot));
-  }
 
   const sidebarItems = [
     { id: 'calendar', icon: calendarIcon, label: 'Dashboard', onClick: () => navigate(resolvePath('dashboard', user)) },
@@ -358,15 +328,6 @@ export default function BookingProfessor() {
 
           {message && <div className="booking-status-message success">{message}</div>}
           {error && <div className="booking-status-message error">{error}</div>}
-
-          <div className="booking-week-calendar">
-            <div className="booking-section-title">Calendar view</div>
-            {calendarEvents.length === 0 ? (
-              <p className="booking-empty-message">No open slots to show on the calendar yet.</p>
-            ) : (
-              <Calendar appointments={calendarEvents} onEventClick={handleCalendarEventClick} />
-            )}
-          </div>
 
           <div className="booking-layout">
             <BookingCalendar
