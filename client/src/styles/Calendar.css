@@ -111,13 +111,16 @@
   position: sticky;
   top: 0;
   background: #fff;
-  z-index: 3;
+  z-index: 20;
 }
 
 .dash-week-day-header {
   padding: 10px 4px;
   text-align: center;
   border-right: 1px solid #f0f0f0;
+  background: #fff;
+  position: relative;
+  z-index: 21;
 }
 
 .dash-week-day-header:first-child {
@@ -163,6 +166,7 @@
 
 .dash-day-column {
   position: relative;
+  background: #fff;
 }
 
 .dash-time-label {

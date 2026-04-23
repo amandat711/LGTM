@@ -149,16 +149,24 @@ export function statusLabel(status) {
 export function getEventStyle(appt, slotHeight = 64) {
   const start = new Date(appt.startTime);
   const end = new Date(appt.endTime);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()) || end <= start) {
+    return { top: 0, height: 0, isVisible: false };
+  }
 
-  const minutesFromTop =
-    (start.getHours() - CALENDAR_START_HOUR) * 60 + start.getMinutes();
+  const totalMinutes = (CALENDAR_END_HOUR - CALENDAR_START_HOUR + 1) * 60;
+  const startMinutes = (start.getHours() - CALENDAR_START_HOUR) * 60 + start.getMinutes();
+  const endMinutes = (end.getHours() - CALENDAR_START_HOUR) * 60 + end.getMinutes();
+  const visibleStart = Math.max(startMinutes, 0);
+  const visibleEnd = Math.min(endMinutes, totalMinutes);
 
-  const durationMinutes = (end - start) / 60000;
+  if (visibleEnd <= visibleStart) {
+    return { top: 0, height: 0, isVisible: false };
+  }
 
-  const top = (minutesFromTop / 60) * slotHeight;
-  const height = Math.max((durationMinutes / 60) * slotHeight, 28);
+  const top = (visibleStart / 60) * slotHeight;
+  const height = Math.max(((visibleEnd - visibleStart) / 60) * slotHeight, 18);
 
-  return { top, height };
+  return { top, height, isVisible: true };
 }
 
 export function mapAppointmentToCalendarEvent(appt, viewerUserId = null) {

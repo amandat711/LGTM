@@ -308,7 +308,8 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
               )}
 
               {dayAppointments.map((appt) => {
-                  const { top, height } = getEventStyle(appt, hourHeight);
+                  const { top, height, isVisible } = getEventStyle(appt, hourHeight);
+                  if (!isVisible) return null;
                   const compact = height < 40;
                   const startTimeString = new Date(appt.startTime).toLocaleTimeString([], {
                     hour: 'numeric',

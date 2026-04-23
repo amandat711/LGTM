@@ -205,6 +205,7 @@
   grid-row: 1;
   flex: 1;
   min-width: 0;
+  padding-right: 90px;
 }
 
 .appointment-item:hover {
@@ -235,6 +236,16 @@
   overflow: visible;
   text-overflow: clip;
   line-height: 1.35;
+  word-break: break-word;
+}
+
+.appointment-item h6 {
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  line-height: 1.35;
+  white-space: normal;
   word-break: break-word;
 }
 
