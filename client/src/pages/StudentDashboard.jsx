@@ -455,6 +455,8 @@ export default function StudentDashboard() {
         <SlotDetailModal
           appointment={{
             title: activeAppt.title,
+            startTime: activeAppt.startTime,
+            endTime: activeAppt.endTime,
             day: new Date(activeAppt.startTime).toLocaleDateString('en-CA', {
               weekday: 'long',
               month: 'long',
@@ -467,6 +469,11 @@ export default function StudentDashboard() {
             attendeeEmail: activeAppt.attendeeEmail,
             bookedBy: activeAppt.attendeeName,
             location: activeAppt.location,
+            description: activeAppt.description,
+            notes: activeAppt.notes || activeAppt.description,
+            capacity: activeAppt.capacity,
+            visibility: activeAppt.visibility,
+            bookedCount: activeAppt.bookedCount,
             status: activeAppt.status,
             type: activeAppt.type,
             participants: activeAppt.participantStatuses || [],

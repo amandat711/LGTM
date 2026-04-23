@@ -278,6 +278,11 @@ export function SlotDetailModal({
     recurrence_rule: ap.recurrence_rule,
     recurrence_group_id: ap.recurrence_group_id,
   });
+  const locationValue = ap.location && String(ap.location).trim() ? ap.location : 'TBD';
+  const detailText = ap.description || ap.notes || '';
+  const normalizedVisibility = ap.visibility ? String(ap.visibility) : '';
+  const capacityNumber = Number(ap.capacity);
+  const hasCapacity = Number.isFinite(capacityNumber) && capacityNumber >= 1;
 
   return (
     <Modal
@@ -334,13 +339,13 @@ export function SlotDetailModal({
         <div className="modal-detail-stack">
           <div className="modal-row">
             <span className="modal-row-label">Location</span>
-            <span className="modal-row-value">{ap.location || 'TBD'}</span>
+            <span className="modal-row-value">{locationValue}</span>
           </div>
 
-          {(ap.description || ap.notes) && (
+          {detailText && (
             <div className="modal-row modal-row-multiline">
               <span className="modal-row-label">{isAvailability ? 'Description' : 'Notes'}</span>
-              <span className="modal-row-value modal-row-value-block">{ap.description || ap.notes}</span>
+              <span className="modal-row-value modal-row-value-block">{detailText}</span>
             </div>
           )}
 
@@ -363,6 +368,19 @@ export function SlotDetailModal({
                     ? `${ap.bookedCount}/${ap.capacity}`
                     : (ap.attendeeName || ap.bookedBy || '—')}
                 </span>
+              </div>
+            </>
+          )}
+
+          {!isAvailability && (
+            <>
+              <div className="modal-row">
+                <span className="modal-row-label">Visibility</span>
+                <span className="modal-row-value">{normalizedVisibility || '—'}</span>
+              </div>
+              <div className="modal-row">
+                <span className="modal-row-label">Capacity</span>
+                <span className="modal-row-value">{hasCapacity ? capacityNumber : '—'}</span>
               </div>
             </>
           )}

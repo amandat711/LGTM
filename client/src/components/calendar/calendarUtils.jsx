@@ -204,6 +204,10 @@ export function mapAppointmentToCalendarEvent(appt, viewerUserId = null) {
           : 'pending'),
     startTime: appt.start_time,
     endTime: appt.end_time,
+    description: appt.ap_description || '',
+    notes: appt.ap_description || '',
+    capacity: Number(appt.capacity ?? 1),
+    visibility: appt.visibility || 'private',
     recurrence_group_id:
       appt.recurrence_group_id ?? appt.source_recurrence_group_id ?? null,
     recurrence_instance_date: appt.source_recurrence_instance_date ?? appt.recurrence_instance_date ?? null,
