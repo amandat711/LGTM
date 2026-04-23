@@ -3,8 +3,8 @@
 export const authCardClass =
   'mx-auto w-full max-w-[400px] rounded-lg border border-[#e4e4e4] bg-white p-8 shadow-[0_1px_6px_rgba(0,0,0,0.06)]';
 
-export const authInputClass =
-  'w-full rounded-[5px] border border-[#e4e4e4] px-3 py-2.5 text-sm text-[#0f0f0f] outline-none transition-[border-color,box-shadow] placeholder:text-[#999] focus:border-mcgill-red focus:ring-2 focus:ring-mcgill-red/20';
+// export const authInputClass =
+//   'w-full rounded-[5px] border border-[#e4e4e4] px-3 py-2.5 text-sm text-[#0f0f0f] outline-none transition-[border-color,box-shadow] placeholder:text-[#999] focus:border-mcgill-red focus:ring-2 focus:ring-mcgill-red/20';
 
 export const authLabelClass = 'text-[13px] font-medium text-[#0f0f0f]';
 

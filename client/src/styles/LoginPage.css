@@ -1,3 +1,5 @@
+/* Rita Zhang */
+
 .login-card {
     width: 100%;
     display: flex;
@@ -85,10 +87,10 @@
 
 .login-input {
     width: 100%;
-    height: 52px;
+    height: 44px;
     border: 1px solid #d2d2d2;
     border-radius: 999px;
-    background: #f8f8f8;
+    background: #ffffff;
     padding: 0 18px 0 44px;
     box-sizing: border-box;
     font-size: 15px;
@@ -104,7 +106,7 @@
 .login-input:focus {
     border-color: #b8b8b8;
     background: #fff;
-    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+    box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.05);
 }
 
 .login-links-row {
@@ -132,7 +134,7 @@
     border-radius: 999px;
     background: #000;
     color: #fff;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     padding: 0 28px;
     cursor: pointer;
@@ -140,8 +142,9 @@
 }
 
 .login-submit:hover:not(:disabled) {
-    transform: translateY(-1px);
-    opacity: 0.92;
+    /* transform: translateY(-1px);
+    opacity: 0.92; */
+    background: #3b3b3b;
 }
 
 .login-submit:disabled {
@@ -157,13 +160,13 @@
 }
 
 .login-register-link {
-    color: #111;
+    color: #E31429;
     font-weight: 600;
     text-decoration: underline;
 }
 
 .login-register-link:hover {
-    color: #000;
+    color: #b50f21;
 }
 
 @media (max-width: 900px) {
