@@ -228,6 +228,12 @@ export default function CreateAvailabilityForm({
 
   return (
     <form onSubmit={handleSubmit} className="availability-form-grid">
+      <div className="form-group-full modal-meta-row">
+        <span className="modal-kind-pill modal-kind-pill--availability">Availability</span>
+        {initialData?.course_id != null ? (
+          <span className="modal-kind-pill modal-kind-pill--course">Course: {initialData.course_id}</span>
+        ) : null}
+      </div>
       <div className="availability-compact-layout form-group-full">
         <div className="availability-left-column">
           <div className="form-group">

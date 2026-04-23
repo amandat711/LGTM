@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
+import Button from '@mui/material/Button';
 import { getUsers } from '../api/users';
-import { ConfirmActionModal } from './Modals';
+import { ConfirmActionModal, Modal } from './Modals';
 import '../styles/CreateAvailabilityModal.css';
 import '../styles/CourseSettingsModal.css';
 
@@ -100,10 +101,6 @@ export default function CourseSettingsModal({
       clearTimeout(timer);
     };
   }, [emailQuery]);
-
-  function handleOverlayMouseDown(e) {
-    if (e.target === e.currentTarget) onClose();
-  }
 
   async function handleSubmitCourse(e) {
     e.preventDefault();
@@ -205,30 +202,20 @@ export default function CourseSettingsModal({
     (Array.isArray(staff) && staff.length > 0) || pendingAdds.length > 0;
 
   return (
-    <div
-      className="availability-modal-overlay"
-      onMouseDown={handleOverlayMouseDown}
+    <Modal
+      title="Course settings"
+      onClose={onClose}
+      className="availability-modal course-settings-modal create-item-modal"
+      meta={
+        <>
+          <span className="modal-kind-pill modal-kind-pill--event">Course</span>
+          {course?.course_id != null ? (
+            <span className="modal-kind-pill modal-kind-pill--course">Course: {course.course_id}</span>
+          ) : null}
+        </>
+      }
     >
-      <div
-        className="availability-modal course-settings-modal"
-        onMouseDown={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="course-settings-title"
-      >
-        <div className="availability-modal-header">
-          <h2 id="course-settings-title">Course settings</h2>
-          <button
-            type="button"
-            className="availability-close-btn"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            ×
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmitCourse} className="availability-form-grid">
+      <form onSubmit={handleSubmitCourse} className="availability-form-grid">
           <div className="form-group form-group-full">
             <label htmlFor="settings_course_name">Course name</label>
             <input
@@ -417,15 +404,14 @@ export default function CourseSettingsModal({
           ) : null}
 
           <div className="availability-modal-footer form-group-full">
-            <button type="button" className="modal-btn secondary" onClick={onClose} disabled={saving}>
+            <Button type="button" variant="text" onClick={onClose} disabled={saving}>
               Cancel
-            </button>
-            <button type="submit" className="modal-btn primary" disabled={saving}>
+            </Button>
+            <Button type="submit" variant="contained" disabled={saving}>
               {saving ? 'Saving…' : 'Save course info'}
-            </button>
+            </Button>
           </div>
-        </form>
-      </div>
+      </form>
       {showCloseConfirm && (
         <ConfirmActionModal
           title="Close this course?"
@@ -454,6 +440,6 @@ export default function CourseSettingsModal({
           onClose={() => setShowDeleteConfirm(false)}
         />
       )}
-    </div>
+    </Modal>
   );
 }

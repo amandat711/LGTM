@@ -482,6 +482,7 @@ export default function StudentDashboard() {
             recurrence_rule: activeAppt.recurrence_rule,
             recurrence_group_id: activeAppt.recurrence_group_id,
             recurrence_instance_date: activeAppt.recurrence_instance_date,
+            course_id: activeAppt.course_id,
           }}
           isOwner={false}
           onUpdateMyStatus={(nextStatus) => handleUpdateMyStatus(activeAppt.id, nextStatus)}
@@ -508,6 +509,7 @@ export default function StudentDashboard() {
             bookedBy: activeAppt.attendeeName,
             recurrence_rule: activeAppt.recurrence_rule,
             recurrence_group_id: activeAppt.recurrence_group_id,
+            course_id: activeAppt.course_id,
           }}
           onConfirm={handleDelete}
           onClose={() => setModal('detail')}

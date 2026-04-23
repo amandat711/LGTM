@@ -212,6 +212,7 @@ export function mapAppointmentToCalendarEvent(appt, viewerUserId = null) {
       appt.recurrence_group_id ?? appt.source_recurrence_group_id ?? null,
     recurrence_instance_date: appt.source_recurrence_instance_date ?? appt.recurrence_instance_date ?? null,
     recurrence_rule: appt.recurrence_rule ?? appt.source_recurrence_rule ?? null,
+    course_id: appt.course_id ?? null,
     location: appt.location || 'TBD',
     status: myStatus,
     appointmentStatus: appt.status,
@@ -247,6 +248,7 @@ export function mapAvailabilityToCalendarEvent(slot, currentUserName = 'You') {
     capacity,
     bookedCount,
     recurrence_rule: slot.recurrence_rule,
+    course_id: slot.course_id ?? null,
     color: '#6B7280',
   };
 }

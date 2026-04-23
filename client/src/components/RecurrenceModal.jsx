@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import Button from '@mui/material/Button';
 import '../styles/RecurrenceModal.css';
+import { Modal } from './Modals';
 
 const WEEKDAYS = [
   { code: 'MO', label: 'M', full: 'Monday' },
@@ -168,30 +170,29 @@ export default function RecurrenceModal({
   if (!isOpen) return null;
 
   return (
-    <div className="recurrence-modal-overlay" onMouseDown={onClose}>
-      <div
-        className="recurrence-modal"
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <div className="recurrence-modal-header">
-          <div>
-            <h3>Custom recurrence</h3>
-            <p className="recurrence-modal-subtitle">
-              Set how this availability repeats.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="recurrence-close-btn"
-            onClick={onClose}
-            aria-label="Close modal"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className="recurrence-modal-content">
+    <Modal
+      title="Custom recurrence"
+      onClose={onClose}
+      className="recurrence-modal"
+      meta={<span className="modal-kind-pill modal-kind-pill--event">Recurring rule</span>}
+      footer={
+        <>
+          <Button type="button" variant="text" color="error" onClick={onRemove}>
+            Remove recurrence
+          </Button>
+          <Button type="button" variant="text" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="button" variant="contained" onClick={validateAndSave}>
+            Save
+          </Button>
+        </>
+      }
+    >
+      <p className="recurrence-modal-subtitle">
+        Set how this availability repeats.
+      </p>
+      <div className="recurrence-modal-content">
           <div className="recurrence-section">
             <label className="recurrence-label">Repeat every</label>
             <div className="recurrence-repeat-row">
@@ -287,35 +288,7 @@ export default function RecurrenceModal({
           {validationError && (
             <div className="recurrence-error-message">{validationError}</div>
           )}
-        </div>
-
-        <div className="recurrence-modal-footer">
-          <button
-            type="button"
-            className="recurrence-btn ghost"
-            onClick={onRemove}
-          >
-            Remove recurrence
-          </button>
-
-          <div className="recurrence-modal-footer-right">
-            <button
-              type="button"
-              className="recurrence-btn secondary"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="recurrence-btn primary"
-              onClick={validateAndSave}
-            >
-              Save
-            </button>
-          </div>
-        </div>
       </div>
-    </div>
+    </Modal>
   );
 }

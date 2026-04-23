@@ -1,6 +1,7 @@
 import React from 'react';
 import '../styles/CreateAvailabilityModal.css';
 import CreateAvailabilityForm from './CreateAvailabilityForm';
+import { Modal } from './Modals';
 import { formatRecurrenceSubtitleLine } from './calendar/calendarUtils';
 
 export default function CreateAvailabilityModal({
@@ -20,50 +21,31 @@ export default function CreateAvailabilityModal({
     recurrence_group_id: initialData?.recurrence_group_id,
   });
 
-  function handleOverlayClick(e) {
-    if (e.target === e.currentTarget) {
-      handleModalClose();
-    }
-  }
-
   return (
-    <div
-      className="availability-modal-overlay"
-      onMouseDown={handleOverlayClick}
+    <Modal
+      title={title}
+      onClose={handleModalClose}
+      className="availability-modal create-item-modal"
+      meta={
+        <>
+          <span className="modal-kind-pill modal-kind-pill--availability">Availability</span>
+          {initialData?.course_id != null ? (
+            <span className="modal-kind-pill modal-kind-pill--course">Course: {initialData.course_id}</span>
+          ) : null}
+        </>
+      }
     >
-      <div
-        className="availability-modal"
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <div className="availability-modal-header">
-          <div>
-            <h2>{title}</h2>
-            <p className="availability-modal-subtitle">
-              Create a time slot students can book.
-            </p>
-            {headerRecurrenceLine ? (
-              <p className="availability-modal-recurrence">{headerRecurrenceLine}</p>
-            ) : null}
-          </div>
-
-          <button
-            type="button"
-            className="availability-close-btn"
-            onClick={handleModalClose}
-            aria-label="Close modal"
-          >
-            ×
-          </button>
-        </div>
-
-        <CreateAvailabilityForm
-          onSubmit={onSubmit}
-          onCancel={handleModalClose}
-          defaultVisibility={defaultVisibility}
-          submitLabel={submitLabel}
-          initialData={initialData}
-        />
-      </div>
-    </div>
+      <p className="availability-modal-subtitle">Create a time slot students can book.</p>
+      {headerRecurrenceLine ? (
+        <p className="availability-modal-recurrence">{headerRecurrenceLine}</p>
+      ) : null}
+      <CreateAvailabilityForm
+        onSubmit={onSubmit}
+        onCancel={handleModalClose}
+        defaultVisibility={defaultVisibility}
+        submitLabel={submitLabel}
+        initialData={initialData}
+      />
+    </Modal>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import RecurrenceModal from './RecurrenceModal';
 import { getUsers } from '../api/users';
+import { getCourses } from '../api/courses';
 import {
   toLocalDateInputValue,
   toLocalTimeInputValue,
@@ -54,6 +55,8 @@ export default function CreateAppointmentForm({
   initialStartTime = null, // ISO string
   initialEndTime = null, // ISO string
   initialData = null,
+  ownerUserId = null,
+  forcedCourse = null,
 }) {
   const today = useMemo(() => toLocalDateInputValue(new Date()), []);
   const initialDate = initialData?.start_time
@@ -69,6 +72,12 @@ export default function CreateAppointmentForm({
     location: initialData?.location || '',
     capacity: initialData?.capacity ?? 1,
     visibility: initialData?.visibility || defaultVisibility,
+    course_id:
+      forcedCourse?.course_id != null
+        ? String(forcedCourse.course_id)
+        : initialData?.course_id != null
+          ? String(initialData.course_id)
+          : '',
   });
 
   const [recurrence, setRecurrence] = useState(() => getInitialRecurrence(initialData, initialDate));
@@ -80,7 +89,41 @@ export default function CreateAppointmentForm({
 
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [allCourses, setAllCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
   const isPublicVisibility = form.visibility === 'public';
+
+  useEffect(() => {
+    if (forcedCourse?.course_id == null) return;
+    setForm((prev) => ({ ...prev, course_id: String(forcedCourse.course_id) }));
+  }, [forcedCourse]);
+
+  useEffect(() => {
+    if (forcedCourse?.course_id != null || !ownerUserId) return;
+    let active = true;
+    setCoursesLoading(true);
+    getCourses()
+      .then((data) => {
+        if (!active) return;
+        const list = Array.isArray(data?.courses) ? data.courses : [];
+        const ownerOnly = list.filter((course) => {
+          if (course.is_owner != null) return Boolean(course.is_owner);
+          if (course.owner_user_id != null) return Number(course.owner_user_id) === Number(ownerUserId);
+          return true;
+        });
+        setAllCourses(ownerOnly);
+      })
+      .catch(() => {
+        if (!active) return;
+        setAllCourses([]);
+      })
+      .finally(() => {
+        if (active) setCoursesLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [forcedCourse, ownerUserId]);
 
   useEffect(() => {
     if (!initialStartTime) return;
@@ -209,6 +252,7 @@ export default function CreateAppointmentForm({
         location: form.location.trim() || null,
         capacity: Number(form.capacity),
         visibility: form.visibility,
+        course_id: form.course_id ? Number(form.course_id) : null,
         invitee_user_ids: selectedInvitees.map((u) => u.id),
         recurrence_rule: recurrencePayload,
       });
@@ -339,6 +383,40 @@ export default function CreateAppointmentForm({
               onChange={(e) => updateField('location', e.target.value)}
               placeholder="Trottier 3xxx or Zoom"
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="course_id">Course</label>
+            {forcedCourse?.course_id != null ? (
+              <>
+                <input
+                  id="course_id"
+                  type="text"
+                  value={
+                    `${forcedCourse.course_code || ''} ${forcedCourse.course_name || ''}`.trim()
+                    || `Course ${forcedCourse.course_id}`
+                  }
+                  readOnly
+                />
+                <small>This event is locked to this course.</small>
+              </>
+            ) : (
+              <>
+                <select
+                  id="course_id"
+                  value={form.course_id}
+                  onChange={(e) => updateField('course_id', e.target.value)}
+                >
+                  <option value="">No course</option>
+                  {allCourses.map((course) => (
+                    <option key={course.course_id} value={course.course_id}>
+                      {course.course_code} - {course.course_name}
+                    </option>
+                  ))}
+                </select>
+                {coursesLoading ? <small>Loading courses...</small> : null}
+              </>
+            )}
           </div>
 
           <div className="form-group">

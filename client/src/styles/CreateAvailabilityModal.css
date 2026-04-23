@@ -1,45 +1,9 @@
-.availability-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  padding: 20px;
-}
-
 .availability-modal {
   width: min(920px, 100%);
-  max-height: 88vh;
-  overflow: hidden;
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
-  padding: 16px 18px;
-}
-
-.availability-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-
-.availability-modal-header-content {
-  min-width: 0;
-}
-
-.availability-modal-header h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #1f2937;
 }
 
 .availability-modal-body {
-  max-height: calc(88vh - 98px);
+  max-height: calc(92vh - 180px);
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -49,23 +13,6 @@
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 10px;
-}
-
-.availability-tab-btn {
-  border-radius: 999px;
-  padding: 7px 12px;
-  font-size: 0.82rem;
-}
-
-.availability-tab-btn.active {
-  background: #e33244;
-  border-color: #e33244;
-  color: #fff;
-}
-
-.availability-tab-btn.active:hover {
-  background: #cf2436;
-  border-color: #cf2436;
 }
 
 .availability-modal-subtitle {
@@ -80,24 +27,6 @@
   font-weight: 500;
   color: #5b6470;
   line-height: 1.35;
-}
-
-.availability-close-btn {
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: 999px;
-  background: transparent;
-  color: #6b7280;
-  font-size: 1.35rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
-}
-
-.availability-close-btn:hover {
-  background: #f3f4f6;
-  color: #111827;
 }
 
 .availability-form-grid {
@@ -374,13 +303,24 @@
   color: #fff;
 }
 
-@media (max-width: 640px) {
-  .availability-modal {
-    padding: 18px;
-    border-radius: 16px;
-    max-height: 92vh;
-  }
+.availability-tab-btn {
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #fff;
+  color: #374151;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
 
+.availability-tab-btn.active {
+  background: #e33244;
+  border-color: #e33244;
+  color: #fff;
+}
+
+@media (max-width: 640px) {
   .availability-form-grid {
     grid-template-columns: 1fr;
   }
@@ -398,16 +338,8 @@
     grid-column: auto;
   }
 
-  .availability-modal-header h2 {
-    font-size: 1.5rem;
-  }
-
   .availability-modal-footer {
     flex-direction: column-reverse;
-  }
-
-  .modal-btn {
-    width: 100%;
   }
 
   .recurrence-display {

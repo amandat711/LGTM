@@ -1,10 +1,24 @@
 /*AMANDA TRAN*/
 
 import React, { useEffect, useMemo, useState } from 'react';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
+import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
+import PublicOutlinedIcon from '@mui/icons-material/PublicOutlined';
+import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
+import NotesOutlinedIcon from '@mui/icons-material/NotesOutlined';
+import EventAvailableOutlinedIcon from '@mui/icons-material/EventAvailableOutlined';
+import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutlineOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
+import MailOutlineOutlinedIcon from '@mui/icons-material/MailOutlineOutlined';
 import { formatTime, statusLabel, formatRecurrenceSubtitleLine } from './calendar/calendarUtils';
 
 // ─── Shared shell ─────────────────────────────────────────────
-function Modal({ title, onClose, children, footer, className = '' }) {
+export function Modal({ title, onClose, children, footer, className = '', meta = null, headerActions = null }) {
   return (
     <div
       className="modal-overlay"
@@ -12,8 +26,14 @@ function Modal({ title, onClose, children, footer, className = '' }) {
     >
       <div className={`modal${className ? ` ${className}` : ''}`}>
         <div className="modal-header">
-          <h3>{title}</h3>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <div className="modal-header-main">
+            <h3>{title}</h3>
+            {meta ? <div className="modal-meta-row">{meta}</div> : null}
+          </div>
+          <div className="modal-header-actions">
+            {headerActions}
+            <button className="modal-close" onClick={onClose}>×</button>
+          </div>
         </div>
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-footer">{footer}</div>}
@@ -35,9 +55,9 @@ export function HelpGuideModal({ guide, onClose }) {
       onClose={onClose}
       className="help-guide-modal"
       footer={
-        <button className="button button-primary" onClick={onClose}>
+        <Button variant="contained" onClick={onClose}>
           Got it
-        </button>
+        </Button>
       }
     >
       <div className="help-guide">
@@ -97,16 +117,17 @@ export function ConfirmActionModal({
       onClose={onClose}
       footer={
         <>
-          <button className="button button-ghost" onClick={onClose} disabled={isWorking}>
+          <Button variant="text" onClick={onClose} disabled={isWorking}>
             {cancelLabel}
-          </button>
-          <button
-            className={`button ${danger ? 'button-danger' : 'button-primary'}`}
+          </Button>
+          <Button
+            variant={danger ? 'outlined' : 'contained'}
+            color={danger ? 'error' : 'primary'}
             onClick={onConfirm}
             disabled={isWorking}
           >
             {isWorking ? 'Working...' : confirmLabel}
-          </button>
+          </Button>
         </>
       }
     >
@@ -152,10 +173,10 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
           <span className="badge-success">✓ Notifications sent!</span>
         ) : (
           <>
-            <button className="button button-ghost" onClick={onClose}>Cancel</button>
-            <button className="button button-primary" onClick={handleConfirm}>
+            <Button variant="text" onClick={onClose}>Cancel</Button>
+            <Button variant="contained" onClick={handleConfirm}>
               Send notifications
-            </button>
+            </Button>
           </>
         )
       }
@@ -222,6 +243,19 @@ function slotKindFromAppointment(ap) {
     return { key: 'appointment', label: 'Appointment' };
   }
   return { key: 'event', label: 'Event' };
+}
+
+function renderTypeAndCoursePills(ap) {
+  const kind = slotKindFromAppointment(ap);
+  const courseId = ap?.course_id;
+  return (
+    <>
+      <span className={`modal-kind-pill modal-kind-pill--${kind.key}`}>{kind.label}</span>
+      {courseId != null && courseId !== '' ? (
+        <span className="modal-kind-pill modal-kind-pill--course">Course: {courseId}</span>
+      ) : null}
+    </>
+  );
 }
 
 /** Primary destructive action in the detail modal footer (host/professor only). */
@@ -325,37 +359,48 @@ export function SlotDetailModal({
     <Modal
       title={ap.title || 'Appointment details'}
       onClose={onClose}
-      footer={
+      meta={renderTypeAndCoursePills(ap)}
+      headerActions={
         <>
-          {isOwner && onEdit && (
-            <button className="button button-outline button-small" onClick={onEdit}>
-              {slotKind.key === 'availability' ? 'Edit availability' : 'Edit event'}
-            </button>
-          )}
-          {isOwner && (
-            <button className="button button-danger button-small" onClick={onDelete}>
-              {ownerDestructiveFooterLabel(ap)}
-            </button>
-          )}
-          <a
-            href={`mailto:${emailTarget}?subject=Re:%20${encodeURIComponent(ap.title || 'Appointment')}`}
-            className="button button-outline button-small"
-            style={{ textDecoration: 'none' }}
-          >
-            Email {isAvailability ? 'student' : isOwner ? 'attendee' : 'owner'}
-          </a>
-          <button className="button button-ghost" onClick={onClose}>Close</button>
+          {isOwner && onEdit ? (
+            <Tooltip title={slotKind.key === 'availability' ? 'Edit availability' : 'Edit event'}>
+              <IconButton size="small" onClick={onEdit} aria-label="Edit">
+                <EditOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+          {isOwner ? (
+            <Tooltip title={ownerDestructiveFooterLabel(ap)}>
+              <IconButton size="small" onClick={onDelete} aria-label="Delete">
+                <DeleteOutlineOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+          <Tooltip title={`Email ${isAvailability ? 'student' : isOwner ? 'attendee' : 'owner'}`}>
+            <IconButton
+              size="small"
+              component="a"
+              href={`mailto:${emailTarget}?subject=Re:%20${encodeURIComponent(ap.title || 'Appointment')}`}
+              aria-label="Email"
+            >
+              <MailOutlineOutlinedIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </>
       }
     >
       <div className="modal-titleblock">
         <div className="modal-titleblock-main">
           <div className="modal-subtitle">
-            <span className={`modal-kind-pill modal-kind-pill--${slotKind.key}`}>{slotKind.label}</span>
+            <span className="modal-subtitle-item">
+              <CalendarMonthOutlinedIcon className="modal-inline-icon" fontSize="inherit" />
+              {dateLabel}
+            </span>
             <span className="modal-subtitle-sep">•</span>
-            <span>{dateLabel}</span>
-            <span className="modal-subtitle-sep">•</span>
-            <span>{timeLabel}</span>
+            <span className="modal-subtitle-item">
+              <ScheduleOutlinedIcon className="modal-inline-icon" fontSize="inherit" />
+              {timeLabel}
+            </span>
           </div>
           {recurrenceSubtitle ? (
             <div className="modal-recurrence-line">{recurrenceSubtitle}</div>
@@ -375,18 +420,27 @@ export function SlotDetailModal({
         <div className="modal-section-title">Details</div>
         <div className="modal-detail-stack">
           <div className="modal-row modal-row-multiline">
-            <span className="modal-row-label">Title</span>
+            <span className="modal-row-label modal-row-label-with-icon">
+              <EventAvailableOutlinedIcon className="modal-inline-icon" fontSize="inherit" />
+              Title
+            </span>
             <span className="modal-row-value modal-row-value-block">{ap.title || '—'}</span>
           </div>
 
           <div className="modal-row">
-            <span className="modal-row-label">Location</span>
+            <span className="modal-row-label modal-row-label-with-icon">
+              <PlaceOutlinedIcon className="modal-inline-icon" fontSize="inherit" />
+              Location
+            </span>
             <span className="modal-row-value">{locationValue}</span>
           </div>
 
           {detailText && (
             <div className="modal-row modal-row-multiline">
-              <span className="modal-row-label">{isAvailability ? 'Description' : 'Description'}</span>
+              <span className="modal-row-label modal-row-label-with-icon">
+                <NotesOutlinedIcon className="modal-inline-icon" fontSize="inherit" />
+                Description
+              </span>
               <span className="modal-row-value modal-row-value-block">{detailText}</span>
             </div>
           )}
@@ -394,11 +448,17 @@ export function SlotDetailModal({
           {isAvailability && (
             <>
               <div className="modal-row">
-                <span className="modal-row-label">Visibility</span>
+                <span className="modal-row-label modal-row-label-with-icon">
+                  <PublicOutlinedIcon className="modal-inline-icon" fontSize="inherit" />
+                  Visibility
+                </span>
                 <span className="modal-row-value">{ap.visibility || '—'}</span>
               </div>
               <div className="modal-row">
-                <span className="modal-row-label">Capacity</span>
+                <span className="modal-row-label modal-row-label-with-icon">
+                  <GroupsOutlinedIcon className="modal-inline-icon" fontSize="inherit" />
+                  Capacity
+                </span>
                 <span className="modal-row-value">
                   {Number.isFinite(Number(ap.capacity)) ? ap.capacity : '—'}
                 </span>
@@ -417,11 +477,17 @@ export function SlotDetailModal({
           {!isAvailability && (
             <>
               <div className="modal-row">
-                <span className="modal-row-label">Visibility</span>
+                <span className="modal-row-label modal-row-label-with-icon">
+                  <PublicOutlinedIcon className="modal-inline-icon" fontSize="inherit" />
+                  Visibility
+                </span>
                 <span className="modal-row-value">{normalizedVisibility || '—'}</span>
               </div>
               <div className="modal-row">
-                <span className="modal-row-label">Capacity</span>
+                <span className="modal-row-label modal-row-label-with-icon">
+                  <GroupsOutlinedIcon className="modal-inline-icon" fontSize="inherit" />
+                  Capacity
+                </span>
                 <span className="modal-row-value">{hasCapacity ? capacityNumber : '—'}</span>
               </div>
             </>
@@ -452,26 +518,31 @@ export function SlotDetailModal({
                     <span className="participant-email">{p.email}</span>
                   </div>
                   <div className="participant-status-actions">
-                    <span className={`appointment-status-pill ${
-                      status === 'confirmed'
-                        ? 'status-confirmed'
-                        : status === 'cancelled'
-                          ? 'status-cancelled'
-                          : 'status-pending'
-                    }`}>
-                      {status}
-                    </span>
+                    {!(canUpdateMyStatus && isCurrentUser) && (
+                      <span className={`appointment-status-pill ${
+                        status === 'confirmed'
+                          ? 'status-confirmed'
+                          : status === 'cancelled'
+                            ? 'status-cancelled'
+                            : 'status-pending'
+                      }`}>
+                        {status}
+                      </span>
+                    )}
                     {canUpdateMyStatus && isCurrentUser && (
-                      <select
-                        className="participant-status-select"
-                        aria-label="Change your status"
-                        value={status}
-                        onChange={(e) => onUpdateMyStatus(e.target.value)}
-                      >
-                        <option value="pending">pending</option>
-                        <option value="confirmed">confirmed</option>
-                        <option value="cancelled">cancelled</option>
-                      </select>
+                      <div className="participant-status-edit-wrap">
+                        <CheckCircleOutlineOutlinedIcon className="modal-inline-icon participant-status-icon" fontSize="inherit" />
+                        <select
+                          className="participant-status-select"
+                          aria-label="Change your status"
+                          value={status}
+                          onChange={(e) => onUpdateMyStatus(e.target.value)}
+                        >
+                          <option value="pending">pending</option>
+                          <option value="confirmed">confirmed</option>
+                          <option value="cancelled">cancelled</option>
+                        </select>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -555,12 +626,13 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
     <Modal
       title={confirmTitle}
       onClose={onClose}
+      meta={renderTypeAndCoursePills(ap)}
       footer={
         <>
-          <button className="button button-ghost" onClick={onClose}>Keep it</button>
-          <button className="button button-danger" onClick={handleDelete}>
+          <Button variant="text" onClick={onClose}>Keep it</Button>
+          <Button variant="outlined" color="error" onClick={handleDelete}>
             {confirmDangerLabel}
-          </button>
+          </Button>
         </>
       }
     >
@@ -599,39 +671,39 @@ export function RecurrenceScopeModal({
       title={`${actionLabel === 'delete' ? 'Delete' : 'Edit'} recurring event`}
       onClose={onClose}
       footer={
-        <button className="button button-ghost" onClick={onClose}>
+        <Button variant="text" onClick={onClose}>
           Cancel
-        </button>
+        </Button>
       }
     >
       {recurrenceSubtitle ? (
         <div className="modal-recurrence-line modal-recurrence-line--spaced">{recurrenceSubtitle}</div>
       ) : null}
       <div className="modal-detail-stack">
-        <button
+        <Button
           type="button"
-          className="button button-outline"
+          variant="outlined"
           onClick={() => onSelect('single')}
-          style={{ width: '100%', textAlign: 'left' }}
+          sx={{ width: '100%', justifyContent: 'flex-start' }}
         >
           This event
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="button button-outline"
+          variant="outlined"
           onClick={() => onSelect('this_and_following')}
-          style={{ width: '100%', textAlign: 'left' }}
+          sx={{ width: '100%', justifyContent: 'flex-start' }}
         >
           This and following events
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
-          className="button button-outline"
+          variant="outlined"
           onClick={() => onSelect('all')}
-          style={{ width: '100%', textAlign: 'left' }}
+          sx={{ width: '100%', justifyContent: 'flex-start' }}
         >
           All events
-        </button>
+        </Button>
       </div>
     </Modal>
   );
@@ -658,10 +730,10 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
       onClose={onClose}
       footer={
         <>
-          <button className="button button-ghost" onClick={onClose}>Done</button>
-          <button className="button button-primary" onClick={handleCopy}>
+          <Button variant="text" onClick={onClose}>Done</Button>
+          <Button variant="contained" onClick={handleCopy}>
             {copied ? '✓ Copied!' : 'Copy link'}
-          </button>
+          </Button>
         </>
       }
     >
@@ -674,9 +746,9 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
       <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{eventTitle || ownerEmail}</p>
       <div className="copy-row">
         <input className="copy-input" readOnly value={shareURL} />
-        <button className="button button-outline button-small" onClick={handleCopy} style={{ whiteSpace: 'nowrap' }}>
+        <Button size="small" variant="outlined" onClick={handleCopy} sx={{ whiteSpace: 'nowrap' }}>
           {copied ? '✓ Copied' : 'Copy'}
-        </button>
+        </Button>
       </div>
       <p style={{ marginTop: 12, fontSize: 12, color: '#bbb' }}>
         Tip: paste this into your course slides or email signature.
@@ -725,16 +797,18 @@ export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClo
       onClose={onClose}
       footer={
         <>
-          <button className="button button-ghost" onClick={onClose}>Later</button>
-          <button
-            className="button button-outline button-small"
-            style={{ borderColor: '#cc2222', color: '#cc2222' }}
+          <Button variant="text" onClick={onClose}>Later</Button>
+          <Button
+            size="small"
+            variant="outlined"
+            color="error"
             onClick={() => { onDecline(s); onClose(); }}
           >
             Decline
-          </button>
-          <button
-            className="button button-primary button-small"
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
             onClick={() => {
               onApprove(s, selectedSlot);
               onClose();
@@ -742,7 +816,7 @@ export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClo
             disabled={!selectedSlot}
           >
             Approve
-          </button>
+          </Button>
         </>
       }
     >

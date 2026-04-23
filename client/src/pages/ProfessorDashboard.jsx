@@ -677,6 +677,7 @@ export default function ProfessorDashboard() {
           onCreateDirectAppointment={handleCreateDirectAppointment}
           initialStartTime={createStartTime}
           initialEndTime={createEndTime}
+          ownerUserId={userId}
         />
       )}
 
@@ -694,6 +695,7 @@ export default function ProfessorDashboard() {
             visibility: activeAppt.visibility,
             recurrence_rule: activeAppt.recurrence_rule || '',
             recurrence_group_id: activeAppt.recurrence_group_id,
+            course_id: activeAppt.course_id,
           }}
           onClose={() => setModal('detail')}
           onSubmit={handleUpdateAvailability}
@@ -711,6 +713,7 @@ export default function ProfessorDashboard() {
             end_time: activeAppt.endTime,
             capacity: activeAppt.capacity,
             visibility: activeAppt.visibility,
+            course_id: activeAppt.course_id,
           }}
           onClose={() => setModal('detail')}
           onSubmit={handleUpdateAppointment}
@@ -750,6 +753,7 @@ export default function ProfessorDashboard() {
             recurrence_rule: activeAppt.recurrence_rule,
             recurrence_group_id: activeAppt.recurrence_group_id,
             recurrence_instance_date: activeAppt.recurrence_instance_date,
+            course_id: activeAppt.course_id,
           }}
           isOwner={true}
           onUpdateMyStatus={
@@ -840,6 +844,7 @@ export default function ProfessorDashboard() {
             bookedBy: activeAppt.attendeeName,
             recurrence_rule: activeAppt.recurrence_rule,
             recurrence_group_id: activeAppt.recurrence_group_id,
+            course_id: activeAppt.course_id,
           }}
           onConfirm={handleDelete}
           onClose={() => setModal('detail')}

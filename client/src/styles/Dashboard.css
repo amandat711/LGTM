@@ -413,18 +413,33 @@
 
 .modal {
   width: 100%;
-  max-width: 460px;
+  max-width: 560px;
   background: #fff;
-  border-radius: 12px;
-  padding: 28px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.14);
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 16px 56px rgba(15, 23, 42, 0.2);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .modal-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+.modal-header-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .modal-header h3 {
@@ -454,7 +469,17 @@
 }
 
 .modal-body {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
+  overflow-y: auto;
+  padding-top: 2px;
+}
+
+.modal-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
 }
 
 .modal-titleblock {
@@ -462,7 +487,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
-  margin: -6px 0 14px;
+  margin: 0 0 14px;
 }
 
 .modal-titleblock-main {
@@ -482,7 +507,7 @@
 }
 
 .modal-recurrence-line--spaced {
-  margin: -6px 0 14px;
+  margin: 0 0 14px;
 }
 
 .modal-subtitle {
@@ -493,6 +518,12 @@
   color: #444;
   font-size: 13px;
   line-height: 1.4;
+}
+
+.modal-subtitle-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .modal-subtitle-sep {
@@ -529,6 +560,12 @@
   border-color: #a7f3d0;
 }
 
+.modal-kind-pill--course {
+  background: #fff8e1;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
 .modal-titleblock-right {
   flex-shrink: 0;
   display: flex;
@@ -547,6 +584,23 @@
   text-transform: uppercase;
   color: #666;
   margin: 0 0 10px;
+}
+
+.modal-section-title-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-row-label-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-inline-icon {
+  font-size: 14px;
+  opacity: 0.75;
 }
 
 .modal-status-pill {
@@ -693,6 +747,16 @@
   gap: 6px;
 }
 
+.participant-status-edit-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.participant-status-icon {
+  color: #6b7280;
+}
+
 .participant-status-select {
   height: 24px;
   border: 1px solid #d6d6d6;
@@ -788,6 +852,10 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.create-item-modal {
+  max-width: 940px;
 }
 
 .help-guide-modal .modal-body {
