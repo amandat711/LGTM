@@ -175,7 +175,11 @@ export default function ProfessorDashboard() {
   // We merge them here into one event list for the calendar component.
   const calendarEvents = useMemo(() => {
     const myName = `${currentUser.firstName} ${currentUser.lastName}`;
-    const visibleAppointments = appointments.filter(includeAppointmentOnWeekCalendar);
+    const visibleAppointments = appointments.filter(
+      (appt) =>
+        includeAppointmentOnWeekCalendar(appt)
+        && !(appt.status === 'cancelled' && dismissedCancelledIds.includes(appt.id))
+    );
 
     // Save appointment time ranges so we can hide availability slots that overlap them.
     const appointmentRanges = visibleAppointments.map((appt) => ({
@@ -198,7 +202,7 @@ export default function ProfessorDashboard() {
 
     // Final calendar = booked appointments + still-visible availability blocks.
     return [...visibleAppointments, ...availabilityEvents];
-  }, [appointments, availabilities, currentUser]);
+  }, [appointments, availabilities, currentUser, dismissedCancelledIds]);
 
   // Short future-facing list for the right panel.
   const upcomingAppts = useMemo(() => {
