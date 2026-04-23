@@ -1,14 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAvailableProfessors, getProfessorPublicAvailabilities } from '../api/availabilities';
+import { getProfessorPublicAvailabilities } from '../api/availabilities';
+import { getAllProfessors } from '../api/users';
 import { createAppointment } from '../api/appointments';
-import useAppShellSession from '../hooks/useAppShellSession';
-import { isFacultyAdmin, resolvePath } from '../auth/authUtils';
-import Navbar from '../components/Navbar';
-import AppSidebar from '../components/AppSidebar';
-import BookingCalendar, { toCalendarDateKey } from '../components/BookingCalendar';
 import { logout } from '../api/auth';
+import useAppShellSession from '../hooks/useAppShellSession';
+import { resolvePath } from '../auth/authUtils';
 import logo from '../assets/logo1.png';
+import calendarIcon from '../assets/calendarIcon.png';
+import coursesIcon from '../assets/courseIcon.png';
+import searchIcon from '../assets/searchIcon.png';
+import InfoIcon from '../assets/infoIcon.png';
+import Navbar from '../components/Navbar';
+import Sidebar from '../components/Sidebar';
+import Calendar from '../components/calendar/Calendar';
+import BookingCalendar, { toCalendarDateKey } from '../components/BookingCalendar';
+import { InviteURLModal } from '../components/Modals';
 
 function formatSlotTime(value) {
   return new Intl.DateTimeFormat('en-CA', {
@@ -41,6 +48,25 @@ function getSlotTitle(slot, professorName) {
   return slot?.av_title || `Meeting with ${professorName}`;
 }
 
+function mapSlotToCalendarEvent(slot, professorName) {
+  const isFull = slot.booked_count >= slot.capacity;
+
+  return {
+    id: `availability-${slot.availability_id}`,
+    type: 'availability',
+    rawSlot: slot,
+    title: getSlotTitle(slot, professorName),
+    ownerName: professorName,
+    ownerEmail: '',
+    attendeeName: isFull ? 'Full' : 'Open slot',
+    startTime: slot.start_time,
+    endTime: slot.end_time,
+    location: slot.location || 'Online',
+    status: isFull ? 'booked' : 'available',
+    color: isFull ? '#777777' : '#E31429',
+  };
+}
+
 function groupSlotsByDate(slots) {
   return slots.reduce((groups, slot) => {
     const dateKey = getSlotDateKey(slot);
@@ -56,14 +82,16 @@ function professorMailtoHref(professor) {
 }
 
 function mapOwnerToProfessor(owner) {
+  const department = owner.department?.trim() || '';
+  const staffTitle = owner.staffTitle?.trim() || '';
+  const subtitle = [department, staffTitle].filter(Boolean).join(' • ') || 'Faculty';
   return {
-    id: owner.user_id?.toString() ?? `${owner.first_name?.toLowerCase()}.${owner.last_name?.toLowerCase()}`,
-    name: owner.first_name && owner.last_name ? `${owner.first_name} ${owner.last_name}` : owner.staff_title || 'Professor',
-    department: owner.department || owner.staff_title || 'Faculty',
-    email: owner.mcgill_email || 'noreply@mail.mcgill.ca',
-    bio: owner.staff_title
-      ? `Available for meetings in ${owner.department || 'your area of study'}.`
-      : 'Available for appointments.',
+    id: owner.id?.toString() ?? `${owner.firstName?.toLowerCase()}.${owner.lastName?.toLowerCase()}`,
+    name: owner.firstName && owner.lastName ? `${owner.firstName} ${owner.lastName}` : owner.staffTitle || 'Professor',
+    department,
+    staffTitle,
+    subtitle,
+    email: owner.email || 'noreply@mail.mcgill.ca',
   };
 }
 
@@ -71,7 +99,6 @@ export default function BookingProfessor() {
   const navigate = useNavigate();
   const { professorId } = useParams();
   const { user, userId: bookerId } = useAppShellSession();
-  const canCreate = isFacultyAdmin(user.user_type);
 
   const [professor, setProfessor] = useState(null);
   const [slots, setSlots] = useState([]);
@@ -80,12 +107,20 @@ export default function BookingProfessor() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(toCalendarDateKey(new Date()));
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
-  const initials = `${user?.first_name?.[0] || 'U'}${user?.last_name?.[0] || ''}`;
+
+  const currentUser = useMemo(
+    () => !user
+      ? { firstName: 'User', lastName: '' }
+      : { firstName: user.first_name || 'User', lastName: user.last_name || '' },
+    [user]
+  );
+  const initials = `${currentUser.firstName?.[0] || 'U'}${currentUser.lastName?.[0] || ''}`;
 
   async function handleLogout() {
     try {
@@ -103,7 +138,7 @@ export default function BookingProfessor() {
       setMessage('');
 
       try {
-        const owners = await getAvailableProfessors('');
+        const owners = await getAllProfessors('');
         const mapped = Array.isArray(owners) ? owners.map(mapOwnerToProfessor) : [];
         const found = mapped.find((prof) => prof.id === professorId);
 
@@ -156,6 +191,10 @@ export default function BookingProfessor() {
   const groupedSlots = useMemo(() => groupSlotsByDate(slots), [slots]);
   const availableDateSet = useMemo(() => new Set(Object.keys(groupedSlots)), [groupedSlots]);
   const selectedDaySlots = groupedSlots[selectedDate] || [];
+  const calendarEvents = useMemo(
+    () => slots.map((slot) => mapSlotToCalendarEvent(slot, professor?.name || 'Professor')),
+    [slots, professor]
+  );
 
   useEffect(() => {
     if (slots.length === 0) return;
@@ -205,42 +244,96 @@ export default function BookingProfessor() {
     }
   };
 
+  function handleCalendarEventClick(event) {
+    if (!event.rawSlot || event.rawSlot.booked_count >= event.rawSlot.capacity) return;
+    setSelectedSlot(event.rawSlot);
+    setSelectedDate(getSlotDateKey(event.rawSlot));
+  }
+
+  const sidebarItems = [
+    { id: 'calendar', icon: calendarIcon, label: 'Dashboard', onClick: () => navigate(resolvePath('dashboard', user)) },
+    { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
+    { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
+  ];
+
+  if (loading && !professor) {
+    return (
+      <div className="dashboard-page">
+        <Navbar
+          logo={logo}
+          title="Book professor"
+          onLeftClick={() => navigate('/')}
+          user={{
+            displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
+            role: 'student',
+            initials,
+          }}
+          actions={[{ label: 'Log Out', onClick: handleLogout }]}
+        />
+        <div className="dashboard-layout">
+          <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', icon: InfoIcon, label: 'Help' }]} />
+          <div className="main-content">
+            <div className="booking-page">
+              <p>Loading...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!professor) {
+    return (
+      <div className="dashboard-page">
+        <Navbar
+          logo={logo}
+          title="Book professor"
+          onLeftClick={() => navigate('/')}
+          user={{
+            displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
+            role: 'student',
+            initials,
+          }}
+          actions={[{ label: 'Log Out', onClick: handleLogout }]}
+        />
+        <div className="dashboard-layout">
+          <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', icon: InfoIcon, label: 'Help' }]} />
+          <div className="main-content">
+            <div className="booking-page">
+              <p>Professor not found.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-page">
       <Navbar
         logo={logo}
-        title="Booking"
-        onLeftClick={() => navigate(-1)}
+        title="Book professor"
+        onLeftClick={() => navigate('/')}
         user={{
-          displayName: `${user?.last_name || ''}, ${user?.first_name || 'User'}`.trim(),
-          role: canCreate ? 'professor' : 'student',
+          displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
+          role: 'student',
           initials,
         }}
         actions={[{ label: 'Log Out', onClick: handleLogout }]}
       />
+
       <div className="dashboard-layout">
-        <AppSidebar
-          activeId="search"
-          user={user}
-          navigate={navigate}
-          canCreate={canCreate}
-        />
+        <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', icon: InfoIcon, label: 'Help' }]} />
+
         <div className="main-content">
-          <div className="booking-page" style={{ width: '100%' }}>
-            {loading ? (
-              <section className="booking-box">
-                <p>Loading...</p>
-              </section>
-            ) : !professor ? (
-              <section className="booking-box">
-                <p>Professor not found.</p>
-              </section>
-            ) : (
-              <section className="booking-box booking-flow-box">
+          <div className="booking-page">
+            <section className="booking-box booking-flow-box">
           <div className="booking-header">
             <div>
               <h1>{professor.name}</h1>
-              <p className="professor-card-subtitle">{professor.department}</p>
+              <p className="professor-card-subtitle">{professor.subtitle}</p>
+              {professor.department ? <p className="professor-card-description">Department: {professor.department}</p> : null}
+              {professor.staffTitle ? <p className="professor-card-description">Staff Title: {professor.staffTitle}</p> : null}
               <p className="professor-card-description">{professor.bio}</p>
               <div className="booking-professor-email-row">
                 <p className="professor-card-email">{professor.email}</p>
@@ -250,6 +343,13 @@ export default function BookingProfessor() {
                 >
                   Contact
                 </a>
+                <button
+                  type="button"
+                  className="professor-card-button secondary-button booking-professor-email-btn"
+                  onClick={() => setInviteModalOpen(true)}
+                >
+                  Copy booking link
+                </button>
               </div>
             </div>
             {/* <div className="booking-info-pill">Student ID {studentId}</div> */}
@@ -257,6 +357,15 @@ export default function BookingProfessor() {
 
           {message && <div className="booking-status-message success">{message}</div>}
           {error && <div className="booking-status-message error">{error}</div>}
+
+          <div className="booking-week-calendar">
+            <div className="booking-section-title">Calendar view</div>
+            {calendarEvents.length === 0 ? (
+              <p className="booking-empty-message">No open slots to show on the calendar yet.</p>
+            ) : (
+              <Calendar appointments={calendarEvents} onEventClick={handleCalendarEventClick} />
+            )}
+          </div>
 
           <div className="booking-layout">
             <BookingCalendar
@@ -340,10 +449,21 @@ export default function BookingProfessor() {
             </aside>
           </div>
         </section>
-            )}
-          </div>
+      </div>
         </div>
       </div>
+      {inviteModalOpen && (
+        <InviteURLModal
+          ownerEmail={professor.email}
+          eventTitle={professor.name}
+          inviteURL={window.location.href}
+          title="Share professor booking page"
+          description="Share this link so students can open this professor booking page and choose an available slot."
+          contextLabel="Professor booking page"
+          tip="Tip: share this in your course channel or office-hours announcement."
+          onClose={() => setInviteModalOpen(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,11 +1,12 @@
-/*AMANDA TRAN*/
+/* AMANDA TRAN */
+// Shared modal components used across dashboards, booking flows, and heatmap pages.
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { formatTime, statusLabel, formatRecurrenceSubtitleLine } from './calendar/calendarUtils';
 
-// ─── Shared shell ─────────────────────────────────────────────
+// One shell for all popups so headers, close behavior, and footers stay consistent.
 function Modal({ title, onClose, children, footer, className = '' }) {
   return (
+    // Clicking the dimmed background closes the modal; clicking inside the modal does not.
     <div
       className="modal-overlay"
       onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}
@@ -22,11 +23,9 @@ function Modal({ title, onClose, children, footer, className = '' }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// HelpGuideModal
-//    Reusable detailed instructions popup for page-specific help.
-// ─────────────────────────────────────────────────────────────
+// Page help modal. The guide content comes from data/helpGuides.js.
 export function HelpGuideModal({ guide, onClose }) {
+  // Keep the modal usable even if a page forgets to pass guide content.
   const safeGuide = guide || {};
 
   return (
@@ -49,6 +48,7 @@ export function HelpGuideModal({ guide, onClose }) {
         )}
 
         {safeGuide.quickTips?.length > 0 && (
+          // Short reminders first, before the longer step-by-step sections.
           <div className="help-guide-tips">
             <h4>Quick tips</h4>
             <ul>
@@ -76,10 +76,7 @@ export function HelpGuideModal({ guide, onClose }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// ConfirmActionModal
-//    Small reusable confirmation popup for destructive or important actions.
-// ─────────────────────────────────────────────────────────────
+// Generic confirmation modal for actions that deserve a pause before they happen.
 export function ConfirmActionModal({
   title,
   message,
@@ -119,6 +116,7 @@ export function ConfirmActionModal({
       {details.length > 0 && (
         <div className="modal-detail-stack">
           {details.map((detail) => (
+            // Detail rows make destructive actions feel less ambiguous.
             <div className="modal-row" key={detail.label}>
               <span className="modal-row-label">{detail.label}</span>
               <span className="modal-row-value">{detail.value}</span>
@@ -130,14 +128,12 @@ export function ConfirmActionModal({
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 1. ConfirmSlotModal
-//    Owner confirms a selected time slot and sends notifications.
-// ─────────────────────────────────────────────────────────────
+// Used when a professor confirms a heatmap slot and wants to notify attendees.
 export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
   const [sent, setSent] = useState(false);
 
   function handleConfirm() {
+    // Show immediate feedback before the parent creates/navigates away from the appointment.
     setSent(true);
     // TODO: POST /api/appointments/confirm { slotDay, slotTime, attendeeIds }
     setTimeout(() => { onConfirm(); onClose(); }, 1200);
@@ -170,6 +166,7 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
       </div>
       <div className="modal-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
         <span className="modal-row-label">Attendees ({attendees?.length})</span>
+        {/* Attendee tags echo the colors from the heatmap participant chips. */}
         <div className="attendee-list">
           {attendees?.map(a => (
             <span key={a.name} className="attendee-tag">
@@ -186,103 +183,10 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 2. SlotDetailModal
-//    Click any booked appointment to view details.
-// ─────────────────────────────────────────────────────────────
-function initialsForName(name) {
-  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return 'U';
-  const first = parts[0][0] || '';
-  const last = parts.length > 1 ? parts[parts.length - 1][0] || '' : '';
-  return `${first}${last}`.toUpperCase();
-}
-
-/** Availability = open slot; appointment = has attendees; event = host only (no attendees). */
-function slotKindFromAppointment(ap) {
-  const safe = ap || {};
-  if (safe.type === 'availability') {
-    return { key: 'availability', label: 'Availability' };
-  }
-  const list = Array.isArray(safe.participants) ? safe.participants : [];
-  const hasAttendeeInList = list.some((p) => {
-    const role = String(p.role || p.participant_role || '').toLowerCase();
-    return role === 'attendee';
-  });
-  const attendeeName = String(safe.attendeeName || '').trim();
-  const attendeeEmail = String(safe.attendeeEmail || '').trim();
-  const bookedBy = String(safe.bookedBy || '').trim();
-  const bookedByLooksLikeSummary = /^\d+\/\d+ booked$/i.test(bookedBy);
-  const hasOtherParty =
-    (attendeeName && attendeeName !== '—') ||
-    !!attendeeEmail ||
-    (bookedBy && bookedBy !== '—' && !bookedByLooksLikeSummary);
-
-  if (hasAttendeeInList || hasOtherParty) {
-    return { key: 'appointment', label: 'Appointment' };
-  }
-  return { key: 'event', label: 'Event' };
-}
-
-/** Primary destructive action in the detail modal footer (host/professor only). */
-function ownerDestructiveFooterLabel(ap) {
-  if ((ap || {}).type === 'availability') return 'Delete availability';
-  const kind = slotKindFromAppointment(ap).key;
-  if (kind === 'event') return 'Delete';
-  return 'Cancel appointments';
-}
-
-export function SlotDetailModal({
-  appointment,
-  isOwner,
-  onDelete,
-  onEdit,
-  onClose,
-  onUpdateMyStatus,
-}) {
+// Readable appointment detail view for calendar blocks.
+export function SlotDetailModal({ appointment, isOwner, onDelete, onClose }) {
+  // Default object keeps the JSX below from exploding while data is still settling.
   const ap = appointment || {};
-  const isAvailability = ap.type === 'availability';
-  const slotKind = slotKindFromAppointment(ap);
-
-  const start = ap.startTime ? new Date(ap.startTime) : null;
-  const end = ap.endTime ? new Date(ap.endTime) : null;
-
-  const dateLabel = start
-    ? start.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric' })
-    : ap.day || '—';
-  const timeLabel = start && end
-    ? `${formatTime(ap.startTime)} \u2013 ${formatTime(ap.endTime)}`
-    : ap.time || '—';
-
-  const status = statusLabel(ap.status);
-  const statusPillClass = `modal-status-pill ${status.cls || ''}`.trim();
-
-  const createdByName = ap.ownerName || ap.owner || '—';
-  const createdByEmail = ap.ownerEmail || '';
-
-  const otherPartyName = isAvailability
-    ? (ap.attendeeName || ap.bookedBy || '—')
-    : (isOwner ? (ap.attendeeName || ap.bookedBy || '—') : (ap.ownerName || ap.owner || '—'));
-  const otherPartyEmail = isAvailability
-    ? (ap.attendeeEmail || ap.bookedByEmail || '')
-    : (isOwner ? (ap.attendeeEmail || ap.bookedByEmail || '') : (ap.ownerEmail || ''));
-
-  const emailTarget = isAvailability
-    ? (otherPartyEmail || '')
-    : (isOwner ? (ap.attendeeEmail || '') : (ap.ownerEmail || ''));
-  const participantList = Array.isArray(ap.participants) ? ap.participants : [];
-  const canUpdateMyStatus = !isAvailability && typeof onUpdateMyStatus === 'function';
-  const ownerPending = isOwner && ap.myStatus === 'pending';
-
-  const recurrenceSubtitle = formatRecurrenceSubtitleLine({
-    recurrence_rule: ap.recurrence_rule,
-    recurrence_group_id: ap.recurrence_group_id,
-  });
-  const locationValue = ap.location && String(ap.location).trim() ? ap.location : 'TBD';
-  const detailText = ap.description || ap.notes || '';
-  const normalizedVisibility = ap.visibility ? String(ap.visibility) : '';
-  const capacityNumber = Number(ap.capacity);
-  const hasCapacity = Number.isFinite(capacityNumber) && capacityNumber >= 1;
 
   return (
     <Modal
@@ -290,320 +194,120 @@ export function SlotDetailModal({
       onClose={onClose}
       footer={
         <>
-          {isOwner && onEdit && (
-            <button className="button button-outline button-small" onClick={onEdit}>
-              {slotKind.key === 'availability' ? 'Edit availability' : 'Edit event'}
-            </button>
-          )}
           {isOwner && (
             <button className="button button-danger button-small" onClick={onDelete}>
-              {ownerDestructiveFooterLabel(ap)}
+              Cancel booking
             </button>
           )}
           <a
-            href={`mailto:${emailTarget}?subject=Re:%20${encodeURIComponent(ap.title || 'Appointment')}`}
+            href={`mailto:${ap.ownerEmail || ''}?subject=Re: ${encodeURIComponent(ap.title || 'Appointment')}`}
             className="button button-outline button-small"
             style={{ textDecoration: 'none' }}
           >
-            Email {isAvailability ? 'student' : isOwner ? 'attendee' : 'owner'}
+            {/* The same modal is used from owner and attendee perspectives. */}
+            Email {isOwner ? 'attendee' : 'owner'}
           </a>
           <button className="button button-ghost" onClick={onClose}>Close</button>
         </>
       }
     >
-      <div className="modal-titleblock">
-        <div className="modal-titleblock-main">
-          <div className="modal-subtitle">
-            <span className={`modal-kind-pill modal-kind-pill--${slotKind.key}`}>{slotKind.label}</span>
-            <span className="modal-subtitle-sep">•</span>
-            <span>{dateLabel}</span>
-            <span className="modal-subtitle-sep">•</span>
-            <span>{timeLabel}</span>
-          </div>
-          {recurrenceSubtitle ? (
-            <div className="modal-recurrence-line">{recurrenceSubtitle}</div>
-          ) : null}
-        </div>
-        <div className="modal-titleblock-right">
-          <span className={statusPillClass}>{status.label}</span>
-        </div>
+      <div className="modal-row">
+        <span className="modal-row-label">Date</span>
+        <span className="modal-row-value">{ap.day}</span>
       </div>
-      {ownerPending && (
-        <p className="modal-description" style={{ marginTop: -6, marginBottom: 10 }}>
-          Action required: this booking request is waiting for your response.
-        </p>
+      <div className="modal-row">
+        <span className="modal-row-label">Time</span>
+        <span className="modal-row-value">{ap.time}</span>
+      </div>
+      <div className="modal-row">
+        <span className="modal-row-label">{isOwner ? 'Booked by' : 'Owner'}</span>
+        <span className="modal-row-value">{isOwner ? ap.bookedBy : ap.owner}</span>
+      </div>
+      {ap.location && (
+        <div className="modal-row">
+          <span className="modal-row-label">Location</span>
+          <span className="modal-row-value">{ap.location}</span>
+        </div>
       )}
-
-      <div className="modal-section">
-        <div className="modal-section-title">Details</div>
-        <div className="modal-detail-stack">
-          <div className="modal-row">
-            <span className="modal-row-label">Location</span>
-            <span className="modal-row-value">{locationValue}</span>
-          </div>
-
-          {detailText && (
-            <div className="modal-row modal-row-multiline">
-              <span className="modal-row-label">{isAvailability ? 'Description' : 'Notes'}</span>
-              <span className="modal-row-value modal-row-value-block">{detailText}</span>
-            </div>
-          )}
-
-          {isAvailability && (
-            <>
-              <div className="modal-row">
-                <span className="modal-row-label">Visibility</span>
-                <span className="modal-row-value">{ap.visibility || '—'}</span>
-              </div>
-              <div className="modal-row">
-                <span className="modal-row-label">Capacity</span>
-                <span className="modal-row-value">
-                  {Number.isFinite(Number(ap.capacity)) ? ap.capacity : '—'}
-                </span>
-              </div>
-              <div className="modal-row">
-                <span className="modal-row-label">Booked</span>
-                <span className="modal-row-value">
-                  {Number.isFinite(Number(ap.bookedCount)) && Number.isFinite(Number(ap.capacity))
-                    ? `${ap.bookedCount}/${ap.capacity}`
-                    : (ap.attendeeName || ap.bookedBy || '—')}
-                </span>
-              </div>
-            </>
-          )}
-
-          {!isAvailability && (
-            <>
-              <div className="modal-row">
-                <span className="modal-row-label">Visibility</span>
-                <span className="modal-row-value">{normalizedVisibility || '—'}</span>
-              </div>
-              <div className="modal-row">
-                <span className="modal-row-label">Capacity</span>
-                <span className="modal-row-value">{hasCapacity ? capacityNumber : '—'}</span>
-              </div>
-            </>
-          )}
+      {ap.notes && (
+        <div className="modal-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+          <span className="modal-row-label">Notes</span>
+          <p style={{ fontSize: 13, color: '#333', marginTop: 4, lineHeight: 1.5 }}>{ap.notes}</p>
         </div>
-      </div>
-
-      <div className="modal-section">
-        <div className="modal-section-title">People</div>
-        {participantList.length > 0 ? (
-          <div className="participant-list">
-            {participantList.map((p) => {
-              const status = p.status || p.participant_status || 'pending';
-              const role = p.role || p.participant_role || 'attendee';
-              const userId = p.userId || p.user_id;
-              const isCurrentUser = Number(userId) === Number(ap.currentUserId);
-              return (
-                <div key={`${p.userId || p.user_id}-${p.email || p.mcgill_email}`} className="participant-row">
-                  <div className="participant-avatar-wrap">
-                    <span className="participant-avatar">{initialsForName(p.name)}</span>
-                    <span className={`participant-status-dot participant-status-${status}`} />
-                  </div>
-                  <div className="participant-meta">
-                    <span className="participant-name">
-                      {p.name}
-                      {role === 'host' && <span className="participant-role-badge">Host</span>}
-                    </span>
-                    <span className="participant-email">{p.email}</span>
-                  </div>
-                  <div className="participant-status-actions">
-                    <span className={`appointment-status-pill ${
-                      status === 'confirmed'
-                        ? 'status-confirmed'
-                        : status === 'cancelled'
-                          ? 'status-cancelled'
-                          : 'status-pending'
-                    }`}>
-                      {status}
-                    </span>
-                    {canUpdateMyStatus && isCurrentUser && (
-                      <select
-                        className="participant-status-select"
-                        aria-label="Change your status"
-                        value={status}
-                        onChange={(e) => onUpdateMyStatus(e.target.value)}
-                      >
-                        <option value="pending">pending</option>
-                        <option value="confirmed">confirmed</option>
-                        <option value="cancelled">cancelled</option>
-                      </select>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="modal-detail-stack">
-            <div className="modal-row">
-              <span className="modal-row-label">Created by</span>
-              <span className="modal-row-value">
-                {createdByEmail ? `${createdByName} (${createdByEmail})` : createdByName}
-              </span>
-            </div>
-            <div className="modal-row">
-              <span className="modal-row-label">{isAvailability ? 'Booked by' : isOwner ? 'Booked by' : 'Owner'}</span>
-              <span className="modal-row-value">
-                {otherPartyEmail ? `${otherPartyName} (${otherPartyEmail})` : otherPartyName}
-              </span>
-            </div>
-          </div>
-        )}
+      )}
+      <div className="modal-row">
+        <span className="modal-row-label">Status</span>
+        <span className="badge-pending">{ap.status || 'Pending'}</span>
       </div>
     </Modal>
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 3. DeleteConfirmModal
-//    Confirms cancellation and opens a mailto: notification.
-// ─────────────────────────────────────────────────────────────
+// Final confirmation before cancelling a booking or removing an availability block.
 export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
   const ap = appointment || {};
-  const isAvailability = ap.type === 'availability';
-  const slotKind = isAvailability ? { key: 'availability', label: 'Availability' } : slotKindFromAppointment(ap);
 
-  async function handleDelete() {
-    if (!isAvailability && ap.notifyEmail) {
-      const isEvent = slotKind.key === 'event';
-      const subject = encodeURIComponent(
-        isEvent ? `Event removed: ${ap.title}` : `Appointment cancelled: ${ap.title}`
-      );
-      const body = encodeURIComponent(
-        isEvent
-          ? `Hi,\n\nThe event "${ap.title}" on ${ap.day} at ${ap.time} has been removed from the calendar.\n\nApologies for any inconvenience.`
-          : `Hi,\n\nThe appointment "${ap.title}" on ${ap.day} at ${ap.time} has been cancelled.\n\nApologies for any inconvenience.`
-      );
-      window.open(`mailto:${ap.notifyEmail}?subject=${subject}&body=${body}`);
-    }
-
-    const shouldClose = await onConfirm();
-    if (shouldClose !== false) {
-      onClose();
-    }
+  function handleDelete() {
+    // Open a prefilled email so the professor can notify the other person in their own words.
+    const subject = encodeURIComponent(`Booking cancelled: ${ap.title}`);
+    const body    = encodeURIComponent(
+      `Hi,\n\nYour booking "${ap.title}" on ${ap.day} at ${ap.time} has been cancelled.\n\nApologies for any inconvenience.`
+    );
+    window.open(`mailto:${ap.notifyEmail}?subject=${subject}&body=${body}`);
+    // TODO: DELETE /api/appointments/:id
+    onConfirm();
+    onClose();
   }
-
-  const confirmTitle = isAvailability
-    ? 'Delete this availability?'
-    : slotKind.key === 'event'
-      ? 'Delete this event?'
-      : 'Cancel appointments?';
-
-  const confirmDangerLabel = isAvailability
-    ? 'Yes, delete availability'
-    : slotKind.key === 'event'
-      ? 'Yes, delete'
-      : 'Yes, cancel appointments';
-
-  const confirmBody = isAvailability
-    ? 'This will permanently delete the availability slot from your calendar.'
-    : slotKind.key === 'event'
-      ? 'This will permanently remove this event from your calendar.'
-      : 'This will cancel the appointment(s) and open your email client to notify the other party.';
-
-  const deleteRecurrenceSubtitle = formatRecurrenceSubtitleLine({
-    recurrence_rule: ap.recurrence_rule,
-    recurrence_group_id: ap.recurrence_group_id,
-  });
 
   return (
     <Modal
-      title={confirmTitle}
+      title="Cancel this booking?"
       onClose={onClose}
       footer={
         <>
           <button className="button button-ghost" onClick={onClose}>Keep it</button>
           <button className="button button-danger" onClick={handleDelete}>
-            {confirmDangerLabel}
+            Yes, cancel &amp; notify
           </button>
         </>
       }
     >
       <p style={{ fontSize: 14, color: '#555', marginBottom: 16, lineHeight: 1.6 }}>
-        {confirmBody}
+        This will permanently remove the booking and open your email client to notify the other party.
       </p>
-      {deleteRecurrenceSubtitle ? (
-        <div className="modal-recurrence-line modal-recurrence-line--spaced">{deleteRecurrenceSubtitle}</div>
-      ) : null}
       <div className="modal-row">
-        <span className="modal-row-label">{isAvailability ? 'Availability' : slotKind.label}</span>
+        <span className="modal-row-label">Appointment</span>
         <span className="modal-row-value">{ap.title}</span>
       </div>
       <div className="modal-row">
         <span className="modal-row-label">Date &amp; time</span>
         <span className="modal-row-value">{ap.day} at {ap.time}</span>
       </div>
-      {!isAvailability && (
-        <div className="modal-row">
-          <span className="modal-row-label">Notify</span>
-          <span className="modal-row-value">{ap.notifyEmail}</span>
-        </div>
-      )}
-    </Modal>
-  );
-}
-
-export function RecurrenceScopeModal({
-  actionLabel = 'update',
-  onSelect,
-  onClose,
-  recurrenceSubtitle = '',
-}) {
-  return (
-    <Modal
-      title={`${actionLabel === 'delete' ? 'Delete' : 'Edit'} recurring event`}
-      onClose={onClose}
-      footer={
-        <button className="button button-ghost" onClick={onClose}>
-          Cancel
-        </button>
-      }
-    >
-      {recurrenceSubtitle ? (
-        <div className="modal-recurrence-line modal-recurrence-line--spaced">{recurrenceSubtitle}</div>
-      ) : null}
-      <div className="modal-detail-stack">
-        <button
-          type="button"
-          className="button button-outline"
-          onClick={() => onSelect('single')}
-          style={{ width: '100%', textAlign: 'left' }}
-        >
-          This event
-        </button>
-        <button
-          type="button"
-          className="button button-outline"
-          onClick={() => onSelect('this_and_following')}
-          style={{ width: '100%', textAlign: 'left' }}
-        >
-          This and following events
-        </button>
-        <button
-          type="button"
-          className="button button-outline"
-          onClick={() => onSelect('all')}
-          style={{ width: '100%', textAlign: 'left' }}
-        >
-          All events
-        </button>
+      <div className="modal-row">
+        <span className="modal-row-label">Notify</span>
+        <span className="modal-row-value">{ap.notifyEmail}</span>
       </div>
     </Modal>
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 4. InviteURLModal
-//    Generates a shareable booking link for owners.
-// ─────────────────────────────────────────────────────────────
-export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
+// Share modal for heatmap and booking links.
+export function InviteURLModal({
+  ownerEmail,
+  eventTitle,
+  inviteURL,
+  onClose,
+  title = 'Share your booking page',
+  description = 'Share this link so students can open the heatmap, mark their availability, and send it back to you.',
+  contextLabel = 'Booking page for',
+  tip = 'Tip: paste this into your course slides or email signature.',
+}) {
   const [copied, setCopied] = useState(false);
+  // Heatmap pages pass an explicit invite URL; older booking flows can use the fallback.
   const shareURL = inviteURL || `${window.location.origin}/heatmap`;
 
   function handleCopy() {
+    // The copied state gives the user a quick "yes, it worked" moment.
     navigator.clipboard.writeText(shareURL).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -612,7 +316,7 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
 
   return (
     <Modal
-      title="Share your booking page"
+      title={title}
       onClose={onClose}
       footer={
         <>
@@ -624,10 +328,10 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
       }
     >
       <p style={{ fontSize: 13, color: '#666', marginBottom: 14, lineHeight: 1.6 }}>
-        Share this link so students can open the heatmap, mark their availability, and send it back to you.
+        {description}
       </p>
       <p style={{ fontSize: 11, color: '#aaa', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        Booking page for
+        {contextLabel}
       </p>
       <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{eventTitle || ownerEmail}</p>
       <div className="copy-row">
@@ -637,16 +341,13 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
         </button>
       </div>
       <p style={{ marginTop: 12, fontSize: 12, color: '#bbb' }}>
-        Tip: paste this into your course slides or email signature.
+        {tip}
       </p>
     </Modal>
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 5. ApproveSubmissionModal
-//    Professor reviews a student's availability submission.
-// ─────────────────────────────────────────────────────────────
+// Turn a raw submitted slot into something a person can scan quickly.
 function formatSlotLabel(slot) {
   if (!slot?.startTime || !slot?.endTime) return 'Unknown time';
 
@@ -666,15 +367,19 @@ function formatSlotLabel(slot) {
   })}`;
 }
 
+// Review modal for a student's heatmap submission.
 export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClose }) {
   const s = submission || {};
+  // Memoize the slots array so the selected radio button only resets when slots really change.
   const slotOptions = useMemo(() => s.slots || [], [s.slots]);
   const [selectedSlotId, setSelectedSlotId] = useState(slotOptions[0]?.id || null);
 
   useEffect(() => {
+    // Default to the first submitted slot whenever a different submission is opened.
     setSelectedSlotId(slotOptions[0]?.id || null);
   }, [slotOptions]);
 
+  // If the selected id no longer exists, fall back gracefully to the first slot.
   const selectedSlot = slotOptions.find((slot) => slot.id === selectedSlotId) || slotOptions[0] || null;
 
   return (
@@ -727,6 +432,7 @@ export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClo
             <span className="modal-row-value">No submitted slots</span>
           ) : (
             slotOptions.map((slot) => (
+              // Radio cards are easier to review than a dense select menu for time slots.
               <label
                 key={slot.id}
                 style={{
