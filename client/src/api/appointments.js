@@ -39,6 +39,19 @@ export async function cancelAppointment(appointmentId, changedBy, options = {}) 
   return parseJson(res);
 }
 
+export async function updateAppointment(appointmentId, payload) {
+  const res = await fetch(`${API_BASE}/appointments/${appointmentId}`, {
+    ...fetchOpts,
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseJson(res);
+}
+
 export async function createAppointment(availabilityId, bookedBy) {
   const res = await fetch(`${API_BASE}/appointments`, {
     ...fetchOpts,
@@ -73,27 +86,35 @@ export async function getMyInvitations(userId) {
   return parseJson(res);
 }
 
-export async function acceptInvitation(invitationId, userId) {
+export async function acceptInvitation(invitationId, userId, options = {}) {
   const res = await fetch(`${API_BASE}/appointments/invitations/${invitationId}/accept`, {
     ...fetchOpts,
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ user_id: Number(userId) }),
+    body: JSON.stringify({
+      user_id: Number(userId),
+      recurrence_scope: options.recurrence_scope,
+      pivot_instance_date: options.pivot_instance_date,
+    }),
   });
 
   return parseJson(res);
 }
 
-export async function declineInvitation(invitationId, userId) {
+export async function declineInvitation(invitationId, userId, options = {}) {
   const res = await fetch(`${API_BASE}/appointments/invitations/${invitationId}/decline`, {
     ...fetchOpts,
     method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ user_id: Number(userId) }),
+    body: JSON.stringify({
+      user_id: Number(userId),
+      recurrence_scope: options.recurrence_scope,
+      pivot_instance_date: options.pivot_instance_date,
+    }),
   });
 
   return parseJson(res);

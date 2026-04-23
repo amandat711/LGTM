@@ -33,6 +33,7 @@ import {
   getHostingAppointments,
   cancelAppointment,
   createDirectAppointment,
+  updateAppointment,
   updateMyParticipantStatus,
 } from '../api/appointments';
 // API helpers for availability slots the professor can create or remove.
@@ -46,6 +47,7 @@ import {
 import { getHeatmaps } from '../api/heatmaps';
 import CreateAvailabilityModal from '../components/CreateAvailabilityModal';
 import CreateItemModal from '../components/CreateItemModal';
+import CreateAppointmentModal from '../components/CreateAppointmentModal';
 import { DASHBOARD_HELP_GUIDES } from '../data/helpGuides';
 
 // Reusable sidebar component instead of hand-writing the menu here.
@@ -210,6 +212,26 @@ export default function ProfessorDashboard() {
     return Boolean(appt?.recurrence_group_id);
   }
 
+  function hasMultipleEventsInSeries(appt) {
+    const recurrenceGroupId = Number(appt?.recurrence_group_id);
+    if (!recurrenceGroupId) return false;
+    if (appt?.type === 'availability') {
+      return availabilities.filter((slot) => Number(slot.recurrence_group_id) === recurrenceGroupId).length > 1;
+    }
+    return appointments.filter(
+      (item) =>
+        Number(item.recurrence_group_id) === recurrenceGroupId &&
+        item.appointmentStatus !== 'cancelled'
+    ).length > 1;
+  }
+
+  function isHostOnlyEvent(appt) {
+    if (!appt || appt.type === 'availability') return false;
+    const hasAttendeeName = Boolean(appt.attendeeName && appt.attendeeName.trim() && appt.attendeeName !== '—');
+    const hasAttendeeParticipant = (appt.participantStatuses || []).some((p) => p.role === 'attendee');
+    return !hasAttendeeName && !hasAttendeeParticipant;
+  }
+
   function getRecurrencePivotDate(appt) {
     return appt?.recurrence_instance_date || toLocalDateInputValue(appt?.startTime);
   }
@@ -258,7 +280,7 @@ export default function ProfessorDashboard() {
   async function handleDelete() {
     if (!activeAppt) return false;
 
-    if (isRecurringSeriesEvent(activeAppt)) {
+    if (isRecurringSeriesEvent(activeAppt) && hasMultipleEventsInSeries(activeAppt)) {
       setPendingRecurrenceAction('delete');
       setModal('recurrenceScope');
       return false;
@@ -314,26 +336,28 @@ export default function ProfessorDashboard() {
         ...payload,
       });
 
-      const updatedAvailability = result.availability;
+      const updatedAvailability = result.availability || result.availabilities?.[0] || null;
       const availabilityData = await getProfessorAvailabilities(userId);
       setAvailabilities(availabilityData);
 
       setModal(null);
       setPendingRecurrenceAction(null);
       setPendingAvailabilityPayload(null);
-      setActiveAppt((prev) =>
-        prev
-          ? {
-              ...prev,
-              title: updatedAvailability.av_title || prev.title,
-              location: updatedAvailability.location || prev.location,
-              startTime: updatedAvailability.start_time,
-              endTime: updatedAvailability.end_time,
-              visibility: updatedAvailability.visibility,
-              capacity: updatedAvailability.capacity,
-            }
-          : prev
-      );
+      if (updatedAvailability) {
+        setActiveAppt((prev) =>
+          prev
+            ? {
+                ...prev,
+                title: updatedAvailability.av_title || prev.title,
+                location: updatedAvailability.location || prev.location,
+                startTime: updatedAvailability.start_time,
+                endTime: updatedAvailability.end_time,
+                visibility: updatedAvailability.visibility,
+                capacity: updatedAvailability.capacity,
+              }
+            : prev
+        );
+      }
       setError('');
     } catch (err) {
       setError(err.message);
@@ -343,7 +367,7 @@ export default function ProfessorDashboard() {
   async function handleUpdateAvailability(payload) {
     if (!activeAppt || activeAppt.type !== 'availability') return;
 
-    if (isRecurringSeriesEvent(activeAppt)) {
+    if (isRecurringSeriesEvent(activeAppt) && hasMultipleEventsInSeries(activeAppt)) {
       setPendingAvailabilityPayload(payload);
       setPendingRecurrenceAction('edit');
       setModal('recurrenceScope');
@@ -351,6 +375,36 @@ export default function ProfessorDashboard() {
     }
 
     await executeUpdateAvailabilityWithScope(payload, 'single');
+  }
+
+  async function executeUpdateAppointmentWithScope(payload, scope = 'single') {
+    if (!activeAppt || activeAppt.type === 'availability') return;
+    try {
+      await updateAppointment(activeAppt.id, {
+        changed_by: Number(userId),
+        recurrence_scope: scope,
+        pivot_instance_date: getRecurrencePivotDate(activeAppt),
+        ...payload,
+      });
+      await refreshHostedAppointments();
+      setModal(null);
+      setPendingRecurrenceAction(null);
+      setPendingAvailabilityPayload(null);
+      setError('');
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function handleUpdateAppointment(payload) {
+    if (!activeAppt || activeAppt.type === 'availability') return;
+    if (isRecurringSeriesEvent(activeAppt) && hasMultipleEventsInSeries(activeAppt)) {
+      setPendingAvailabilityPayload(payload);
+      setPendingRecurrenceAction('editAppointment');
+      setModal('recurrenceScope');
+      return;
+    }
+    await executeUpdateAppointmentWithScope(payload, 'single');
   }
 
   async function handleUpdateMyStatus(appointmentId, nextStatus) {
@@ -646,6 +700,23 @@ export default function ProfessorDashboard() {
         />
       )}
 
+      {modal === 'editAppointment' && activeAppt && (
+        <CreateAppointmentModal
+          mode="edit"
+          initialData={{
+            ap_title: activeAppt.title,
+            ap_description: activeAppt.description,
+            location: activeAppt.location,
+            start_time: activeAppt.startTime,
+            end_time: activeAppt.endTime,
+            capacity: activeAppt.capacity,
+            visibility: activeAppt.visibility,
+          }}
+          onClose={() => setModal('detail')}
+          onSubmit={handleUpdateAppointment}
+        />
+      )}
+
       {/* Opens when the professor clicks an appointment or availability block for more detail. */}
       {modal === 'detail' && activeAppt && (
         /* The modal expects display-friendly fields, so reshape the calendar event here. */
@@ -686,7 +757,13 @@ export default function ProfessorDashboard() {
                   setPendingAvailabilityPayload(null);
                   setModal('editAvailability');
                 }
-              : undefined
+              : isHostOnlyEvent(activeAppt)
+                ? () => {
+                    setPendingRecurrenceAction(null);
+                    setPendingAvailabilityPayload(null);
+                    setModal('editAppointment');
+                  }
+                : undefined
           }
           onDelete={() => {
             setPendingRecurrenceAction(null);
@@ -726,6 +803,15 @@ export default function ProfessorDashboard() {
                 return;
               }
               await executeUpdateAvailabilityWithScope(payload, scope);
+              return;
+            }
+            if (pendingRecurrenceAction === 'editAppointment') {
+              const payload = pendingAvailabilityPayload;
+              if (!payload) {
+                setModal('detail');
+                return;
+              }
+              await executeUpdateAppointmentWithScope(payload, scope);
             }
           }}
         />

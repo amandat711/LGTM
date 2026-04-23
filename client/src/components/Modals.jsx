@@ -287,7 +287,7 @@ export function SlotDetailModal({
         <>
           {isOwner && onEdit && (
             <button className="button button-outline button-small" onClick={onEdit}>
-              Edit availability
+              {slotKind.key === 'availability' ? 'Edit availability' : 'Edit event'}
             </button>
           )}
           {isOwner && (

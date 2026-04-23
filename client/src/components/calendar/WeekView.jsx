@@ -25,6 +25,52 @@ function minutesToTimeLabel(totalMinutes) {
   return `${displayH}:${String(minutes).padStart(2, '0')}${ampm}`;
 }
 
+function buildDayEventLayouts(dayAppointments) {
+  const sorted = [...dayAppointments]
+    .map((appt) => ({
+      appt,
+      startMs: new Date(appt.startTime).getTime(),
+      endMs: new Date(appt.endTime).getTime(),
+      lane: 0,
+      lanesInCluster: 1,
+    }))
+    .sort((a, b) => (a.startMs - b.startMs) || (a.endMs - b.endMs));
+
+  const clusters = [];
+  let currentCluster = null;
+  for (const item of sorted) {
+    if (!currentCluster || item.startMs >= currentCluster.endMs) {
+      currentCluster = { endMs: item.endMs, items: [item] };
+      clusters.push(currentCluster);
+    } else {
+      currentCluster.endMs = Math.max(currentCluster.endMs, item.endMs);
+      currentCluster.items.push(item);
+    }
+  }
+
+  const out = new Map();
+  for (const cluster of clusters) {
+    const laneEnds = [];
+    for (const item of cluster.items) {
+      let lane = laneEnds.findIndex((laneEnd) => laneEnd <= item.startMs);
+      if (lane === -1) {
+        lane = laneEnds.length;
+        laneEnds.push(item.endMs);
+      } else {
+        laneEnds[lane] = item.endMs;
+      }
+      item.lane = lane;
+    }
+    const lanesInCluster = Math.max(laneEnds.length, 1);
+    for (const item of cluster.items) {
+      item.lanesInCluster = lanesInCluster;
+      out.set(item.appt.id, item);
+    }
+  }
+
+  return out;
+}
+
 export default function WeekView({ appointments, onEventClick, onSlotClick, onSlotSelect }) {
   const today = useMemo(() => new Date(), []);
   const [now, setNow] = useState(() => new Date());
@@ -200,6 +246,11 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
 
           {weekDays.map((day, di) => (
             <div key={di} className="dash-day-column">
+              {(() => {
+                const dayAppointments = appointments.filter((a) => isSameDay(new Date(a.startTime), day));
+                const layoutById = buildDayEventLayouts(dayAppointments);
+                return (
+                  <>
               {/* Grid background lines (hour blocks). Actual selection is drag-based at 15-min granularity. */}
               {HOURS.map((h) => (
                 <div key={h} className="dash-time-cell" />
@@ -256,9 +307,7 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
                 </div>
               )}
 
-              {appointments
-                .filter((a) => isSameDay(new Date(a.startTime), day))
-                .map((appt) => {
+              {dayAppointments.map((appt) => {
                   const { top, height } = getEventStyle(appt, hourHeight);
                   const compact = height < 40;
                   const startTimeString = new Date(appt.startTime).toLocaleTimeString([], {
@@ -269,6 +318,9 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
                   const eventTop = top + 2;
                   const eventHeight = Math.max(height - 4, 24);
                   const stacked = eventHeight >= 40;
+                  const layout = layoutById.get(appt.id) || { lane: 0, lanesInCluster: 1 };
+                  const widthPct = 100 / layout.lanesInCluster;
+                  const leftPct = layout.lane * widthPct;
 
                   return (
                     <button
@@ -278,11 +330,14 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
                       style={{
                         top: eventTop,
                         height: eventHeight,
+                        width: `calc(${widthPct}% - 4px)`,
+                        left: `calc(${leftPct}% + 2px)`,
                         background: `${appt.color}33`,
                         border: `1px solid ${appt.color}33`,
                         borderLeft: `4px solid ${appt.color}`,
                         color: appt.color,
                         boxShadow: '0 1px 2px rgba(15, 23, 42, 0.08)',
+                        zIndex: 3 + layout.lane,
                       }}
                       onClick={() => onEventClick(appt)}
                       title={`${appt.title} • ${startTimeString}`}
@@ -305,6 +360,9 @@ export default function WeekView({ appointments, onEventClick, onSlotClick, onSl
                     </button>
                   );
                 })}
+                  </>
+                );
+              })()}
             </div>
           ))}
         </div>

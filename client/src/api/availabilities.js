@@ -40,6 +40,7 @@ export async function deleteAvailability(availabilityId, deletedBy, options = {}
 
 export async function updateAvailability(availabilityId, payload) {
   const res = await fetch(`${API_BASE}/availabilities/${availabilityId}`, {
+    ...fetchOpts,
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),

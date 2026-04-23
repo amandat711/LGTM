@@ -23,6 +23,28 @@ function getDefaultRecurrence(baseDate) {
   };
 }
 
+function getInitialRecurrence(initialData, baseDate) {
+  if (!initialData?.recurrence_rule) return getDefaultRecurrence(baseDate);
+  try {
+    const parsed =
+      typeof initialData.recurrence_rule === 'string'
+        ? JSON.parse(initialData.recurrence_rule)
+        : initialData.recurrence_rule;
+    return {
+      enabled: Boolean(parsed?.enabled),
+      frequency: parsed?.frequency || 'weekly',
+      interval: Number(parsed?.interval) || 1,
+      byWeekdays: Array.isArray(parsed?.byWeekdays) ? parsed.byWeekdays : [],
+      endType: parsed?.endType || 'never',
+      until: parsed?.until || '',
+      count: Number(parsed?.count) || 13,
+      baseDate: baseDate || '',
+    };
+  } catch {
+    return getDefaultRecurrence(baseDate);
+  }
+}
+
 export default function CreateAppointmentForm({
   mode = 'event',
   onSubmit,
@@ -31,21 +53,25 @@ export default function CreateAppointmentForm({
   submitLabel,
   initialStartTime = null, // ISO string
   initialEndTime = null, // ISO string
+  initialData = null,
 }) {
   const today = useMemo(() => toLocalDateInputValue(new Date()), []);
+  const initialDate = initialData?.start_time
+    ? toLocalDateInputValue(initialData.start_time)
+    : today;
 
   const [form, setForm] = useState({
-    ap_title: '',
-    ap_description: '',
-    date: today,
-    start_time: '10:00',
-    end_time: '10:30',
-    location: '',
-    capacity: 1,
-    visibility: defaultVisibility,
+    ap_title: initialData?.ap_title || '',
+    ap_description: initialData?.ap_description || '',
+    date: initialDate,
+    start_time: initialData?.start_time ? toLocalTimeInputValue(initialData.start_time) : '10:00',
+    end_time: initialData?.end_time ? toLocalTimeInputValue(initialData.end_time) : '10:30',
+    location: initialData?.location || '',
+    capacity: initialData?.capacity ?? 1,
+    visibility: initialData?.visibility || defaultVisibility,
   });
 
-  const [recurrence, setRecurrence] = useState(() => getDefaultRecurrence(today));
+  const [recurrence, setRecurrence] = useState(() => getInitialRecurrence(initialData, initialDate));
   const [recurrenceModalOpen, setRecurrenceModalOpen] = useState(false);
 
   const [inviteQuery, setInviteQuery] = useState('');
@@ -78,7 +104,9 @@ export default function CreateAppointmentForm({
     setRecurrence((prev) => ({ ...prev, baseDate: date }));
   }, [initialEndTime, initialStartTime]);
 
-  const finalSubmitLabel = submitLabel || (selectedInvitees.length > 0 ? 'Send invitation' : 'Create event');
+  const finalSubmitLabel = submitLabel || (mode === 'edit'
+    ? 'Save changes'
+    : (selectedInvitees.length > 0 ? 'Send invitation' : 'Create event'));
 
   function updateField(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -185,7 +213,7 @@ export default function CreateAppointmentForm({
         recurrence_rule: recurrencePayload,
       });
     } catch (err) {
-      setError(err?.message || 'Failed to create appointment.');
+      setError(err?.message || `Failed to ${mode === 'edit' ? 'update' : 'create'} appointment.`);
     } finally {
       setSaving(false);
     }
