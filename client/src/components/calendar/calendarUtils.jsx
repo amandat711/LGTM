@@ -67,6 +67,77 @@ export function isSameDay(d1, d2) {
   );
 }
 
+/** Bookings with row status cancelled are hidden from week calendars (still available via GET /:id if needed). */
+export function includeAppointmentOnWeekCalendar(event) {
+  if (!event || event.type === 'availability') return true;
+  return event.appointmentStatus !== 'cancelled';
+}
+
+const WEEKDAY_ORDER = { MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6, SU: 7 };
+const WEEKDAY_LABEL = { MO: 'Mon', TU: 'Tue', WE: 'Wed', TH: 'Thu', FR: 'Fri', SA: 'Sat', SU: 'Sun' };
+
+function weekdayOrder(code) {
+  return WEEKDAY_ORDER[code] ?? 999;
+}
+
+function weekdayLabel(code) {
+  return WEEKDAY_LABEL[code] || code;
+}
+
+function summarizeParsedRecurrence(recurrence) {
+  if (!recurrence?.enabled) return '';
+
+  const sortedDays = [...(recurrence.byWeekdays || [])].sort((a, b) => weekdayOrder(a) - weekdayOrder(b));
+  const dayNames = sortedDays.map(weekdayLabel);
+
+  let summary = `Repeats every ${recurrence.interval} week${recurrence.interval > 1 ? 's' : ''}`;
+  if (dayNames.length > 0) {
+    summary += dayNames.length <= 2 ? ` on ${dayNames.join(' and ')}` : ` on ${dayNames.join(', ')}`;
+  }
+
+  if (recurrence.endType === 'on' && recurrence.until) {
+    summary += ` until ${recurrence.until}`;
+  } else if (recurrence.endType === 'after' && recurrence.count) {
+    summary += ` for ${recurrence.count} occurrence${recurrence.count !== 1 ? 's' : ''}`;
+  }
+
+  return summary;
+}
+
+function parseRecurrenceRulePayload(rule) {
+  if (rule == null || rule === '') return null;
+  if (typeof rule === 'object' && !Array.isArray(rule)) return rule;
+  if (typeof rule === 'string') {
+    const t = rule.trim();
+    if (!t) return null;
+    try {
+      const p = JSON.parse(t);
+      return typeof p === 'object' && p !== null ? p : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/**
+ * One-line human summary for under date/time in modals (matches app recurrence JSON shape).
+ */
+export function formatRecurrenceSubtitleLine({ recurrence_rule, recurrence_group_id } = {}) {
+  const parsed = parseRecurrenceRulePayload(recurrence_rule);
+  if (parsed?.enabled) {
+    return summarizeParsedRecurrence(parsed);
+  }
+  if (typeof recurrence_rule === 'string' && recurrence_rule.trim() && !parsed) {
+    const t = recurrence_rule.trim();
+    return t.length > 100 ? `${t.slice(0, 97)}…` : t;
+  }
+  if (Number(recurrence_group_id) > 0) {
+    return 'Part of a recurring series';
+  }
+  return '';
+}
+
 export function statusLabel(status) {
   if (status === 'confirmed') return { label: 'Confirmed', cls: 'status-confirmed' };
   if (status === 'pending') return { label: 'Pending', cls: 'status-pending' };
@@ -133,6 +204,10 @@ export function mapAppointmentToCalendarEvent(appt, viewerUserId = null) {
           : 'pending'),
     startTime: appt.start_time,
     endTime: appt.end_time,
+    recurrence_group_id:
+      appt.recurrence_group_id ?? appt.source_recurrence_group_id ?? null,
+    recurrence_instance_date: appt.source_recurrence_instance_date ?? appt.recurrence_instance_date ?? null,
+    recurrence_rule: appt.recurrence_rule ?? appt.source_recurrence_rule ?? null,
     location: appt.location || 'TBD',
     status: myStatus,
     appointmentStatus: appt.status,
@@ -152,6 +227,9 @@ export function mapAvailabilityToCalendarEvent(slot, currentUserName = 'You') {
     id: `availability-${slot.availability_id}`,
     rawId: slot.availability_id,
     type: 'availability',
+    recurrence_group_id: slot.recurrence_group_id || null,
+    recurrence_instance_date: slot.recurrence_instance_date || null,
+    is_recurrence_exception: Number(slot.is_recurrence_exception || 0),
     title: slot.av_title || 'Availability',
     description: slot.av_description || '',
     startTime: slot.start_time,

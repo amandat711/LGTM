@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
-const { parseDate, toStoredIsoDateTime } = require('../utils/dateTime');
+const { routeLog } = require('../utils/routeLog');
 
 function dbGet(sql, params = []) {
   return new Promise((resolve, reject) => {
@@ -24,8 +24,20 @@ function dbRun(sql, params = []) {
   });
 }
 
+function parseDate(value) {
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
 function toSqliteDateTime(date) {
-  return toStoredIsoDateTime(date);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 }
 
 async function ensureSubmissionStatusColumn() {
@@ -400,6 +412,7 @@ router.post('/', async (req, res) => {
     );
 
     const bundle = await getHeatmapBundle(insertResult.lastID);
+    routeLog('heatmaps', 'heatmap_created', { heatmap_id: insertResult.lastID, created_by });
     return res.status(201).json(bundle);
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -468,6 +481,7 @@ router.patch('/:id', async (req, res) => {
     );
 
     const bundle = await getHeatmapBundle(heatmapId);
+    routeLog('heatmaps', 'heatmap_updated', { heatmap_id: heatmapId, changed_by });
     return res.json(bundle);
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -583,6 +597,12 @@ router.put('/:id/submissions', async (req, res) => {
     }
 
     const bundle = await getHeatmapBundle(heatmapId);
+    routeLog('heatmaps', 'heatmap_submissions_upserted', {
+      heatmap_id: heatmapId,
+      user_id,
+      participant_role,
+      slot_count: normalizedSlots.length,
+    });
     return res.json(bundle);
   } catch (err) {
     const statusCode = err.message.includes('valid start and end times') ? 400 : 500;
@@ -620,6 +640,11 @@ router.patch('/submissions/:submissionId', async (req, res) => {
     );
 
     const bundle = await getHeatmapBundle(submission.heatmap_id);
+    routeLog('heatmaps', 'heatmap_submission_status_updated', {
+      submission_id: submissionId,
+      heatmap_id: submission.heatmap_id,
+      status,
+    });
     return res.json(bundle);
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -682,12 +707,11 @@ router.post('/:id/appointments', async (req, res) => {
     const insertResult = await dbRun(
       `
         INSERT INTO appointments
-          (course_id, created_by, created_from_availability, capacity, location, start_time, end_time, visibility, ap_title, ap_description, scheduling_mode, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (course_id, created_from_availability, capacity, location, start_time, end_time, visibility, ap_title, ap_description, scheduling_mode, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         null,
-        changed_by || host_user_id,
         null,
         uniqueAttendeeIds.length,
         location || 'Heatmap booking',
@@ -755,6 +779,14 @@ router.post('/:id/appointments', async (req, res) => {
 
     const appointment = await getAppointmentWithParticipants(appointmentId);
     const bundle = await getHeatmapBundle(heatmapId);
+
+    routeLog('heatmaps', 'heatmap_appointment_created', {
+      heatmap_id: heatmapId,
+      appointment_id: appointmentId,
+      host_user_id,
+      attendee_count: uniqueAttendeeIds.length,
+      changed_by: changed_by || host_user_id,
+    });
 
     return res.status(201).json({
       message: 'Heatmap appointment created successfully',

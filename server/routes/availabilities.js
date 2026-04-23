@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
+const { routeLog } = require('../utils/routeLog');
+
 const {
   toSqliteDateTime,
   parseDate,
@@ -69,6 +71,21 @@ function toDateOnlyString(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+function normalizeRecurrenceScope(scope) {
+  if (!scope) return 'single';
+  const normalized = String(scope).trim().toLowerCase();
+  const allowed = ['single', 'this_and_following', 'all'];
+  if (!allowed.includes(normalized)) return null;
+  return normalized;
+}
+
+function toDateOnlyFromValue(value) {
+  if (!value) return null;
+  const parsed = parseDate(value);
+  if (!parsed) return null;
+  return toDateOnlyString(parsed);
+}
+
 router.post('/', (req, res) => {
   const {
     created_by,
@@ -81,7 +98,13 @@ router.post('/', (req, res) => {
     recurrence_rule,
     av_title,
     av_description,
+    course_id: bodyCourseId,
   } = req.body;
+
+  const courseIdNorm = normalizeCourseId(bodyCourseId);
+  if (courseIdNorm === 'invalid') {
+    return res.status(400).json({ error: 'course_id must be a positive integer or null/omitted.' });
+  }
 
   if (!created_by || !start_time || !end_time) {
     return res.status(400).json({
@@ -175,17 +198,25 @@ router.post('/', (req, res) => {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      const allowed = ['course_admin', 'general_admin'];
-      if (!allowed.includes(user.user_type)) {
-        return res.status(403).json({
-          error: 'Not allowed to create availability'
-        });
+      const courseIdForRow = courseIdNorm;
+
+      if (courseIdForRow == null) {
+        const allowed = ['course_admin', 'general_admin'];
+        if (!allowed.includes(user.user_type)) {
+          return res.status(403).json({
+            error: 'Not allowed to create availability'
+          });
+        }
       }
 
+      const overlapCourseKey = courseIdForRow == null ? -1 : courseIdForRow;
+
+      const startCreateFlow = () => {
       const overlapQuery = `
         SELECT availability_id, start_time, end_time
         FROM availabilities
         WHERE created_by = ?
+          AND COALESCE(course_id, -1) = ?
           AND datetime(start_time) < datetime(?)
           AND datetime(end_time) > datetime(?)
         LIMIT 1
@@ -200,7 +231,7 @@ router.post('/', (req, res) => {
 
         db.get(
           overlapQuery,
-          [created_by, slot.end_time, slot.start_time],
+          [created_by, overlapCourseKey, slot.end_time, slot.start_time],
           (err, overlap) => {
             if (err) return res.status(500).json({ error: err.message });
 
@@ -250,6 +281,13 @@ router.post('/', (req, res) => {
                 insertedIds,
                 (err, rows) => {
                   if (err) return res.status(500).json({ error: err.message });
+
+                  routeLog('availabilities', 'availabilities_created', {
+                    created_by,
+                    created_count: rows.length,
+                    recurrence_applied: !!parsedRecurrence?.enabled,
+                    recurrence_group_id: recurrenceGroupId,
+                  });
 
                   return res.status(201).json({
                     message: 'Availabilities created successfully',
@@ -372,6 +410,19 @@ router.post('/', (req, res) => {
       };
 
       checkOverlaps(0);
+      };
+
+      if (courseIdForRow == null) {
+        return startCreateFlow();
+      }
+
+      return assertUserMayPostOfficeHours(courseIdForRow, user.user_id, (courseErr) => {
+        if (courseErr) {
+          const code = courseErr.statusCode || 500;
+          return res.status(code).json({ error: courseErr.message });
+        }
+        startCreateFlow();
+      });
     }
   );
 });
@@ -580,7 +631,9 @@ router.patch('/:id', (req, res) => {
     end_time,
     av_title,
     av_description,
-    recurrence_rule
+    recurrence_rule,
+    recurrence_scope,
+    pivot_instance_date,
   } = req.body;
 
   if (!updated_by) {
@@ -598,6 +651,18 @@ router.patch('/:id', (req, res) => {
       if (!availability) {
         return res.status(404).json({ error: 'Availability not found' });
       }
+
+      const scope = normalizeRecurrenceScope(recurrence_scope);
+      if (!scope) {
+        return res.status(400).json({ error: 'recurrence_scope must be single, this_and_following, or all' });
+      }
+
+      const isRecurringInstance = Number(availability.recurrence_group_id) > 0;
+      const effectiveScope = isRecurringInstance ? scope : 'single';
+      const pivotDate =
+        toDateOnlyFromValue(pivot_instance_date) ||
+        availability.recurrence_instance_date ||
+        toDateOnlyFromValue(availability.start_time);
 
       db.get(
         `SELECT user_id, user_type FROM users WHERE user_id = ?`,
@@ -623,14 +688,29 @@ router.patch('/:id', (req, res) => {
             (key) => fieldsToCheck[key] !== undefined
           );
 
+              let targetWhere = 'availability_id = ?';
+              let targetParams = [availabilityId];
+              if (effectiveScope === 'all') {
+                targetWhere = 'recurrence_group_id = ?';
+                targetParams = [availability.recurrence_group_id];
+              } else if (effectiveScope === 'this_and_following') {
+                targetWhere =
+                  'recurrence_group_id = ? AND recurrence_instance_date IS NOT NULL AND date(recurrence_instance_date) >= date(?)';
+                targetParams = [availability.recurrence_group_id, pivotDate];
+              }
+
           db.get(
             `
             SELECT COUNT(*) AS active_booking_count
             FROM appointments
-            WHERE created_from_availability = ?
+            WHERE created_from_availability IN (
+              SELECT availability_id
+              FROM availabilities
+              WHERE ${targetWhere}
+            )
               AND status != 'cancelled'
             `,
-            [availabilityId],
+            targetParams,
             (err, countRow) => {
               if (err) return res.status(500).json({ error: err.message });
 
@@ -725,23 +805,30 @@ router.patch('/:id', (req, res) => {
                 });
               }
 
-              params.push(availabilityId);
-
               db.run(
-                `UPDATE availabilities SET ${updateFields.join(', ')} WHERE availability_id = ?`,
-                params,
+                `UPDATE availabilities SET ${updateFields.join(', ')} WHERE ${targetWhere}`,
+                [...params, ...targetParams],
                 function (err) {
                   if (err) return res.status(500).json({ error: err.message });
+                  const updatedCount = this.changes || 0;
 
-                  db.get(
-                    `SELECT * FROM availabilities WHERE availability_id = ?`,
-                    [availabilityId],
-                    (err, updatedAvailability) => {
+                  db.all(
+                    `SELECT * FROM availabilities WHERE ${targetWhere} ORDER BY datetime(start_time) ASC`,
+                    targetParams,
+                    (err, updatedAvailabilities) => {
                       if (err) return res.status(500).json({ error: err.message });
-
+                      routeLog('availabilities', 'availability_updated', {
+                        availability_id: availabilityId,
+                        updated_by,
+                        scope: effectiveScope,
+                        updated_count: updatedCount,
+                      });
                       res.json({
                         message: 'Availability updated successfully',
-                        availability: updatedAvailability
+                        updated_count: updatedCount,
+                        scope: effectiveScope,
+                        availability: updatedAvailabilities[0] || null,
+                        availabilities: updatedAvailabilities,
                       });
                     }
                   );
@@ -757,7 +844,7 @@ router.patch('/:id', (req, res) => {
 
 router.delete('/:id', (req, res) => {
   const availabilityId = req.params.id;
-  const { deleted_by } = req.body;
+  const { deleted_by, recurrence_scope, pivot_instance_date } = req.body;
 
   if (!deleted_by) {
     return res.status(400).json({
@@ -775,6 +862,28 @@ router.delete('/:id', (req, res) => {
         return res.status(404).json({ error: 'Availability not found' });
       }
 
+      const scope = normalizeRecurrenceScope(recurrence_scope);
+      if (!scope) {
+        return res.status(400).json({ error: 'recurrence_scope must be single, this_and_following, or all' });
+      }
+      const isRecurringInstance = Number(availability.recurrence_group_id) > 0;
+      const effectiveScope = isRecurringInstance ? scope : 'single';
+      const pivotDate =
+        toDateOnlyFromValue(pivot_instance_date) ||
+        availability.recurrence_instance_date ||
+        toDateOnlyFromValue(availability.start_time);
+
+      let targetWhere = 'availability_id = ?';
+      let targetParams = [availabilityId];
+      if (effectiveScope === 'all') {
+        targetWhere = 'recurrence_group_id = ?';
+        targetParams = [availability.recurrence_group_id];
+      } else if (effectiveScope === 'this_and_following') {
+        targetWhere =
+          'recurrence_group_id = ? AND recurrence_instance_date IS NOT NULL AND date(recurrence_instance_date) >= date(?)';
+        targetParams = [availability.recurrence_group_id, pivotDate];
+      }
+
       db.get(
         `SELECT user_id, user_type FROM users WHERE user_id = ?`,
         [deleted_by],
@@ -789,6 +898,90 @@ router.delete('/:id', (req, res) => {
           const isFacultyAdmin = ['course_admin', 'general_admin'].includes(user.user_type);
 
           const runDeleteAfterChecks = () => {
+            /**
+             * Single slot: same as before — block if it has an active booking.
+             * Recurring ("all" / "this and following"): delete only instances with no
+             * active booking; return skipped[] for the rest (Google Calendar–style).
+             */
+            if (effectiveScope === 'all' || effectiveScope === 'this_and_following') {
+              return db.all(
+                `SELECT availability_id FROM availabilities WHERE ${targetWhere} ORDER BY datetime(start_time) ASC`,
+                targetParams,
+                (eAll, rows) => {
+                  if (eAll) return res.status(500).json({ error: eAll.message });
+                  if (!rows || rows.length === 0) {
+                    return res.status(404).json({ error: 'No availability rows matched this scope' });
+                  }
+
+                  const ids = rows.map((r) => r.availability_id);
+                  const toDelete = [];
+                  const skipped = [];
+                  let idx = 0;
+
+                  const afterChecks = () => {
+                    if (toDelete.length === 0) {
+                      return res.status(400).json({
+                        error: 'All selected instances have active bookings. Remove the appointments first, or only open slots can be removed.',
+                        skipped,
+                        deleted_count: 0,
+                        scope: effectiveScope,
+                      });
+                    }
+                    const placeholders = toDelete.map(() => '?').join(',');
+                    db.run(
+                      `DELETE FROM availabilities WHERE availability_id IN (${placeholders})`,
+                      toDelete,
+                      function (delErr) {
+                        if (delErr) return res.status(500).json({ error: delErr.message });
+                        routeLog('availabilities', 'availability_deleted', {
+                          deleted_by,
+                          deleted_availability_id: Number(availabilityId),
+                          deleted_count: this.changes || 0,
+                          scope: effectiveScope,
+                          skipped_count: skipped.length,
+                        });
+                        return res.json({
+                          message: 'Availability deleted successfully',
+                          deleted_availability_id: Number(availabilityId),
+                          deleted_count: this.changes || 0,
+                          scope: effectiveScope,
+                          skipped,
+                        });
+                      }
+                    );
+                  };
+
+                  const checkOne = () => {
+                    if (idx >= ids.length) {
+                      return afterChecks();
+                    }
+                    const id = ids[idx];
+                    idx += 1;
+                    db.get(
+                      `
+                      SELECT COUNT(*) AS c
+                      FROM appointments
+                      WHERE created_from_availability = ?
+                        AND status != 'cancelled'
+                      `,
+                      [id],
+                      (e2, countRow) => {
+                        if (e2) return res.status(500).json({ error: e2.message });
+                        if (countRow.c > 0) {
+                          skipped.push({ availability_id: id, reason: 'active_booking' });
+                        } else {
+                          toDelete.push(id);
+                        }
+                        checkOne();
+                      }
+                    );
+                  };
+
+                  return checkOne();
+                }
+              );
+            }
+
             db.get(
               `
             SELECT COUNT(*) AS active_booking_count
@@ -802,7 +995,7 @@ router.delete('/:id', (req, res) => {
 
                 if (countRow.active_booking_count > 0) {
                   return res.status(400).json({
-                    error: 'Cannot delete availability with active booking(s)'
+                    error: 'Cannot delete availability with active booking(s)',
                   });
                 }
 
@@ -812,9 +1005,19 @@ router.delete('/:id', (req, res) => {
                   function (delErr) {
                     if (delErr) return res.status(500).json({ error: delErr.message });
 
+                    routeLog('availabilities', 'availability_deleted', {
+                      deleted_by,
+                      deleted_availability_id: Number(availabilityId),
+                      deleted_count: this.changes || 0,
+                      scope: effectiveScope,
+                    });
+
                     res.json({
                       message: 'Availability deleted successfully',
-                      deleted_availability_id: Number(availabilityId)
+                      deleted_availability_id: Number(availabilityId),
+                      deleted_count: this.changes || 0,
+                      scope: effectiveScope,
+                      skipped: [],
                     });
                   }
                 );
@@ -824,6 +1027,25 @@ router.delete('/:id', (req, res) => {
 
           if (isCreator) {
             return runDeleteAfterChecks();
+          }
+
+          if (availability.course_id) {
+            return db.get(
+              `SELECT 1 AS ok FROM course_ownerships
+               WHERE course_id = ? AND general_admin_id = ? AND status = 'active'
+               UNION ALL
+               SELECT 1 AS ok FROM course_admin_assignments
+               WHERE course_id = ? AND course_admin_id = ? AND status = 'active'
+               LIMIT 1`,
+              [availability.course_id, deleted_by, availability.course_id, deleted_by],
+              (e2, staffRow) => {
+                if (e2) return res.status(500).json({ error: e2.message });
+                if (staffRow) return runDeleteAfterChecks();
+                return res.status(403).json({
+                  error: 'Not allowed to delete this availability'
+                });
+              }
+            );
           }
 
           if (!isFacultyAdmin) {

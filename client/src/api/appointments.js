@@ -22,7 +22,7 @@ export async function getHostingAppointments(userId) {
   return parseJson(res);
 }
 
-export async function cancelAppointment(appointmentId, changedBy) {
+export async function cancelAppointment(appointmentId, changedBy, options = {}) {
   const res = await fetch(`${API_BASE}/appointments/${appointmentId}/cancel`, {
     ...fetchOpts,
     method: 'PATCH',
@@ -31,6 +31,8 @@ export async function cancelAppointment(appointmentId, changedBy) {
     },
     body: JSON.stringify({
       changed_by: Number(changedBy),
+      recurrence_scope: options.recurrence_scope,
+      pivot_instance_date: options.pivot_instance_date,
     }),
   });
 

@@ -1,7 +1,7 @@
 /*AMANDA TRAN*/
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { formatTime, statusLabel } from './calendar/calendarUtils';
+import { formatTime, statusLabel, formatRecurrenceSubtitleLine } from './calendar/calendarUtils';
 
 // ─── Shared shell ─────────────────────────────────────────────
 function Modal({ title, onClose, children, footer, className = '' }) {
@@ -198,6 +198,40 @@ function initialsForName(name) {
   return `${first}${last}`.toUpperCase();
 }
 
+/** Availability = open slot; appointment = has attendees; event = host only (no attendees). */
+function slotKindFromAppointment(ap) {
+  const safe = ap || {};
+  if (safe.type === 'availability') {
+    return { key: 'availability', label: 'Availability' };
+  }
+  const list = Array.isArray(safe.participants) ? safe.participants : [];
+  const hasAttendeeInList = list.some((p) => {
+    const role = String(p.role || p.participant_role || '').toLowerCase();
+    return role === 'attendee';
+  });
+  const attendeeName = String(safe.attendeeName || '').trim();
+  const attendeeEmail = String(safe.attendeeEmail || '').trim();
+  const bookedBy = String(safe.bookedBy || '').trim();
+  const bookedByLooksLikeSummary = /^\d+\/\d+ booked$/i.test(bookedBy);
+  const hasOtherParty =
+    (attendeeName && attendeeName !== '—') ||
+    !!attendeeEmail ||
+    (bookedBy && bookedBy !== '—' && !bookedByLooksLikeSummary);
+
+  if (hasAttendeeInList || hasOtherParty) {
+    return { key: 'appointment', label: 'Appointment' };
+  }
+  return { key: 'event', label: 'Event' };
+}
+
+/** Primary destructive action in the detail modal footer (host/professor only). */
+function ownerDestructiveFooterLabel(ap) {
+  if ((ap || {}).type === 'availability') return 'Delete availability';
+  const kind = slotKindFromAppointment(ap).key;
+  if (kind === 'event') return 'Delete';
+  return 'Cancel appointments';
+}
+
 export function SlotDetailModal({
   appointment,
   isOwner,
@@ -208,6 +242,7 @@ export function SlotDetailModal({
 }) {
   const ap = appointment || {};
   const isAvailability = ap.type === 'availability';
+  const slotKind = slotKindFromAppointment(ap);
 
   const start = ap.startTime ? new Date(ap.startTime) : null;
   const end = ap.endTime ? new Date(ap.endTime) : null;
@@ -239,6 +274,11 @@ export function SlotDetailModal({
   const canUpdateMyStatus = !isAvailability && typeof onUpdateMyStatus === 'function';
   const ownerPending = isOwner && ap.myStatus === 'pending';
 
+  const recurrenceSubtitle = formatRecurrenceSubtitleLine({
+    recurrence_rule: ap.recurrence_rule,
+    recurrence_group_id: ap.recurrence_group_id,
+  });
+
   return (
     <Modal
       title={ap.title || 'Appointment details'}
@@ -252,7 +292,7 @@ export function SlotDetailModal({
           )}
           {isOwner && (
             <button className="button button-danger button-small" onClick={onDelete}>
-              {isAvailability ? 'Delete availability' : 'Cancel booking'}
+              {ownerDestructiveFooterLabel(ap)}
             </button>
           )}
           <a
@@ -267,10 +307,17 @@ export function SlotDetailModal({
       }
     >
       <div className="modal-titleblock">
-        <div className="modal-subtitle">
-          <span>{dateLabel}</span>
-          <span className="modal-subtitle-sep">•</span>
-          <span>{timeLabel}</span>
+        <div className="modal-titleblock-main">
+          <div className="modal-subtitle">
+            <span className={`modal-kind-pill modal-kind-pill--${slotKind.key}`}>{slotKind.label}</span>
+            <span className="modal-subtitle-sep">•</span>
+            <span>{dateLabel}</span>
+            <span className="modal-subtitle-sep">•</span>
+            <span>{timeLabel}</span>
+          </div>
+          {recurrenceSubtitle ? (
+            <div className="modal-recurrence-line">{recurrenceSubtitle}</div>
+          ) : null}
         </div>
         <div className="modal-titleblock-right">
           <span className={statusPillClass}>{status.label}</span>
@@ -317,12 +364,6 @@ export function SlotDetailModal({
                     : (ap.attendeeName || ap.bookedBy || '—')}
                 </span>
               </div>
-              {ap.recurrence_rule && (
-                <div className="modal-row modal-row-multiline">
-                  <span className="modal-row-label">Recurrence</span>
-                  <span className="modal-row-value modal-row-value-block">{ap.recurrence_rule}</span>
-                </div>
-              )}
             </>
           )}
         </div>
@@ -405,40 +446,72 @@ export function SlotDetailModal({
 export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
   const ap = appointment || {};
   const isAvailability = ap.type === 'availability';
+  const slotKind = isAvailability ? { key: 'availability', label: 'Availability' } : slotKindFromAppointment(ap);
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!isAvailability && ap.notifyEmail) {
-      const subject = encodeURIComponent(`Booking cancelled: ${ap.title}`);
+      const isEvent = slotKind.key === 'event';
+      const subject = encodeURIComponent(
+        isEvent ? `Event removed: ${ap.title}` : `Appointment cancelled: ${ap.title}`
+      );
       const body = encodeURIComponent(
-        `Hi,\n\nYour booking "${ap.title}" on ${ap.day} at ${ap.time} has been cancelled.\n\nApologies for any inconvenience.`
+        isEvent
+          ? `Hi,\n\nThe event "${ap.title}" on ${ap.day} at ${ap.time} has been removed from the calendar.\n\nApologies for any inconvenience.`
+          : `Hi,\n\nThe appointment "${ap.title}" on ${ap.day} at ${ap.time} has been cancelled.\n\nApologies for any inconvenience.`
       );
       window.open(`mailto:${ap.notifyEmail}?subject=${subject}&body=${body}`);
     }
 
-    onConfirm();
-    onClose();
+    const shouldClose = await onConfirm();
+    if (shouldClose !== false) {
+      onClose();
+    }
   }
+
+  const confirmTitle = isAvailability
+    ? 'Delete this availability?'
+    : slotKind.key === 'event'
+      ? 'Delete this event?'
+      : 'Cancel appointments?';
+
+  const confirmDangerLabel = isAvailability
+    ? 'Yes, delete availability'
+    : slotKind.key === 'event'
+      ? 'Yes, delete'
+      : 'Yes, cancel appointments';
+
+  const confirmBody = isAvailability
+    ? 'This will permanently delete the availability slot from your calendar.'
+    : slotKind.key === 'event'
+      ? 'This will permanently remove this event from your calendar.'
+      : 'This will cancel the appointment(s) and open your email client to notify the other party.';
+
+  const deleteRecurrenceSubtitle = formatRecurrenceSubtitleLine({
+    recurrence_rule: ap.recurrence_rule,
+    recurrence_group_id: ap.recurrence_group_id,
+  });
 
   return (
     <Modal
-      title={isAvailability ? 'Delete this availability?' : 'Cancel this booking?'}
+      title={confirmTitle}
       onClose={onClose}
       footer={
         <>
           <button className="button button-ghost" onClick={onClose}>Keep it</button>
           <button className="button button-danger" onClick={handleDelete}>
-            {isAvailability ? 'Yes, delete availability' : 'Yes, cancel & notify'}
+            {confirmDangerLabel}
           </button>
         </>
       }
     >
       <p style={{ fontSize: 14, color: '#555', marginBottom: 16, lineHeight: 1.6 }}>
-        {isAvailability
-          ? 'This will permanently delete the availability slot from your calendar.'
-          : 'This will permanently remove the booking and open your email client to notify the other party.'}
+        {confirmBody}
       </p>
+      {deleteRecurrenceSubtitle ? (
+        <div className="modal-recurrence-line modal-recurrence-line--spaced">{deleteRecurrenceSubtitle}</div>
+      ) : null}
       <div className="modal-row">
-        <span className="modal-row-label">{isAvailability ? 'Availability' : 'Appointment'}</span>
+        <span className="modal-row-label">{isAvailability ? 'Availability' : slotKind.label}</span>
         <span className="modal-row-value">{ap.title}</span>
       </div>
       <div className="modal-row">
@@ -451,6 +524,55 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
           <span className="modal-row-value">{ap.notifyEmail}</span>
         </div>
       )}
+    </Modal>
+  );
+}
+
+export function RecurrenceScopeModal({
+  actionLabel = 'update',
+  onSelect,
+  onClose,
+  recurrenceSubtitle = '',
+}) {
+  return (
+    <Modal
+      title={`${actionLabel === 'delete' ? 'Delete' : 'Edit'} recurring event`}
+      onClose={onClose}
+      footer={
+        <button className="button button-ghost" onClick={onClose}>
+          Cancel
+        </button>
+      }
+    >
+      {recurrenceSubtitle ? (
+        <div className="modal-recurrence-line modal-recurrence-line--spaced">{recurrenceSubtitle}</div>
+      ) : null}
+      <div className="modal-detail-stack">
+        <button
+          type="button"
+          className="button button-outline"
+          onClick={() => onSelect('single')}
+          style={{ width: '100%', textAlign: 'left' }}
+        >
+          This event
+        </button>
+        <button
+          type="button"
+          className="button button-outline"
+          onClick={() => onSelect('this_and_following')}
+          style={{ width: '100%', textAlign: 'left' }}
+        >
+          This and following events
+        </button>
+        <button
+          type="button"
+          className="button button-outline"
+          onClick={() => onSelect('all')}
+          style={{ width: '100%', textAlign: 'left' }}
+        >
+          All events
+        </button>
+      </div>
     </Modal>
   );
 }

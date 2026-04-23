@@ -74,6 +74,14 @@
   color: #6b7280;
 }
 
+.availability-modal-recurrence {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #5b6470;
+  line-height: 1.35;
+}
+
 .availability-close-btn {
   width: 34px;
   height: 34px;

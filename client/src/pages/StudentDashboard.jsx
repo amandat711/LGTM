@@ -19,6 +19,7 @@ import {
   formatTime,
   statusLabel,
   mapAppointmentToCalendarEvent,
+  includeAppointmentOnWeekCalendar,
 } from '../components/calendar/calendarUtils';
 import { getMyAppointments, cancelAppointment, updateMyParticipantStatus } from '../api/appointments';
 import { getHeatmaps } from '../api/heatmaps';
@@ -62,6 +63,7 @@ export default function StudentDashboard() {
   // Basic page status flags for loading, errors, and the right-side panel toggle.
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
   // When the logged-in student changes, fetch their appointments and heatmap invites from the server.
@@ -82,9 +84,11 @@ export default function StudentDashboard() {
         setAppointments(data.map((appt) => mapAppointmentToCalendarEvent(appt, userId)));
         setHeatmaps(heatmapData);
         setError('');
+        setInfoMessage('');
       } catch (err) {
         // If anything fails, keep the page alive and show the message instead of crashing.
         setError(err.message);
+        setInfoMessage('');
       } finally {
         // Always stop the loading state, even if the request fails.
         setLoading(false);
@@ -94,6 +98,12 @@ export default function StudentDashboard() {
     loadAppointments();
     // Run again if the logged-in user changes.
   }, [userId]);
+
+  useEffect(() => {
+    if (!infoMessage) return;
+    const t = window.setTimeout(() => setInfoMessage(''), 10000);
+    return () => window.clearTimeout(t);
+  }, [infoMessage]);
 
   // Builds the name shown in the navbar, with a fallback in case session data is missing.
   const currentUser = !user
@@ -111,7 +121,7 @@ export default function StudentDashboard() {
     const now = new Date();
 
     return appointments
-      .filter((a) => new Date(a.startTime) >= now && a.status !== 'cancelled')
+      .filter((a) => includeAppointmentOnWeekCalendar(a) && new Date(a.startTime) >= now)
       .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
       .slice(0, 10);
   }, [appointments]);
@@ -124,9 +134,14 @@ export default function StudentDashboard() {
   const pastAppts = useMemo(() => {
     const now = new Date();
     return appointments
-      .filter((a) => new Date(a.startTime) < now && a.status !== 'cancelled')
+      .filter((a) => includeAppointmentOnWeekCalendar(a) && new Date(a.startTime) < now)
       .sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
   }, [appointments]);
+
+  const weekCalendarAppointments = useMemo(
+    () => appointments.filter(includeAppointmentOnWeekCalendar),
+    [appointments]
+  );
 
   // Shrinks raw heatmap data down to just the fields this page actually needs.
   const heatmapInvites = heatmaps.map((heatmap) => ({
@@ -148,7 +163,7 @@ export default function StudentDashboard() {
       setAppointments((prev) =>
         prev.map((a) =>
           a.id === activeAppt.id
-            ? { ...a, status: 'cancelled', color: '#777777' }
+            ? { ...a, status: 'cancelled', appointmentStatus: 'cancelled', color: '#777777' }
             : a
         )
       );
@@ -156,7 +171,9 @@ export default function StudentDashboard() {
       setActiveAppt(null);
       setModal(null);
       setError('');
+      setInfoMessage('Appointment cancelled.');
     } catch (err) {
+      setInfoMessage('');
       setError(err.message);
     }
   }
@@ -164,29 +181,33 @@ export default function StudentDashboard() {
   async function handleUpdateMyStatus(appointmentId, nextStatus) {
     try {
       await updateMyParticipantStatus(appointmentId, userId, nextStatus);
-      setAppointments((prev) =>
-        prev.map((appt) => {
-          if (appt.id !== appointmentId) return appt;
-          const participantStatuses = (appt.participantStatuses || []).map((p) =>
-            Number(p.userId) === Number(userId) ? { ...p, status: nextStatus } : p
-          );
-          const attendeeStatuses = participantStatuses.filter((p) => p.role === 'attendee');
-          const allConfirmed = attendeeStatuses.length > 0 && attendeeStatuses.every((p) => p.status === 'confirmed');
-          const allCancelled = attendeeStatuses.length > 0 && attendeeStatuses.every((p) => p.status === 'cancelled');
-          const nextApptStatus = allConfirmed ? 'confirmed' : allCancelled ? 'cancelled' : 'pending';
 
-          return {
-            ...appt,
-            attendeeStatus: nextStatus,
-            participantStatuses,
-            attendeeStatuses,
-            status: nextApptStatus,
-          };
-        })
-      );
-      setActiveAppt((prev) => (prev && prev.id === appointmentId ? { ...prev, attendeeStatus: nextStatus } : prev));
+      const mergeParticipantUpdate = (appt) => {
+        if (appt.id !== appointmentId) return appt;
+        const participantStatuses = (appt.participantStatuses || []).map((p) =>
+          Number(p.userId) === Number(userId) ? { ...p, status: nextStatus } : p
+        );
+        const attendeeStatuses = participantStatuses.filter((p) => p.role === 'attendee');
+        const allConfirmed = attendeeStatuses.length > 0 && attendeeStatuses.every((p) => p.status === 'confirmed');
+        const allCancelled = attendeeStatuses.length > 0 && attendeeStatuses.every((p) => p.status === 'cancelled');
+        const nextApptStatus = allConfirmed ? 'confirmed' : allCancelled ? 'cancelled' : 'pending';
+
+        return {
+          ...appt,
+          attendeeStatus: nextStatus,
+          participantStatuses,
+          attendeeStatuses,
+          status: nextApptStatus,
+          appointmentStatus: nextApptStatus,
+        };
+      };
+
+      setAppointments((prev) => prev.map(mergeParticipantUpdate));
+      setActiveAppt((prev) => (prev && prev.id === appointmentId ? mergeParticipantUpdate(prev) : prev));
       setError('');
+      setInfoMessage('Your response was saved.');
     } catch (err) {
+      setInfoMessage('');
       setError(err.message);
     }
   }
@@ -194,9 +215,38 @@ export default function StudentDashboard() {
   // Small initials badge used by the navbar profile area.
   const initials = `${currentUser.firstName?.[0] || 'U'}${currentUser.lastName?.[0] || ''}`;
 
+  const showFloatingToast = loading || Boolean(error) || Boolean(infoMessage);
+  const floatingToastType = loading ? 'loading' : error ? 'error' : 'success';
+  const floatingToastText = loading
+    ? 'Loading appointments…'
+    : error || infoMessage;
+
   return (
     <>
       <div className="dashboard-page">
+        {showFloatingToast && (
+          <div
+            className={`dashboard-toast dashboard-toast--${floatingToastType}`}
+            role={floatingToastType === 'error' ? 'alert' : 'status'}
+            aria-live={floatingToastType === 'error' ? 'assertive' : 'polite'}
+          >
+            <span className="dashboard-toast-text">{floatingToastText}</span>
+            {floatingToastType !== 'loading' && (
+              <button
+                type="button"
+                className="dashboard-toast-dismiss"
+                aria-label="Dismiss"
+                onClick={() => {
+                  setError('');
+                  setInfoMessage('');
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Whole dashboard shell: navbar on top, sidebar/calendar/panel underneath. */}
         {/* Top navigation bar with the page title, profile badge, and quick actions. */}
         <Navbar
@@ -236,15 +286,11 @@ export default function StudentDashboard() {
 
           {/* Main dashboard body: calendar in the middle, extra info on the right. */}
           <div className="main-content">
-            {/* Simple feedback while the page is loading or if something goes wrong. */}
-            {loading && <p style={{ padding: 16 }}>Loading appointments...</p>}
-            {error && <p style={{ padding: 16, color: 'red' }}>{error}</p>}
-
             {!loading && (
               // Main week calendar. Clicking any event opens the detail modal below.
               <Calendar
                 view="week"
-                appointments={appointments}
+                appointments={weekCalendarAppointments}
                 onEventClick={(appt) => {
                   setActiveAppt(appt);
                   setModal('detail');
@@ -411,11 +457,18 @@ export default function StudentDashboard() {
             time: `${formatTime(activeAppt.startTime)} – ${formatTime(activeAppt.endTime)}`,
             owner: activeAppt.ownerName,
             ownerEmail: activeAppt.ownerEmail,
+            attendeeName: activeAppt.attendeeName,
+            attendeeEmail: activeAppt.attendeeEmail,
+            bookedBy: activeAppt.attendeeName,
             location: activeAppt.location,
             status: activeAppt.status,
+            type: activeAppt.type,
             participants: activeAppt.participantStatuses || [],
             myStatus: activeAppt.attendeeStatus,
             currentUserId: userId,
+            recurrence_rule: activeAppt.recurrence_rule,
+            recurrence_group_id: activeAppt.recurrence_group_id,
+            recurrence_instance_date: activeAppt.recurrence_instance_date,
           }}
           isOwner={false}
           onUpdateMyStatus={(nextStatus) => handleUpdateMyStatus(activeAppt.id, nextStatus)}
@@ -435,6 +488,13 @@ export default function StudentDashboard() {
             day: new Date(activeAppt.startTime).toLocaleDateString(),
             time: formatTime(activeAppt.startTime),
             notifyEmail: activeAppt.ownerEmail,
+            type: activeAppt.type,
+            participants: activeAppt.participantStatuses || [],
+            attendeeName: activeAppt.attendeeName,
+            attendeeEmail: activeAppt.attendeeEmail,
+            bookedBy: activeAppt.attendeeName,
+            recurrence_rule: activeAppt.recurrence_rule,
+            recurrence_group_id: activeAppt.recurrence_group_id,
           }}
           onConfirm={handleDelete}
           onClose={() => setModal('detail')}

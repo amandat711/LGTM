@@ -167,6 +167,8 @@ CREATE TABLE appointments (
                               CHECK (scheduling_mode IN ('calendar', 'heatmap', 'direct_request')),
     status                    TEXT NOT NULL DEFAULT 'pending'
                               CHECK (status IN ('pending', 'waiting_confirmation', 'confirmed', 'cancelled', 'rescheduled')),
+    recurrence_rule           TEXT,
+    recurrence_group_id       INTEGER,
     created_at                TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CHECK (datetime(end_time) > datetime(start_time)),
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE SET NULL,

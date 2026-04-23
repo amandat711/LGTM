@@ -1,6 +1,7 @@
 import React from 'react';
 import '../styles/CreateAvailabilityModal.css';
 import CreateAvailabilityForm from './CreateAvailabilityForm';
+import { formatRecurrenceSubtitleLine } from './calendar/calendarUtils';
 
 export default function CreateAvailabilityModal({
   onClose,
@@ -13,6 +14,11 @@ export default function CreateAvailabilityModal({
   function handleModalClose() {
     onClose();
   }
+
+  const headerRecurrenceLine = formatRecurrenceSubtitleLine({
+    recurrence_rule: initialData?.recurrence_rule,
+    recurrence_group_id: initialData?.recurrence_group_id,
+  });
 
   function handleOverlayClick(e) {
     if (e.target === e.currentTarget) {
@@ -35,6 +41,9 @@ export default function CreateAvailabilityModal({
             <p className="availability-modal-subtitle">
               Create a time slot students can book.
             </p>
+            {headerRecurrenceLine ? (
+              <p className="availability-modal-recurrence">{headerRecurrenceLine}</p>
+            ) : null}
           </div>
 
           <button

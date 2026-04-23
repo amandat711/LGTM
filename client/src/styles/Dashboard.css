@@ -30,6 +30,66 @@
   overflow: hidden;
 }
 
+/* Floating status: errors, confirmations, loading — does not consume main-content width */
+.dashboard-toast {
+  position: fixed;
+  top: 62px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  max-width: min(560px, calc(100vw - 32px));
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  pointer-events: auto;
+}
+
+.dashboard-toast-text {
+  flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+}
+
+.dashboard-toast--error {
+  background: #fff5f5;
+  border: 1px solid #f1c1c1;
+  color: #8f1d23;
+}
+
+.dashboard-toast--success {
+  background: #e8f7ec;
+  border: 1px solid #b7e4c0;
+  color: #1a5c2a;
+}
+
+.dashboard-toast--loading {
+  background: #f8f9fa;
+  border: 1px solid #e4e4e4;
+  color: #444;
+}
+
+.dashboard-toast-dismiss {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 2px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.dashboard-toast-dismiss:hover {
+  opacity: 1;
+}
+
 /*  TOP NAVIGATION BAR  */
 /* Navbar styles live in Navbar.css — imported by Navbar.jsx */
 
@@ -398,6 +458,26 @@
   margin: -6px 0 14px;
 }
 
+.modal-titleblock-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.modal-recurrence-line {
+  font-size: 13px;
+  color: #5b6470;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.modal-recurrence-line--spaced {
+  margin: -6px 0 14px;
+}
+
 .modal-subtitle {
   display: flex;
   flex-wrap: wrap;
@@ -410,6 +490,36 @@
 
 .modal-subtitle-sep {
   color: #bbb;
+}
+
+.modal-kind-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.modal-kind-pill--availability {
+  background: #f3f4f6;
+  color: #4b5563;
+  border-color: #e5e7eb;
+}
+
+.modal-kind-pill--event {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.modal-kind-pill--appointment {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
 }
 
 .modal-titleblock-right {

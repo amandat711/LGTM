@@ -1,11 +1,11 @@
 import React from 'react';
-import { formatDate, statusLabel } from '../calendar/calendarUtils';
+import { formatDate, statusLabel, includeAppointmentOnWeekCalendar } from '../calendar/calendarUtils';
 
 export default function UpcomingAppointments({ appointments, onAppointmentClick }) {
   const today = new Date();
 
   const upcomingAppts = appointments
-    .filter((a) => new Date(a.startTime) >= today && a.status !== 'cancelled')
+    .filter((a) => includeAppointmentOnWeekCalendar(a) && new Date(a.startTime) >= today)
     .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
     .slice(0, 5);
 

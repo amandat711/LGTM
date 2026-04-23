@@ -16,7 +16,7 @@ import coursesIcon from '../assets/courseIcon.png';
 import searchIcon from '../assets/searchIcon.png';
 import createAvailabilityIcon from '../assets/createAvailabilityIcon.png';
 import InfoIcon from '../assets/infoIcon.png';
-import { DeleteConfirmModal, HelpGuideModal, SlotDetailModal } from '../components/Modals';
+import { DeleteConfirmModal, HelpGuideModal, RecurrenceScopeModal, SlotDetailModal } from '../components/Modals';
 import Calendar from '../components/calendar/Calendar';
 import {
   formatDate,
@@ -24,6 +24,9 @@ import {
   statusLabel,
   mapAppointmentToCalendarEvent,
   mapAvailabilityToCalendarEvent,
+  toLocalDateInputValue,
+  includeAppointmentOnWeekCalendar,
+  formatRecurrenceSubtitleLine,
 } from '../components/calendar/calendarUtils';
 // API helpers for professor-owned appointments.
 import {
@@ -78,12 +81,15 @@ export default function ProfessorDashboard() {
   const [activeAppt, setActiveAppt] = useState(null);
   const [createStartTime, setCreateStartTime] = useState(null);
   const [createEndTime, setCreateEndTime] = useState(null);
+  const [pendingRecurrenceAction, setPendingRecurrenceAction] = useState(null);
+  const [pendingAvailabilityPayload, setPendingAvailabilityPayload] = useState(null);
   // Heatmaps created by this professor, shown in the right-side tools panel.
   const [heatmaps, setHeatmaps] = useState([]);
   // Simple page status flags.
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
+  const [infoMessage, setInfoMessage] = useState('');
 
 
   // Main dashboard load:
@@ -143,6 +149,12 @@ export default function ProfessorDashboard() {
     };
   }, [userId]);
 
+  useEffect(() => {
+    if (!infoMessage) return;
+    const t = window.setTimeout(() => setInfoMessage(''), 10000);
+    return () => window.clearTimeout(t);
+  }, [infoMessage]);
+
 
   // Name shown in the navbar.
   // If the session has not loaded fully yet, fall back to a generic label.
@@ -160,9 +172,10 @@ export default function ProfessorDashboard() {
   // We merge them here into one event list for the calendar component.
   const calendarEvents = useMemo(() => {
     const myName = `${currentUser.firstName} ${currentUser.lastName}`;
+    const visibleAppointments = appointments.filter(includeAppointmentOnWeekCalendar);
 
     // Save appointment time ranges so we can hide availability slots that overlap them.
-    const appointmentRanges = appointments.map((appt) => ({
+    const appointmentRanges = visibleAppointments.map((appt) => ({
       start: new Date(appt.startTime).getTime(),
       end: new Date(appt.endTime).getTime(),
     }));
@@ -181,52 +194,78 @@ export default function ProfessorDashboard() {
       .map((slot) => mapAvailabilityToCalendarEvent(slot, myName));
 
     // Final calendar = booked appointments + still-visible availability blocks.
-    return [...appointments, ...availabilityEvents];
+    return [...visibleAppointments, ...availabilityEvents];
   }, [appointments, availabilities, currentUser]);
 
   // Short future-facing list for the right panel.
   const upcomingAppts = useMemo(() => {
     const now = new Date();
     return appointments
-      .filter((a) => new Date(a.startTime) >= now && a.status !== 'cancelled')
+      .filter((a) => includeAppointmentOnWeekCalendar(a) && new Date(a.startTime) >= now)
       .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
       .slice(0, 5);
   }, [appointments]);
 
-  // Handles both delete flows:
-  // deleting an open availability slot or cancelling a booked appointment.
-  async function handleDelete() {
+  function isRecurringSeriesEvent(appt) {
+    return Boolean(appt?.recurrence_group_id);
+  }
+
+  function getRecurrencePivotDate(appt) {
+    return appt?.recurrence_instance_date || toLocalDateInputValue(appt?.startTime);
+  }
+
+  async function executeDeleteWithScope(scope = 'single') {
     if (!activeAppt) return;
 
     try {
+      setInfoMessage('');
       // Availability slots and real appointments use different backend actions.
       if (activeAppt.type === 'availability') {
-        await deleteAvailability(activeAppt.rawId, userId);
-
-        setAvailabilities((prev) =>
-          prev.filter(
-            (slot) => Number(slot.availability_id) !== Number(activeAppt.rawId)
-          )
-        );
+        const result = await deleteAvailability(activeAppt.rawId, userId, {
+          recurrence_scope: scope,
+          pivot_instance_date: getRecurrencePivotDate(activeAppt),
+        });
+        const availabilityData = await getProfessorAvailabilities(userId);
+        setAvailabilities(availabilityData);
+        if (result?.skipped?.length > 0) {
+          setInfoMessage(
+            `Removed ${result.deleted_count} open slot(s). ` +
+            `${result.skipped.length} could not be removed (they still have active bookings).`
+          );
+        }
       } else {
-        await cancelAppointment(activeAppt.id, userId);
-
-        setAppointments((prev) =>
-          prev.map((a) =>
-            a.id === activeAppt.id
-              ? { ...a, status: 'cancelled', color: '#777777' }
-              : a
-          )
-        );
+        await cancelAppointment(activeAppt.id, userId, {
+          recurrence_scope: scope,
+          pivot_instance_date: getRecurrencePivotDate(activeAppt),
+        });
+        await refreshHostedAppointments();
       }
 
       // Close the modal and clear any previous error after a successful action.
       setActiveAppt(null);
       setModal(null);
+      setPendingRecurrenceAction(null);
+      setPendingAvailabilityPayload(null);
       setError('');
     } catch (err) {
+      setInfoMessage('');
       setError(err.message);
     }
+  }
+
+  // Handles both delete flows:
+  // deleting an open availability slot or cancelling a booked appointment.
+  async function handleDelete() {
+    if (!activeAppt) return false;
+
+    if (isRecurringSeriesEvent(activeAppt)) {
+      setPendingRecurrenceAction('delete');
+      setModal('recurrenceScope');
+      return false;
+    }
+
+    await executeDeleteWithScope('single');
+    return true;
   }
 
   // Creates a new availability block from the modal form and adds it to local state.
@@ -264,26 +303,24 @@ export default function ProfessorDashboard() {
     }
   }
 
-  async function handleUpdateAvailability(payload) {
+  async function executeUpdateAvailabilityWithScope(payload, scope = 'single') {
     if (!activeAppt || activeAppt.type !== 'availability') return;
 
     try {
       const result = await updateAvailability(activeAppt.rawId, {
         updated_by: Number(userId),
+        recurrence_scope: scope,
+        pivot_instance_date: getRecurrencePivotDate(activeAppt),
         ...payload,
       });
 
       const updatedAvailability = result.availability;
-
-      setAvailabilities((prev) =>
-        prev.map((slot) =>
-          Number(slot.availability_id) === Number(activeAppt.rawId)
-            ? updatedAvailability
-            : slot
-        )
-      );
+      const availabilityData = await getProfessorAvailabilities(userId);
+      setAvailabilities(availabilityData);
 
       setModal(null);
+      setPendingRecurrenceAction(null);
+      setPendingAvailabilityPayload(null);
       setActiveAppt((prev) =>
         prev
           ? {
@@ -301,6 +338,19 @@ export default function ProfessorDashboard() {
     } catch (err) {
       setError(err.message);
     }
+  }
+
+  async function handleUpdateAvailability(payload) {
+    if (!activeAppt || activeAppt.type !== 'availability') return;
+
+    if (isRecurringSeriesEvent(activeAppt)) {
+      setPendingAvailabilityPayload(payload);
+      setPendingRecurrenceAction('edit');
+      setModal('recurrenceScope');
+      return;
+    }
+
+    await executeUpdateAvailabilityWithScope(payload, 'single');
   }
 
   async function handleUpdateMyStatus(appointmentId, nextStatus) {
@@ -343,9 +393,38 @@ export default function ProfessorDashboard() {
   // Small initials badge shown in the navbar profile area.
   const initials = `${currentUser.firstName?.[0] || 'U'}${currentUser.lastName?.[0] || ''}`;
 
+  const showFloatingToast = loading || Boolean(error) || Boolean(infoMessage);
+  const floatingToastType = loading ? 'loading' : error ? 'error' : 'success';
+  const floatingToastText = loading
+    ? 'Loading appointments…'
+    : error || infoMessage;
+
   return (
     <>
       <div className="dashboard-page">
+        {showFloatingToast && (
+          <div
+            className={`dashboard-toast dashboard-toast--${floatingToastType}`}
+            role={floatingToastType === 'error' ? 'alert' : 'status'}
+            aria-live={floatingToastType === 'error' ? 'assertive' : 'polite'}
+          >
+            <span className="dashboard-toast-text">{floatingToastText}</span>
+            {floatingToastType !== 'loading' && (
+              <button
+                type="button"
+                className="dashboard-toast-dismiss"
+                aria-label="Dismiss"
+                onClick={() => {
+                  setError('');
+                  setInfoMessage('');
+                }}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Whole dashboard shell: navbar on top, sidebar/calendar/panel underneath. */}
         {/* Top navbar:
             page title, user identity, and quick actions like panel visibility or logout. */}
@@ -387,10 +466,6 @@ export default function ProfessorDashboard() {
           {/* Main content area:
               the calendar sits in the middle and quick summaries stay on the right. */}
           <div className="main-content">
-            {/* Basic loading/error feedback before the full calendar is ready. */}
-            {loading && <p style={{ padding: 16 }}>Loading appointments...</p>}
-            {error && <p style={{ padding: 16, color: 'red' }}>{error}</p>}
-
             {/* Weekly calendar view for appointments and still-open availability slots. */}
             {!loading && (
               // Main week calendar. Clicking any block opens the detail modal below.
@@ -564,6 +639,7 @@ export default function ProfessorDashboard() {
             capacity: activeAppt.capacity,
             visibility: activeAppt.visibility,
             recurrence_rule: activeAppt.recurrence_rule || '',
+            recurrence_group_id: activeAppt.recurrence_group_id,
           }}
           onClose={() => setModal('detail')}
           onSubmit={handleUpdateAvailability}
@@ -585,12 +661,17 @@ export default function ProfessorDashboard() {
             owner: activeAppt.ownerName,
             ownerEmail: activeAppt.ownerEmail,
             bookedBy: activeAppt.attendeeName,
+            attendeeName: activeAppt.attendeeName,
+            attendeeEmail: activeAppt.attendeeEmail,
             location: activeAppt.location,
             status: activeAppt.status,
             type: activeAppt.type,
             participants: activeAppt.participantStatuses || [],
             myStatus: activeAppt.status,
             currentUserId: userId,
+            recurrence_rule: activeAppt.recurrence_rule,
+            recurrence_group_id: activeAppt.recurrence_group_id,
+            recurrence_instance_date: activeAppt.recurrence_instance_date,
           }}
           isOwner={true}
           onUpdateMyStatus={
@@ -598,11 +679,54 @@ export default function ProfessorDashboard() {
               ? (nextStatus) => handleUpdateMyStatus(activeAppt.id, nextStatus)
               : undefined
           }
-          onEdit={activeAppt.type === 'availability' ? () => setModal('editAvailability') : undefined}
-          onDelete={() => setModal('delete')}
+          onEdit={
+            activeAppt.type === 'availability'
+              ? () => {
+                  setPendingRecurrenceAction(null);
+                  setPendingAvailabilityPayload(null);
+                  setModal('editAvailability');
+                }
+              : undefined
+          }
+          onDelete={() => {
+            setPendingRecurrenceAction(null);
+            setPendingAvailabilityPayload(null);
+            setModal('delete');
+          }}
           onClose={() => {
             setModal(null);
             setActiveAppt(null);
+            setPendingRecurrenceAction(null);
+            setPendingAvailabilityPayload(null);
+          }}
+        />
+      )}
+
+      {modal === 'recurrenceScope' && activeAppt && (
+        <RecurrenceScopeModal
+          actionLabel={pendingRecurrenceAction}
+          recurrenceSubtitle={formatRecurrenceSubtitleLine({
+            recurrence_rule: activeAppt.recurrence_rule,
+            recurrence_group_id: activeAppt.recurrence_group_id,
+          })}
+          onClose={() => {
+            setPendingRecurrenceAction(null);
+            setPendingAvailabilityPayload(null);
+            setModal('detail');
+          }}
+          onSelect={async (scope) => {
+            if (pendingRecurrenceAction === 'delete') {
+              await executeDeleteWithScope(scope);
+              return;
+            }
+            if (pendingRecurrenceAction === 'edit') {
+              const payload = pendingAvailabilityPayload;
+              if (!payload) {
+                setModal('detail');
+                return;
+              }
+              await executeUpdateAvailabilityWithScope(payload, scope);
+            }
           }}
         />
       )}
@@ -616,6 +740,13 @@ export default function ProfessorDashboard() {
             day: new Date(activeAppt.startTime).toLocaleDateString(),
             time: formatTime(activeAppt.startTime),
             notifyEmail: activeAppt.type === 'availability' ? '' : activeAppt.attendeeEmail,
+            type: activeAppt.type,
+            participants: activeAppt.participantStatuses || [],
+            attendeeName: activeAppt.attendeeName,
+            attendeeEmail: activeAppt.attendeeEmail,
+            bookedBy: activeAppt.attendeeName,
+            recurrence_rule: activeAppt.recurrence_rule,
+            recurrence_group_id: activeAppt.recurrence_group_id,
           }}
           onConfirm={handleDelete}
           onClose={() => setModal('detail')}
