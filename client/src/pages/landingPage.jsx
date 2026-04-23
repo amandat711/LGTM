@@ -1,7 +1,7 @@
 //AMANDA TRAN
 
 import { useState, useRef } from "react";
-import logo1 from "../assets/logo1.png";
+import LGTMLogo2 from "../assets/LGTMLogo2.png";
 import header from "../assets/header.png";
 import heatmapPreview from "../assets/HeatmapPreview.png";
 import { useNavigate } from "react-router-dom";
@@ -27,17 +27,15 @@ export default function LandingPage() {
   return (
     <div className="landing-page">
       {/* Top navigation bar */}
-      <nav className="landing-top-bar">
-        <div className="landing-top-bar-content">
-          <Navbar
-            logo={logo1}
-            onLeftClick={() => navigate("/")}
-            actions={[
-              { label: "Login", onClick: () => navigate("/login") },
-            ]}
-          />
-        </div>
-      </nav>
+      <div className="landing-top-bar">
+        <Navbar
+          logo={LGTMLogo2}
+          onLeftClick={() => navigate('/')}
+          actions={[
+            { label: "Login", onClick: () => navigate("/login") },
+          ]}
+        />
+      </div>
 
       {/* Hero section with image, title, and main button */}
       <div className="hero-section">
@@ -55,8 +53,8 @@ export default function LandingPage() {
       {/* Intro text */}
       <section className="intro-section">
         <p className="intro-text">
-          LGTM is more than a booking tool. 
-          It combines real-time availability, appointment tracking, and heatmap-based scheduling into one streamlined platform, 
+          LGTM is more than a booking tool.
+          It combines real-time availability, appointment tracking, and heatmap-based scheduling into one streamlined platform,
           giving McGill students and professors the easiest way to coordinate meetings without the usual confusion.
         </p>
       </section>
@@ -67,7 +65,7 @@ export default function LandingPage() {
           <div className="feature-text">
             <h2 className="feature-title">All your appointments in one place!</h2>
             <p className="feature-text-block">
-              LGTM keeps meetings, office hours, and upcoming bookings organized in one clear dashboard. 
+              LGTM keeps meetings, office hours, and upcoming bookings organized in one clear dashboard.
               Students can quickly check what is coming up, while professors can manage schedules without digging through scattered emails or calendars.
             </p>
             <button className="feature-button" onClick={() => navigate("/login")}>
@@ -85,9 +83,9 @@ export default function LandingPage() {
             <img src={heatmapPreview} alt="Heatmap preview" className="feature-preview-image" />
           </div>
           <div className="feature-text">
-            <h2 className="feature-title">Other feature!</h2>
+            <h2 className="feature-title">Additional features</h2>
             <p className="feature-text-block">
-              With heatmaps and shared availability, LGTM makes it easier to spot the times that work best for everyone. 
+              With heatmaps and shared availability, LGTM makes it easier to spot the times that work best for everyone.
               Instead of endless back-and-forth, students and professors can make decisions quickly and book with confidence.
             </p>
             {/* "Learn more" = the trigger*/}
@@ -118,7 +116,7 @@ export default function LandingPage() {
         >
 
           <span>How does shared availability work?</span>
-         
+
         </button>
         <div className="accordion-body">
           <p>
@@ -288,8 +286,8 @@ export default function LandingPage() {
           <div className="footer-sub-inner">
             <div className="footer-copyright">
               <div className="footer-brand-lockup">
-                <img src={logo1} alt="McGill logo" className="footer-logo-mark" />
-                
+                <img src={LGTMLogo2} alt="McGill logo" className="footer-logo-mark" />
+
               </div>
               <div>Copyright &copy; 2026 McGill University.</div>
             </div>

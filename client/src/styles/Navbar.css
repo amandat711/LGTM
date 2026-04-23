@@ -1,55 +1,75 @@
-/*
- * Navbar.css — styles for the reusable Navbar component.
- */
-
-/* ─── CONTAINER ──────────────────────────────────────────── */
-
 .top-bar {
-  height: 54px;
-  background: #fff;
-  border-bottom: 1px solid #e4e4e4;
+  position: sticky;
+  top: 0;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  transition: box-shadow 0.2s;
+  box-shadow: 0 1px 0 #e4e4e4;
+}
+
+.top-bar-content {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  flex-shrink: 0;
-  z-index: 10;
+  align-items: center;
+
+  height: 54px;
+  width: 100vw;
+  max-width: none;
+
+  margin: 0;
+  padding: 0 24px 0 0;
+  padding-left: 16px;
+  box-sizing: border-box;
 }
 
-/* ─── LEFT SIDE ───────────────────────────────────────────── */
-
-.top-bar-left {
+.top-bar-left,
+.top-bar-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  margin: 0;
+  padding: 0;
 }
 
-.top-bar-logo-button {
+.top-bar-left-button {
   display: flex;
   align-items: center;
+  gap: 10px;
   background: none;
   border: none;
   padding: 0;
+  margin: 0;
   cursor: pointer;
 }
 
+/* troubleshooting navbar logo */
+/* .top-bar { outline: 2px solid red; }
+.top-bar-content { outline: 4px solid blue; }
+.top-bar-left { outline: 2px solid green; }
+.top-bar-left-button { outline: 2px solid purple; }
+.top-bar-logo { outline: 2px solid orange; } */
+
+.top-bar-right {
+  gap: 12px;
+  margin-left: auto;
+}
+
 .top-bar-logo {
-  height: 32px;
-  width: auto;
+  height: 72px;
+  width: 72px;
+  object-fit: contain;
+  display: block;
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
 }
 
 .top-bar-title {
   font-size: 15px;
   font-weight: 600;
   color: #0f0f0f;
-}
-
-/* ─── RIGHT SIDE ──────────────────────────────────────────── */
-
-.top-bar-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
 .top-bar-user {
@@ -87,8 +107,6 @@
   letter-spacing: 0.03em;
 }
 
-/* ─── ROLE BADGE ──────────────────────────────────────────── */
-
 .top-bar-user-role {
   font-size: 11px;
   font-weight: 500;
@@ -100,22 +118,21 @@
   color: #E31429;
 }
 
-/* ─── ACTION BUTTONS ──────────────────────────────────────── */
-
 .top-bar-button {
-  background: none;
-  border: 1px solid #e4e4e4;
+  background: white;
+  border: 2px solid #000000;
   border-radius: 5px;
   padding: 5px 12px;
   font-size: 12px;
   font-weight: 500;
-  color: #555;
+  color: #000000;
   cursor: pointer;
   font-family: inherit;
   transition: border-color 0.15s, color 0.15s;
 }
 
 .top-bar-button:hover {
-  border-color: #E31429;
-  color: #E31429;
+  background: black;
+  border-color: none;
+  color: white;
 }
