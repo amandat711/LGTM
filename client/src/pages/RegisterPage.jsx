@@ -73,7 +73,17 @@ export default function RegisterPage() {
             <img src={redpath} alt="Redpath Library" className="register-side-image" />
           </div>
           <div className="register-panel-right">
+            <Link to="/" className="register-back-link">
+              Back to website
+              <span aria-hidden="true">→</span>
+            </Link>
             <h1 className="register-title">Create an account</h1>
+            <p className="register-subtitle">
+              Already have an account?{' '}
+              <Link to="/login" className="register-inline-link">
+                Log In
+              </Link>
+            </p>
 
             {error ? (
               <p className="register-error" role="alert">
@@ -249,16 +259,9 @@ export default function RegisterPage() {
                 className="register-submit"
                 disabled={submitting}
               >
-                {submitting ? '...' : 'Register'}
+                {submitting ? '...' : 'Create an account'}
               </button>
             </form>
-
-            <p className="register-footer-text">
-              Already have an account?{' '}
-              <Link to="/login" className="register-login-link">
-                Log in
-              </Link>
-            </p>
           </div>
         </div>
       </div>

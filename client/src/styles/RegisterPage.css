@@ -1,102 +1,142 @@
 /* Rita Zhang */
 
 .register-card {
-    width: 100%;
-    display: flex;
-    justify-content: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .register-panel {
-    width: min(100%, 980px);
-    min-height: 760px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    background: #fff;
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  width: min(100%, 920px);
+  height: min(100%, 560px);
+  display: grid;
+  grid-template-columns: 1.06fr 1fr;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #d9d9d9;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
 }
 
 .register-panel-left {
-    background: #f6f6f6;
-    position: relative;
+  background: #f6f6f6;
+  position: relative;
+  margin: 14px;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .register-side-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .register-panel-right {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 18px clamp(16px, 1.8vw, 28px);
+  min-width: 0;
+  position: relative;
+}
+
+.register-back-link {
+  position: absolute;
+  top: 18px;
+  right: clamp(16px, 1.8vw, 28px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #555;
+  text-decoration: none;
+  font-size: 11px;
+  line-height: 1;
+}
+
+.register-back-link:hover {
+  color: #111;
 }
 
 .register-title {
-    margin: 0;
-    text-align: left;
-    font-size: 52px;
-    line-height: 1.05;
-    font-weight: 600;
-    letter-spacing: -0.8px;
-    color: #0f0f0f;
+  margin: 0;
+  text-align: left;
+  font-size: clamp(1.55rem, 1.8vw, 1.95rem);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #0f0f0f;
+}
+
+.register-subtitle {
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: #666;
+}
+
+.register-inline-link {
+  color: #333;
+  text-decoration: underline;
+}
+
+.register-inline-link:hover {
+  color: #000;
 }
 
 .register-error {
-    margin: 20px 0 0;
-    border: 1px solid #f1c5c5;
-    background: #fff3f3;
-    color: #9e1c1c;
-    border-radius: 8px;
-    padding: 12px 14px;
-    font-size: 13px;
+  margin: 10px 0 0;
+  border: 1px solid #f1c5c5;
+  background: #fff3f3;
+  color: #9e1c1c;
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: 11px;
 }
 
 .register-form {
-    margin-top: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .register-field-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .register-field {
-    position: relative;
+  position: relative;
 }
 
 .register-field-icon {
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #a1a1a1;
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a1a1a1;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .register-input {
-    width: 100%;
-    height: 44px;
-    border: 1px solid #cbcbcb;
-    border-radius: 999px;
-    background: #ffffff;
-    padding: 0 20px 0 44px;
-    box-sizing: border-box;
-    font-size: 15px;
-    color: #0f0f0f;
-    outline: none;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
+  height: 36px;
+  border: 1px solid #cbcbcb;
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 0 12px 0 36px;
+  box-sizing: border-box;
+  font-size: 13px;
+  color: #0f0f0f;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .register-input::placeholder {
@@ -114,63 +154,61 @@
 }
 
 .register-input-no-icon {
-    padding-left: 20px;
+  padding-left: 12px;
 }
 
 /* staff fields animation */
 .register-staff-fields {
-    display: grid;
-    grid-template-rows: 0fr;
-    opacity: 0;
-    transform: translateY(-4px);
-    transition: grid-template-rows 0.5s ease, opacity 0.5s ease, transform 0.5s ease;
-    overflow: hidden;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: grid-template-rows 0.35s ease, opacity 0.35s ease, transform 0.35s ease;
+  overflow: hidden;
 }
 
 .register-staff-fields-open {
-    grid-template-rows: 1fr;
-    opacity: 1;
-    transform: translateY(0);
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .register-staff-fields-inner {
-    overflow: hidden;
-    margin-top: 4px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  overflow: hidden;
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .register-password-group {
-    gap: 6px;
+  gap: 4px;
 }
 
 .register-hint {
-    margin: 0;
-    font-size: 12px;
-    color: #777;
-    padding-left: 4px;
+  margin: 0;
+  font-size: 10px;
+  color: #777;
+  padding-left: 4px;
 }
 
 .register-submit {
-    margin: 8px auto 0;
-    min-width: 112px;
-    height: 48px;
-    border: none;
-    border-radius: 999px;
-    background: #000;
-    color: #fff;
-    font-size: 16px;
-    font-weight: 600;
-    padding: 0 32px;
-    cursor: pointer;
-    transition: transform 0.15s ease, opacity 0.15s ease;
+  margin: 5px auto 0;
+  min-width: 148px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 0 20px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease;
 }
 
 .register-submit:hover:not(:disabled) {
-    /* transform: translateY(-1px);
-    opacity: 0.92; */
-    background: #3b3b3b;
+  background: #2f2f2f;
 }
 
 .register-submit:disabled {
@@ -179,10 +217,7 @@
 }
 
 .register-footer-text {
-    margin: 32px 0 0;
-    text-align: left;
-    font-size: 13px;
-    color: #555;
+  display: none;
 }
 
 .register-login-link {
@@ -196,20 +231,25 @@
 }
 
 @media (max-width: 900px) {
-    .register-panel {
-        grid-template-columns: 1fr;
-        min-height: auto;
-    }
+  .register-panel {
+    width: min(100%, 860px);
+    height: min(100%, 520px);
+    grid-template-columns: 0.95fr 1fr;
+  }
+}
 
-    .register-panel-left {
-        min-height: 220px;
-    }
+@media (max-width: 760px), (max-height: 700px) {
+  .register-panel {
+    width: min(100%, 520px);
+    height: min(100%, 520px);
+    grid-template-columns: 1fr;
+  }
 
-    .register-panel-right {
-        padding: 32px 24px;
-    }
+  .register-panel-left {
+    display: none;
+  }
 
-    .register-title {
-        font-size: 40px;
-    }
+  .register-panel-right {
+    padding: 16px;
+  }
 }

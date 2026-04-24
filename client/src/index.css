@@ -7,9 +7,14 @@
 html, body, #root {
   margin: 0;
   height: 100%;
+  min-width: 390px;
   font-family: 'Inter' -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  overflow-x: auto;
 }
 
 code {

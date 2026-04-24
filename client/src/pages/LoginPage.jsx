@@ -49,7 +49,17 @@ export default function LoginPage() {
           </div>
 
           <div className="login-panel-right">
-            <h1 className="login-title">Login</h1>
+            <Link to="/" className="login-back-link">
+              Back to website
+              <span aria-hidden="true">→</span>
+            </Link>
+            <h1 className="login-title">Log In</h1>
+            <p className="login-subtitle">
+              Don&apos;t have an account?{' '}
+              <Link to="/register" className="login-inline-link">
+                Sign Up
+              </Link>
+            </p>
 
             {error ? (
               <p className="login-error" role="alert">
@@ -123,7 +133,7 @@ export default function LoginPage() {
               </div>
 
               <button type="submit" className="login-submit" disabled={submitting}>
-                {submitting ? '...' : 'Log in'}
+                {submitting ? '...' : 'Log In'}
               </button>
             </form>
 

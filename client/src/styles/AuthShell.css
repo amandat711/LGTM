@@ -1,85 +1,103 @@
 /*Rita Zhang*/
 
 .auth-shell {
-    height: 100vh;
-    background: #f1f1f1;
+    height: 100dvh;
+    background: #f5f3ee;
     color: #0f0f0f;
     font-family: inherit;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow: hidden;
+    position: relative;
 }
 
-.auth-header {
-    height: 72px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
+.auth-top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 120;
     box-shadow: 0 1px 0 #e4e4e4;
 }
 
-.auth-header .top-bar-content {
+.auth-top-bar .top-bar {
+    border-bottom: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.92) 100%);
+    box-shadow: none;
+}
+
+.auth-top-bar .top-bar-content {
     height: 72px;
     padding: 0 26px;
 }
 
-.auth-header .top-bar-logo {
+.auth-top-bar .top-bar-right {
+    display: none;
+}
+
+.auth-top-bar .top-bar-left-button {
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: none;
+}
+
+.auth-top-bar .top-bar-logo {
     height: 56px;
     width: auto;
     max-width: none;
+    filter: none;
 }
 
 .auth-main {
-    height: calc(100vh - 72px);
+    height: 100%;
     display: grid;
     place-items: center;
     width: 100%;
     box-sizing: border-box;
-    padding: 16px;
+    padding: 84px 16px 16px;
     overflow: hidden;
 }
 
 @media (min-width: 640px) {
     .auth-main {
-        padding: 48px 40px;
+        padding: 92px 24px 24px;
     }
 }
 
 @media (max-width: 768px) {
-    .auth-header {
-        height: 66px;
-    }
-
-    .auth-header .top-bar-content {
+    .auth-top-bar .top-bar-content {
         height: 66px;
         padding: 0 16px;
     }
 
-    .auth-header .top-bar-logo {
-        height: 48px;
-        max-width: none;
+    .auth-top-bar .top-bar-left-button {
+        padding: 6px 10px;
     }
 
-    .auth-main {
-        height: calc(100vh - 66px);
+    .auth-top-bar .top-bar-logo {
+        height: 48px;
+        max-width: none;
     }
 }
 
 @media (max-width: 480px) {
-    .auth-header {
-        height: 58px;
-    }
-
-    .auth-header .top-bar-content {
+    .auth-top-bar .top-bar-content {
         height: 58px;
         padding: 0 14px;
     }
 
-    .auth-header .top-bar-logo {
+    .auth-top-bar .top-bar-left-button {
+        padding: 4px 8px;
+    }
+
+    .auth-top-bar .top-bar-logo {
         height: 40px;
         max-width: none;
     }
 
     .auth-main {
-        height: calc(100vh - 58px);
+        padding: 68px 10px 10px;
     }
 }
