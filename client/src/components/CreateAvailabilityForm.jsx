@@ -92,6 +92,7 @@ export default function CreateAvailabilityForm({
   initialStartTime = null,
   initialEndTime = null,
 }) {
+  const courseMetaLabel = initialData?.course_code ?? initialData?.courseCode ?? null;
   const today = useMemo(() => toLocalDateInputValue(new Date()), []);
   const initialDate = initialData?.start_time
     ? toLocalDateInputValue(initialData.start_time)
@@ -283,8 +284,8 @@ export default function CreateAvailabilityForm({
     <form onSubmit={handleSubmit} className="availability-form-grid">
       <div className="form-group-full modal-meta-row">
         <span className="modal-kind-pill modal-kind-pill--availability">Availability</span>
-        {initialData?.course_id != null ? (
-          <span className="modal-kind-pill modal-kind-pill--course">Course: {initialData.course_id}</span>
+        {courseMetaLabel ? (
+          <span className="modal-kind-pill modal-kind-pill--course">Course: {courseMetaLabel}</span>
         ) : null}
       </div>
       <div className="availability-compact-layout form-group-full">

@@ -169,6 +169,41 @@
   margin-top: 2px;
 }
 
+/* Keep MUI modal action buttons visually consistent with app buttons. */
+.availability-modal-footer .MuiButton-root {
+  border-radius: 6px;
+  min-height: 36px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  box-shadow: none;
+}
+
+.availability-modal-footer .MuiButton-text {
+  border: 1.5px solid #ccc;
+  background: #fff;
+  color: #111;
+}
+
+.availability-modal-footer .MuiButton-text:hover {
+  background: #f8f8f8;
+  border-color: #bdbdbd;
+}
+
+.availability-modal-footer .MuiButton-containedPrimary {
+  background: #E31429;
+  border: 1.5px solid #E31429;
+  color: #fff;
+}
+
+.availability-modal-footer .MuiButton-containedPrimary:hover {
+  background: #b01020;
+  border-color: #b01020;
+  box-shadow: none;
+}
+
 .modal-btn {
   border: none;
   border-radius: 10px;

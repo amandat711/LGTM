@@ -12,6 +12,8 @@ export default function CreateAvailabilityModal({
   submitLabel = 'Create slot',
   initialData = null,
 }) {
+  const courseMetaLabel = initialData?.course_code ?? initialData?.courseCode ?? null;
+
   function handleModalClose() {
     onClose();
   }
@@ -29,8 +31,8 @@ export default function CreateAvailabilityModal({
       meta={
         <>
           <span className="modal-kind-pill modal-kind-pill--availability">Availability</span>
-          {initialData?.course_id != null ? (
-            <span className="modal-kind-pill modal-kind-pill--course">Course: {initialData.course_id}</span>
+          {courseMetaLabel ? (
+            <span className="modal-kind-pill modal-kind-pill--course">Course: {courseMetaLabel}</span>
           ) : null}
         </>
       }

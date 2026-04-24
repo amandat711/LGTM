@@ -247,12 +247,12 @@ function slotKindFromAppointment(ap) {
 
 function renderTypeAndCoursePills(ap) {
   const kind = slotKindFromAppointment(ap);
-  const courseId = ap?.course_id;
+  const courseCode = ap?.course_code ?? ap?.courseCode ?? null;
   return (
     <>
       <span className={`modal-kind-pill modal-kind-pill--${kind.key}`}>{kind.label}</span>
-      {courseId != null && courseId !== '' ? (
-        <span className="modal-kind-pill modal-kind-pill--course">Course: {courseId}</span>
+      {courseCode ? (
+        <span className="modal-kind-pill modal-kind-pill--course">Course: {courseCode}</span>
       ) : null}
     </>
   );

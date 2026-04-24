@@ -190,7 +190,7 @@ export default function CoursesListPage() {
                   className="courses-add-btn"
                   onClick={() => setCreateModalOpen(true)}
                 >
-                  Add course
+                  + Add course
                 </button>
               )}
             </div>
