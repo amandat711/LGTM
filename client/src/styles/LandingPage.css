@@ -23,6 +23,44 @@
 
 .landing-top-bar .top-bar {
   border-bottom: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.92) 100%);
+  box-shadow: none;
+}
+
+.landing-top-bar .top-bar-content {
+  height: 72px;
+  padding: 0 26px;
+}
+
+.landing-top-bar .top-bar-left-button {
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: none;
+}
+
+.landing-top-bar .top-bar-logo {
+  height: 56px;
+  width: auto;
+  max-width: none;
+  filter: none;
+}
+
+.landing-top-bar .top-bar-button {
+  border: 1px solid #111;
+  border-radius: 0;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #111;
+  color: #fff;
+  transition: background 0.15s ease;
+}
+
+.landing-top-bar .top-bar-button:hover {
+  background: #E31429;
+  color: #fff;
 }
 /* .brand-area { display: flex; align-items: center; }
 .brand-logo { height: 100px; width: 100px; object-fit: contain; display: block; }
@@ -370,7 +408,17 @@
 
 /* Tablet and small laptop adjustments */
 @media (max-width: 768px) {
-  .landing-top-bar-content { padding: 0 16px; }
+  .landing-top-bar .top-bar-content {
+    height: 66px;
+    padding: 0 16px;
+  }
+  .landing-top-bar .top-bar-left-button {
+    padding: 6px 10px;
+  }
+  .landing-top-bar .top-bar-logo {
+    height: 48px;
+    max-width: none;
+  }
   .brand-logo  { width: 88px; height: 88px; }
   .hero-section      { height: 290px; }
   .hero-title { font-size: 26px; }
@@ -404,6 +452,21 @@
 
 /* Phone-sized layout changes */
 @media (max-width: 480px) {
+  .landing-top-bar .top-bar-content {
+    height: 58px;
+    padding: 0 14px;
+  }
+  .landing-top-bar .top-bar-left-button {
+    padding: 4px 8px;
+  }
+  .landing-top-bar .top-bar-logo {
+    height: 40px;
+    max-width: none;
+  }
+  .landing-top-bar .top-bar-button {
+    padding: 7px 14px;
+    font-size: 12px;
+  }
   .login-button { display: none; }
   .hero-section { height: 240px; }
   .hero-title { font-size: 20px; }

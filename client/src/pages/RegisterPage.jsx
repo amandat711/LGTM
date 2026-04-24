@@ -69,192 +69,197 @@ export default function RegisterPage() {
     <AuthShell>
       <div className="register-card">
         <div className="register-panel">
-          <h1 className="register-title">Create an account</h1>
+          <div className="register-panel-left">
+            <img src={redpath} alt="Redpath Library" className="register-side-image" />
+          </div>
+          <div className="register-panel-right">
+            <h1 className="register-title">Create an account</h1>
 
-          {error ? (
-            <p className="register-error" role="alert">
-              {error}
-            </p>
-          ) : null}
-
-          <form className="register-form" onSubmit={handleSubmit} noValidate>
-            <div className="register-field-group">
-              <div className="register-field">
-                <span className="register-field-icon" aria-hidden="true">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.8" />
-                    <path
-                      d="M5 19a7 7 0 0 1 14 0"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </span>
-                <input
-                  id="register-name"
-                  name="name"
-                  type="text"
-                  autoComplete="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Firstname Lastname"
-                  className="register-input"
-                />
-              </div>
-            </div>
-
-            <div className="register-field-group">
-              <div className="register-field">
-                <span className="register-field-icon" aria-hidden="true">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <path
-                      d="M4 7h16v10H4V7Zm0 0 8 6 8-6"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </span>
-                <input
-                  id="register-email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="McGill email"
-                  className="register-input"
-                />
-              </div>
-            </div>
-
-            <div
-              className={`register-staff-fields ${isStaffEmail ? 'register-staff-fields-open' : ''}`}
-              aria-hidden={!isStaffEmail}
-            >
-              <div className="register-staff-fields-inner">
-                <div className="register-field-group">
-                  <div className="register-field">
-                    <input
-                      id="register-department"
-                      name="department"
-                      type="text"
-                      autoComplete="organization"
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
-                      placeholder="Department"
-                      className="register-input register-input-no-icon"
-                      disabled={!isStaffEmail}
-                    />
-                  </div>
-                </div>
-
-                <div className="register-field-group">
-                  <div className="register-field">
-                    <input
-                      id="register-staff-title"
-                      name="staffTitle"
-                      type="text"
-                      autoComplete="organization-title"
-                      value={staffTitle}
-                      onChange={(e) => setStaffTitle(e.target.value)}
-                      placeholder="Staff Title"
-                      className="register-input register-input-no-icon"
-                      disabled={!isStaffEmail}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="register-field-group register-password-group">
-              <div className="register-field">
-                <span className="register-field-icon" aria-hidden="true">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <rect
-                      x="5"
-                      y="10"
-                      width="14"
-                      height="10"
-                      rx="2"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                    />
-                    <path
-                      d="M8 10V7a4 4 0 1 1 8 0v3"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </span>
-                <input
-                  id="register-password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
-                  className="register-input"
-                />
-              </div>
-              <p className="register-hint">
-                At least {MIN_PASSWORD_LEN} characters.
+            {error ? (
+              <p className="register-error" role="alert">
+                {error}
               </p>
-            </div>
+            ) : null}
 
-            <div className="register-field-group">
-              <div className="register-field">
-                <span className="register-field-icon" aria-hidden="true">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                    <rect
-                      x="5"
-                      y="10"
-                      width="14"
-                      height="10"
-                      rx="2"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                    />
-                    <path
-                      d="M8 10V7a4 4 0 1 1 8 0v3"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </span>
-                <input
-                  id="register-confirm"
-                  name="confirm"
-                  type="password"
-                  autoComplete="new-password"
-                  value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
-                  placeholder="Confirm password"
-                  className="register-input"
-                />
+            <form className="register-form" onSubmit={handleSubmit} noValidate>
+              <div className="register-field-group">
+                <div className="register-field">
+                  <span className="register-field-icon" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="8" r="3.5" stroke="currentColor" strokeWidth="1.8" />
+                      <path
+                        d="M5 19a7 7 0 0 1 14 0"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    id="register-name"
+                    name="name"
+                    type="text"
+                    autoComplete="name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Firstname Lastname"
+                    className="register-input"
+                  />
+                </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              className="register-submit"
-              disabled={submitting}
-            >
-              {submitting ? '...' : 'Register'}
-            </button>
-          </form>
+              <div className="register-field-group">
+                <div className="register-field">
+                  <span className="register-field-icon" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M4 7h16v10H4V7Zm0 0 8 6 8-6"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    id="register-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="McGill email"
+                    className="register-input"
+                  />
+                </div>
+              </div>
 
-          <p className="register-footer-text">
-            Already have an account?{' '}
-            <Link to="/login" className="register-login-link">
-              Log in
-            </Link>
-          </p>
+              <div
+                className={`register-staff-fields ${isStaffEmail ? 'register-staff-fields-open' : ''}`}
+                aria-hidden={!isStaffEmail}
+              >
+                <div className="register-staff-fields-inner">
+                  <div className="register-field-group">
+                    <div className="register-field">
+                      <input
+                        id="register-department"
+                        name="department"
+                        type="text"
+                        autoComplete="organization"
+                        value={department}
+                        onChange={(e) => setDepartment(e.target.value)}
+                        placeholder="Department"
+                        className="register-input register-input-no-icon"
+                        disabled={!isStaffEmail}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="register-field-group">
+                    <div className="register-field">
+                      <input
+                        id="register-staff-title"
+                        name="staffTitle"
+                        type="text"
+                        autoComplete="organization-title"
+                        value={staffTitle}
+                        onChange={(e) => setStaffTitle(e.target.value)}
+                        placeholder="Staff Title"
+                        className="register-input register-input-no-icon"
+                        disabled={!isStaffEmail}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="register-field-group register-password-group">
+                <div className="register-field">
+                  <span className="register-field-icon" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <rect
+                        x="5"
+                        y="10"
+                        width="14"
+                        height="10"
+                        rx="2"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                      />
+                      <path
+                        d="M8 10V7a4 4 0 1 1 8 0v3"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    id="register-password"
+                    name="password"
+                    type="password"
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    className="register-input"
+                  />
+                </div>
+                <p className="register-hint">
+                  At least {MIN_PASSWORD_LEN} characters.
+                </p>
+              </div>
+
+              <div className="register-field-group">
+                <div className="register-field">
+                  <span className="register-field-icon" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <rect
+                        x="5"
+                        y="10"
+                        width="14"
+                        height="10"
+                        rx="2"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                      />
+                      <path
+                        d="M8 10V7a4 4 0 1 1 8 0v3"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    id="register-confirm"
+                    name="confirm"
+                    type="password"
+                    autoComplete="new-password"
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    placeholder="Confirm password"
+                    className="register-input"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="register-submit"
+                disabled={submitting}
+              >
+                {submitting ? '...' : 'Register'}
+              </button>
+            </form>
+
+            <p className="register-footer-text">
+              Already have an account?{' '}
+              <Link to="/login" className="register-login-link">
+                Log in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </AuthShell>

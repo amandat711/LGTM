@@ -60,7 +60,15 @@ export default function LoginPage() {
             <form className="login-form" onSubmit={handleSubmit} noValidate>
               <div className="login-field" aria-label="Account field">
                 <span className="login-field-icon" aria-hidden="true">
-                  {/* icon */}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path
+                      d="M4 7h16v10H4V7Zm0 0 8 6 8-6"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                 </span>
                 <input
                   id="login-email"
@@ -77,7 +85,23 @@ export default function LoginPage() {
               <div className="login-field-group">
                 <div className="login-field" aria-label="Password field">
                   <span className="login-field-icon" aria-hidden="true">
-                    {/* icon */}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <rect
+                        x="5"
+                        y="10"
+                        width="14"
+                        height="10"
+                        rx="2"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                      />
+                      <path
+                        d="M8 10V7a4 4 0 1 1 8 0v3"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                      />
+                    </svg>
                   </span>
                   <input
                     id="login-password"

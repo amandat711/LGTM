@@ -1,32 +1,85 @@
 /*Rita Zhang*/
 
 .auth-shell {
-    min-height: 100vh;
+    height: 100vh;
     background: #f1f1f1;
     color: #0f0f0f;
     font-family: inherit;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
 }
 
 .auth-header {
-    height: 54px;
+    height: 72px;
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(8px);
     box-shadow: 0 1px 0 #e4e4e4;
 }
 
+.auth-header .top-bar-content {
+    height: 72px;
+    padding: 0 26px;
+}
+
+.auth-header .top-bar-logo {
+    height: 56px;
+    width: auto;
+    max-width: none;
+}
+
 .auth-main {
-    height: calc(100vh - 54px);
+    height: calc(100vh - 72px);
     display: grid;
     place-items: center;
     width: 100%;
     box-sizing: border-box;
     padding: 16px;
+    overflow: hidden;
 }
 
 @media (min-width: 640px) {
     .auth-main {
         padding: 48px 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .auth-header {
+        height: 66px;
+    }
+
+    .auth-header .top-bar-content {
+        height: 66px;
+        padding: 0 16px;
+    }
+
+    .auth-header .top-bar-logo {
+        height: 48px;
+        max-width: none;
+    }
+
+    .auth-main {
+        height: calc(100vh - 66px);
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-header {
+        height: 58px;
+    }
+
+    .auth-header .top-bar-content {
+        height: 58px;
+        padding: 0 14px;
+    }
+
+    .auth-header .top-bar-logo {
+        height: 40px;
+        max-width: none;
+    }
+
+    .auth-main {
+        height: calc(100vh - 58px);
     }
 }
