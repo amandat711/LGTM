@@ -16,6 +16,7 @@ export default function AppSidebar({
   canCreate = false,
   onCreate,
   onHelp,
+  helpGuide,
 }) {
   const [showHelp, setShowHelp] = useState(false);
   const roleKey = useMemo(
@@ -60,7 +61,7 @@ export default function AppSidebar({
       />
       {showHelp && (
         <HelpGuideModal
-          guide={DASHBOARD_HELP_GUIDES[roleKey]}
+          guide={helpGuide || DASHBOARD_HELP_GUIDES[roleKey]}
           onClose={() => setShowHelp(false)}
         />
       )}
