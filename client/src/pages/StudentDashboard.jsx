@@ -22,13 +22,18 @@ import {
   includeAppointmentOnWeekCalendar,
   formatRecurrenceSubtitleLine,
 } from '../components/calendar/calendarUtils';
-import { getMyAppointments, cancelAppointment, updateMyParticipantStatus } from '../api/appointments';
+import {
+  getMyAppointments,
+  getMyInvitations,
+  cancelAppointment,
+  updateMyParticipantStatus,
+} from '../api/appointments';
 import { getHeatmaps } from '../api/heatmaps';
 import { logout } from '../api/auth';
 import { DASHBOARD_HELP_GUIDES } from '../data/helpGuides';
 
 // Reusable sidebar component instead of hardcoding the left menu here.
-import Sidebar from '../components/Sidebar'; 
+import Sidebar from '../components/Sidebar';
 import '../styles/Dashboard.css';
 
 
@@ -67,6 +72,13 @@ export default function StudentDashboard() {
   const [infoMessage, setInfoMessage] = useState('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
 
+  const currentUser = !user
+    ? { firstName: 'User', lastName: String(userId ?? '') }
+    : {
+        firstName: user.first_name || 'User',
+        lastName: user.last_name || String(userId ?? ''),
+      };
+
   // When the logged-in student changes, fetch their appointments and heatmap invites from the server.
   useEffect(() => {
     if (!userId) return;
@@ -75,14 +87,49 @@ export default function StudentDashboard() {
       try {
         setLoading(true);
         // Pull both sets of data together so the dashboard can load in one pass.
-        const [data, heatmapData] = await Promise.all([
+        const [data, heatmapData, inviteData] = await Promise.all([
           getMyAppointments(userId),
-          
           getHeatmaps({ participant_user_id: userId }),
+          getMyInvitations(userId),
         ]);
 
-        // The API shape is not exactly what the calendar wants, so we normalize it first.
-        setAppointments(data.map((appt) => mapAppointmentToCalendarEvent(appt, userId)));
+        // Merge direct appointment rows with pending invites so invite-only events show on calendar.
+        const baseAppointments = data.map((appt) => mapAppointmentToCalendarEvent(appt, userId));
+        const knownIds = new Set(baseAppointments.map((appt) => Number(appt.id)));
+        const inviteOnlyAppointments = inviteData
+          .filter((invite) => !knownIds.has(Number(invite.appointment_id)))
+          .map((invite) => {
+            const ownerName = `${invite.inviter_first_name || ''} ${invite.inviter_last_name || ''}`.trim() || 'Host';
+            return {
+              id: invite.appointment_id,
+              title: invite.ap_title || 'Appointment invitation',
+              ownerName,
+              ownerEmail: invite.inviter_email || '',
+              attendeeName: `${currentUser.firstName} ${currentUser.lastName}`.trim(),
+              attendeeEmail: user?.mcgill_email || '',
+              attendeeStatus: 'pending',
+              startTime: invite.start_time,
+              endTime: invite.end_time,
+              description: invite.ap_description || '',
+              notes: invite.ap_description || '',
+              capacity: 1,
+              visibility: invite.visibility || 'private',
+              recurrence_group_id: null,
+              recurrence_instance_date: null,
+              recurrence_rule: null,
+              course_id: null,
+              location: invite.location || 'TBD',
+              status: 'pending',
+              appointmentStatus: invite.appointment_status || 'pending',
+              color: '#1565A8',
+              participants: [],
+              participantStatuses: [],
+              attendeeStatuses: [],
+              inviteOnly: true,
+            };
+          });
+
+        setAppointments([...baseAppointments, ...inviteOnlyAppointments]);
         setHeatmaps(heatmapData);
         setError('');
         setInfoMessage('');
@@ -98,7 +145,7 @@ export default function StudentDashboard() {
 
     loadAppointments();
     // Run again if the logged-in user changes.
-  }, [userId]);
+  }, [userId, user]);
 
   useEffect(() => {
     if (!infoMessage) return;
@@ -106,17 +153,16 @@ export default function StudentDashboard() {
     return () => window.clearTimeout(t);
   }, [infoMessage]);
 
-  // Builds the name shown in the navbar, with a fallback in case session data is missing.
-  const currentUser = !user
-    ? { firstName: 'User', lastName: String(userId ?? '') }
-    : {
-        firstName: user.first_name || 'User',
-        lastName: user.last_name || String(userId ?? ''),
-      };
+  // // Builds the name shown in the navbar, with a fallback in case session data is missing.
+  // const currentUser = !user
+  //   ? { firstName: 'User', lastName: String(userId ?? '') }
+  //   : {
+  //     firstName: user.first_name || 'User',
+  //     lastName: user.last_name || String(userId ?? ''),
+  //   };
 
 
   /*__________________________________________________________________________*/
-  /*CODE GENERATE FROM ChatGPT STARTS HERE*/
   // Shows up to ten future appointments so the student can quickly see what is coming next.
   const upcomingAppts = useMemo(() => {
     const now = new Date();
@@ -160,8 +206,6 @@ export default function StudentDashboard() {
 
     return grouped;
   }, [upcomingAppts]);
-
-  /*CODE GENERATED FROM ChatGPT ENDS HERE*/
   /*__________________________________________________________________________*/
 
 
@@ -291,11 +335,12 @@ export default function StudentDashboard() {
             // Ends the current session and returns to the landing page.
             { label: 'Log Out', onClick: handleLogout },
           ]}
+          appointments={appointments}
         />
 
         <div className="dashboard-layout">
           {/* Reusable Left sidebar for quick navigation between dashboard actions. */}
-    
+
           <Sidebar
             activeId={sideTab}
             items={[
@@ -329,122 +374,122 @@ export default function StudentDashboard() {
             {rightPanelOpen && (
               <aside className="side-panel">
                 {/* Upcoming items are shown first because they matter the most day-to-day. */}
-              <div className="side-panel-section side-panel-section-upcoming">
-                <div className="side-panel-title">Upcoming appointments</div>
-                <div className="side-panel-scroll">
-                  {upcomingPanelAppts.length === 0 ? (
-                    // Empty state keeps the panel from looking broken when there is no data.
-                    <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
-                  ) : (
-                    upcomingPanelAppts.map(({ appt, seriesCount, isSeriesCard }) => {
-                      // Convert raw status into label + CSS class for the pill.
-                      const { label, cls } = statusLabel(appt.status);
-                      const recurrenceSummary = formatRecurrenceSubtitleLine({
-                        recurrence_rule: appt.recurrence_rule,
-                        recurrence_group_id: appt.recurrence_group_id,
-                      });
+                <div className="side-panel-section side-panel-section-upcoming">
+                  <div className="side-panel-title">Upcoming appointments</div>
+                  <div className="side-panel-scroll">
+                    {upcomingPanelAppts.length === 0 ? (
+                      // Empty state keeps the panel from looking broken when there is no data.
+                      <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
+                    ) : (
+                      upcomingPanelAppts.map(({ appt, seriesCount, isSeriesCard }) => {
+                        // Convert raw status into label + CSS class for the pill.
+                        const { label, cls } = statusLabel(appt.status);
+                        const recurrenceSummary = formatRecurrenceSubtitleLine({
+                          recurrence_rule: appt.recurrence_rule,
+                          recurrence_group_id: appt.recurrence_group_id,
+                        });
 
-                      return (
-                        // Each card is clickable so students can review or cancel from the modal.
-                        <div
-                          key={appt.id}
-                          className="appointment-item"
-                          onClick={() => {
-                            setActiveAppt(appt);
-                            setModal('detail');
-                          }}
-                        >
-                          <div className="appointment-color-dot" style={{ background: appt.color }} />
-                          <div>
-                            <h4>{appt.title || 'Untitled appointment'}</h4>
-                            <h6>{appt.ownerName}</h6>
-                            <p>{formatDate(appt.startTime)}</p>
-                            <p>{appt.location}</p>
-                            {appt.recurrence_group_id && (
-                              <p className="appointment-recurrence-line">
-                                {recurrenceSummary || 'Part of a recurring series'}
-                                {isSeriesCard && seriesCount > 1 ? ` • +${seriesCount - 1} more` : ''}
-                              </p>
+                        return (
+                          // Each card is clickable so students can review or cancel from the modal.
+                          <div
+                            key={appt.id}
+                            className="appointment-item"
+                            onClick={() => {
+                              setActiveAppt(appt);
+                              setModal('detail');
+                            }}
+                          >
+                            <div className="appointment-color-dot" style={{ background: appt.color }} />
+                            <div>
+                              <h4>{appt.title || 'Untitled appointment'}</h4>
+                              <h6>{appt.ownerName}</h6>
+                              <p>{formatDate(appt.startTime)}</p>
+                              <p>{appt.location}</p>
+                              {appt.recurrence_group_id && (
+                                <p className="appointment-recurrence-line">
+                                  {recurrenceSummary || 'Part of a recurring series'}
+                                  {isSeriesCard && seriesCount > 1 ? ` • +${seriesCount - 1} more` : ''}
+                                </p>
+                              )}
+                            </div>
+                            <span className={`appointment-status-pill ${cls}`}>{label}</span>
+                            {appt.attendeeStatus === 'pending' && (
+                              <div style={{ display: 'grid', gap: 6 }}>
+                                <button
+                                  type="button"
+                                  className="invite-action-button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUpdateMyStatus(appt.id, 'confirmed');
+                                  }}
+                                  title="Set your status to confirmed"
+                                >
+                                  ✓
+                                </button>
+                                <button
+                                  type="button"
+                                  className="invite-action-button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUpdateMyStatus(appt.id, 'cancelled');
+                                  }}
+                                  title="Set your status to cancelled"
+                                >
+                                  ×
+                                </button>
+                              </div>
                             )}
                           </div>
-                          <span className={`appointment-status-pill ${cls}`}>{label}</span>
-                          {appt.attendeeStatus === 'pending' && (
-                            <div style={{ display: 'grid', gap: 6 }}>
-                              <button
-                                type="button"
-                                className="invite-action-button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleUpdateMyStatus(appt.id, 'confirmed');
-                                }}
-                                title="Set your status to confirmed"
-                              >
-                                ✓
-                              </button>
-                              <button
-                                type="button"
-                                className="invite-action-button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleUpdateMyStatus(appt.id, 'cancelled');
-                                }}
-                                title="Set your status to cancelled"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="side-panel-divider" />
+                <div className="side-panel-divider" />
 
-              {/* Heatmap invites are shown as action items the student may still need to respond to. */}
-              <div className="side-panel-section side-panel-section-heatmap">
-                <div className="side-panel-title">Heatmap invitations</div>
-                <div className="side-panel-scroll">
-                  {heatmapInvites.length === 0 ? (
-                    <p style={{ fontSize: 12, color: '#aaa' }}>No heatmap invitations right now.</p>
-                  ) : (
-                    heatmapInvites.map((inv) => (
-                      // One invitation card per heatmap the student can view or respond to.
-                      <div key={inv.id} className="invite-item">
-                        <div className={`invite-dot${inv.responded ? ' responded' : ''}`} />
-                        <div>
-                          <h4>{inv.profName}</h4>
-                          <p>{inv.title}</p>
-                          <p style={{ color: inv.responded ? '#888' : '#E31429' }}>
-                            {inv.responded
-                              ? inv.status === 'approved'
-                                ? 'Approved'
-                                : inv.status === 'declined'
-                                  ? 'Declined'
-                                  : 'Responded'
-                              : `Open ${new Date(inv.dueDate).toLocaleDateString('en-CA', {
+                {/* Heatmap invites are shown as action items the student may still need to respond to. */}
+                <div className="side-panel-section side-panel-section-heatmap">
+                  <div className="side-panel-title">Heatmap invitations</div>
+                  <div className="side-panel-scroll">
+                    {heatmapInvites.length === 0 ? (
+                      <p style={{ fontSize: 12, color: '#aaa' }}>No heatmap invitations right now.</p>
+                    ) : (
+                      heatmapInvites.map((inv) => (
+                        // One invitation card per heatmap the student can view or respond to.
+                        <div key={inv.id} className="invite-item">
+                          <div className={`invite-dot${inv.responded ? ' responded' : ''}`} />
+                          <div>
+                            <h4>{inv.profName}</h4>
+                            <p>{inv.title}</p>
+                            <p style={{ color: inv.responded ? '#888' : '#E31429' }}>
+                              {inv.responded
+                                ? inv.status === 'approved'
+                                  ? 'Approved'
+                                  : inv.status === 'declined'
+                                    ? 'Declined'
+                                    : 'Responded'
+                                : `Open ${new Date(inv.dueDate).toLocaleDateString('en-CA', {
                                   month: 'short',
                                   day: 'numeric',
                                 })}`}
-                          </p>
+                            </p>
+                          </div>
+                          <button
+                            className="invite-action-button"
+                            onClick={() => navigate(`/heatmap/student/${inv.id}`)}
+                            title={inv.responded ? 'View heatmap' : 'Respond to heatmap'}
+                          >
+                            {/* Plus means action needed; arrow means they already responded. */}
+                            {inv.responded ? '>' : '+'}
+                          </button>
                         </div>
-                        <button
-                          className="invite-action-button"
-                          onClick={() => navigate(`/heatmap/student/${inv.id}`)}
-                          title={inv.responded ? 'View heatmap' : 'Respond to heatmap'}
-                        >
-                          {/* Plus means action needed; arrow means they already responded. */}
-                          {inv.responded ? '>' : '+'}
-                        </button>
-                      </div>
-                    ))
-                  )}
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
-            </aside>
-          )}
+              </aside>
+            )}
           </div>
         </div>
       </div>

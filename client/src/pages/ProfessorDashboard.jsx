@@ -489,6 +489,7 @@ export default function ProfessorDashboard() {
           logo={logo}
           title="Dashboard Calendar"
           onLeftClick={() => navigate('/')}
+          appointments={appointments}
           user={{
             displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
             role: 'professor',

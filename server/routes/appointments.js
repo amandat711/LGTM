@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { routeLog } = require('../utils/routeLog');
+const {
+  sendAppointmentUpdatedByOwnerEmail,
+  sendAppointmentCancelledByOwnerEmail,
+  sendStudentEventResponseToHostEmail,
+} = require('../lib/mailer');
 
 const {
   parseDate,
@@ -55,6 +60,129 @@ function toResponseStatus(participantStatus) {
   if (participantStatus === 'confirmed') return 'accepted';
   if (participantStatus === 'cancelled') return 'declined';
   return 'pending';
+}
+
+async function notifyAttendeesOfOwnerChange({ appointmentIds, action, note }) {
+  const normalizedIds = uniqueInts(
+    (appointmentIds || [])
+      .map((id) => Number(id))
+      .filter((id) => Number.isInteger(id) && id > 0)
+  );
+  if (!normalizedIds.length) return;
+
+  const placeholders = normalizedIds.map(() => '?').join(',');
+  const rows = await dbAll(
+    `
+    SELECT
+      a.appointment_id,
+      a.ap_title,
+      a.start_time,
+      a.end_time,
+      a.location,
+      attendee.mcgill_email AS attendee_email,
+      host.first_name AS host_first_name,
+      host.last_name AS host_last_name
+    FROM appointments a
+    JOIN appointment_participants ap_attendee
+      ON ap_attendee.appointment_id = a.appointment_id
+    JOIN users attendee
+      ON attendee.user_id = ap_attendee.user_id
+    LEFT JOIN appointment_participants ap_host
+      ON ap_host.appointment_id = a.appointment_id
+      AND ap_host.participant_role = 'host'
+    LEFT JOIN users host
+      ON host.user_id = ap_host.user_id
+    WHERE a.appointment_id IN (${placeholders})
+      AND ap_attendee.participant_role = 'attendee'
+      AND ap_attendee.response_status != 'declined'
+    `,
+    normalizedIds
+  );
+
+  if (!rows.length) return;
+
+  await Promise.all(
+    rows.map((row) => {
+      const hostName = [row.host_first_name, row.host_last_name].filter(Boolean).join(' ').trim();
+      const payload = {
+        to: row.attendee_email,
+        appointmentTitle: row.ap_title,
+        startTime: row.start_time,
+        endTime: row.end_time,
+        location: row.location,
+        hostName,
+        note,
+      };
+
+      if (action === 'cancelled') {
+        return sendAppointmentCancelledByOwnerEmail(payload);
+      }
+      return sendAppointmentUpdatedByOwnerEmail(payload);
+    })
+  );
+}
+
+async function notifyHostOfStudentEventResponse({ appointmentIds, studentUserId, response }) {
+  const ids = uniqueInts(
+    (appointmentIds || [])
+      .map((id) => Number(id))
+      .filter((id) => Number.isInteger(id) && id > 0)
+  );
+  if (!ids.length || !Number.isInteger(Number(studentUserId)) || Number(studentUserId) < 1) return;
+  if (response !== 'accepted' && response !== 'declined') return;
+
+  const student = await dbGet(
+    `SELECT first_name, last_name FROM users WHERE user_id = ?`,
+    [Number(studentUserId)]
+  );
+  if (!student) return;
+  const studentName = [student.first_name, student.last_name].filter(Boolean).join(' ').trim() || 'A student';
+
+  const placeholders = ids.map(() => '?').join(',');
+  const rows = await dbAll(
+    `
+    SELECT
+      a.appointment_id,
+      a.ap_title,
+      a.start_time,
+      h.mcgill_email AS host_email
+    FROM appointments a
+    JOIN appointment_participants aph
+      ON aph.appointment_id = a.appointment_id
+      AND aph.participant_role = 'host'
+    JOIN users h
+      ON h.user_id = aph.user_id
+    WHERE a.appointment_id IN (${placeholders})
+      AND h.mcgill_email IS NOT NULL
+      AND TRIM(h.mcgill_email) != ''
+    ORDER BY datetime(a.start_time) ASC
+    `,
+    ids
+  );
+  if (!rows.length) return;
+
+  const byEmailKey = new Map();
+  for (const row of rows) {
+    const raw = String(row.host_email || '').trim();
+    if (!raw) continue;
+    const key = raw.toLowerCase();
+    if (!byEmailKey.has(key)) byEmailKey.set(key, { to: raw, appts: [] });
+    byEmailKey.get(key).appts.push(row);
+  }
+
+  await Promise.all(
+    [...byEmailKey.values()].map(({ to, appts }) => {
+      const first = appts[0];
+      return sendStudentEventResponseToHostEmail({
+        to,
+        studentName,
+        response,
+        appointmentTitle: first.ap_title,
+        startTime: first.start_time,
+        sessionCount: appts.length,
+      });
+    })
+  );
 }
 
 async function recalculateAppointmentStatus(appointmentId) {
@@ -245,17 +373,17 @@ router.post('/', (req, res) => {
                   db.run(
                     insertAppointment,
                     [
-                    availability.course_id ?? null,
-                    availability.availability_id,
-                    availability.capacity,
-                    availability.location || null,
-                    availability.start_time,
-                    availability.end_time,
-                    availability.visibility || 'private',
-                    availability.av_title || 'Booked Appointment',
-                    availability.av_description || null,
-                    'calendar',
-                    'pending'
+                      availability.course_id ?? null,
+                      availability.availability_id,
+                      availability.capacity,
+                      availability.location || null,
+                      availability.start_time,
+                      availability.end_time,
+                      availability.visibility || 'private',
+                      availability.av_title || 'Booked Appointment',
+                      availability.av_description || null,
+                      'calendar',
+                      'pending'
                     ],
                     function (err) {
                       if (err) return res.status(500).json({ error: err.message });
@@ -1024,6 +1152,14 @@ router.patch('/invitations/:id/accept', async (req, res) => {
       await recalculateAppointmentStatus(apptId);
     }
 
+    notifyHostOfStudentEventResponse({
+      appointmentIds,
+      studentUserId: inviteeUserId,
+      response: 'accepted',
+    }).catch((emailErr) => {
+      console.error('[mailer] host notify (invitation accepted) failed:', emailErr);
+    });
+
     const updated = await dbGet(`SELECT * FROM invitations WHERE invitation_id = ?`, [invitationId]);
     routeLog('appointments', 'invitation_accepted', {
       invitation_id: invitationId,
@@ -1160,6 +1296,14 @@ router.patch('/invitations/:id/decline', async (req, res) => {
       await recalculateAppointmentStatus(apptId);
     }
 
+    notifyHostOfStudentEventResponse({
+      appointmentIds,
+      studentUserId: inviteeUserId,
+      response: 'declined',
+    }).catch((emailErr) => {
+      console.error('[mailer] host notify (invitation declined) failed:', emailErr);
+    });
+
     const updated = await dbGet(`SELECT * FROM invitations WHERE invitation_id = ?`, [invitationId]);
     routeLog('appointments', 'invitation_declined', {
       invitation_id: invitationId,
@@ -1253,6 +1397,14 @@ router.post('/:id/join', async (req, res) => {
 
     await recalculateAppointmentStatus(appointmentId);
 
+    notifyHostOfStudentEventResponse({
+      appointmentIds: [appointmentId],
+      studentUserId: userId,
+      response: 'accepted',
+    }).catch((emailErr) => {
+      console.error('[mailer] host notify (join) failed:', emailErr);
+    });
+
     const participant = await dbGet(
       `
       SELECT appointment_id, user_id, participant_role, response_status
@@ -1345,6 +1497,19 @@ router.patch('/:id/participants/:userId/status', async (req, res) => {
       `,
       [appointmentId, participantUserId]
     );
+
+    if (
+      participant.participant_role !== 'host' &&
+      (status === 'confirmed' || status === 'cancelled')
+    ) {
+      notifyHostOfStudentEventResponse({
+        appointmentIds: [appointmentId],
+        studentUserId: participantUserId,
+        response: status === 'confirmed' ? 'accepted' : 'declined',
+      }).catch((emailErr) => {
+        console.error('[mailer] host notify (participant status) failed:', emailErr);
+      });
+    }
 
     routeLog('appointments', 'participant_status_updated', {
       appointment_id: appointmentId,
@@ -1639,6 +1804,15 @@ router.patch('/:id', async (req, res) => {
       scope: hasRecurringSeries ? scope : 'single',
       updated_count: updatedRows.length,
     });
+
+    notifyAttendeesOfOwnerChange({
+      appointmentIds: updatedRows.map((row) => row.appointment_id),
+      action: 'updated',
+      note: note || null,
+    }).catch((emailErr) => {
+      console.error('[mailer] appointment update email failed:', emailErr);
+    });
+
     return res.json({
       message: 'Appointment updated successfully',
       scope: hasRecurringSeries ? scope : 'single',
@@ -1731,6 +1905,14 @@ router.patch('/:id/cancel', (req, res) => {
                       scope: 'single',
                     });
 
+                    notifyAttendeesOfOwnerChange({
+                      appointmentIds: [appointmentId],
+                      action: 'cancelled',
+                      note: note || null,
+                    }).catch((emailErr) => {
+                      console.error('[mailer] appointment cancellation email failed:', emailErr);
+                    });
+
                     res.json({
                       message: 'Appointment cancelled successfully',
                       appointment: updatedAppointment
@@ -1762,73 +1944,82 @@ router.patch('/:id/cancel', (req, res) => {
       };
 
       resolveRecurringSource((srcErr, sourceAvailability) => {
-          if (srcErr) return res.status(500).json({ error: srcErr.message });
+        if (srcErr) return res.status(500).json({ error: srcErr.message });
 
-          const recurrenceGroupId = sourceAvailability?.recurrence_group_id || null;
-          if (!recurrenceGroupId || scope === 'single') {
-            return runSingleCancel();
-          }
+        const recurrenceGroupId = sourceAvailability?.recurrence_group_id || null;
+        if (!recurrenceGroupId || scope === 'single') {
+          return runSingleCancel();
+        }
 
-          const pivotDate = pivot_instance_date || sourceAvailability?.recurrence_instance_date || appointment.start_time;
-          let scopedWhere = sourceAvailability?.source_type === 'appointments'
-            ? `a.recurrence_group_id = ?`
-            : `a.created_from_availability IN (
+        const pivotDate = pivot_instance_date || sourceAvailability?.recurrence_instance_date || appointment.start_time;
+        let scopedWhere = sourceAvailability?.source_type === 'appointments'
+          ? `a.recurrence_group_id = ?`
+          : `a.created_from_availability IN (
               SELECT availability_id
               FROM availabilities
               WHERE recurrence_group_id = ?
             )`;
-          const scopedParams = [recurrenceGroupId];
-          if (scope === 'this_and_following') {
-            scopedWhere = sourceAvailability?.source_type === 'appointments'
-              ? `a.recurrence_group_id = ? AND datetime(a.start_time) >= datetime(?)`
-              : `a.created_from_availability IN (
+        const scopedParams = [recurrenceGroupId];
+        if (scope === 'this_and_following') {
+          scopedWhere = sourceAvailability?.source_type === 'appointments'
+            ? `a.recurrence_group_id = ? AND datetime(a.start_time) >= datetime(?)`
+            : `a.created_from_availability IN (
               SELECT availability_id
               FROM availabilities
               WHERE recurrence_group_id = ?
                 AND recurrence_instance_date IS NOT NULL
                 AND date(recurrence_instance_date) >= date(?)
             )`;
-            scopedParams.push(pivotDate);
-          }
+          scopedParams.push(pivotDate);
+        }
 
-          db.all(
-            `SELECT a.appointment_id, a.status
+        db.all(
+          `SELECT a.appointment_id, a.status
              FROM appointments a
              WHERE ${scopedWhere}
                AND a.status != 'cancelled'`,
-            scopedParams,
-            (targetErr, targets) => {
-              if (targetErr) return res.status(500).json({ error: targetErr.message });
-              if (!targets.length) {
-                return res.status(400).json({ error: 'No active appointments found in selected recurrence scope' });
-              }
+          scopedParams,
+          (targetErr, targets) => {
+            if (targetErr) return res.status(500).json({ error: targetErr.message });
+            if (!targets.length) {
+              return res.status(400).json({ error: 'No active appointments found in selected recurrence scope' });
+            }
 
-              const ids = targets.map((t) => t.appointment_id);
-              const placeholders = ids.map(() => '?').join(',');
+            const ids = targets.map((t) => t.appointment_id);
+            const placeholders = ids.map(() => '?').join(',');
 
-              db.run(
-                `UPDATE appointments SET status = 'cancelled' WHERE appointment_id IN (${placeholders})`,
-                ids,
-                function (updateErr) {
-                  if (updateErr) return res.status(500).json({ error: updateErr.message });
+            db.run(
+              `UPDATE appointments SET status = 'cancelled' WHERE appointment_id IN (${placeholders})`,
+              ids,
+              function (updateErr) {
+                if (updateErr) return res.status(500).json({ error: updateErr.message });
 
-                  const insertOneHistory = (index) => {
-                    if (index >= targets.length) {
-                      routeLog('appointments', 'appointment_cancelled', {
-                        appointment_ids: ids,
-                        changed_by,
-                        scope,
-                        cancelled_count: ids.length,
-                      });
-                      return res.json({
-                        message: 'Recurring appointments cancelled successfully',
-                        scope,
-                        cancelled_count: ids.length,
-                      });
-                    }
-                    const target = targets[index];
-                    db.run(
-                      `
+                const insertOneHistory = (index) => {
+                  if (index >= targets.length) {
+                    routeLog('appointments', 'appointment_cancelled', {
+                      appointment_ids: ids,
+                      changed_by,
+                      scope,
+                      cancelled_count: ids.length,
+                    });
+
+                    notifyAttendeesOfOwnerChange({
+                      appointmentIds: ids,
+                      action: 'cancelled',
+                      note: note || null,
+                    }).catch((emailErr) => {
+                      console.error('[mailer] appointment cancellation email failed:', emailErr);
+                    });
+
+                    return res.json({
+                      message: 'Recurring appointments cancelled successfully',
+                      scope,
+                      cancelled_count: ids.length,
+                    });
+                  }
+                  const target = targets[index];
+                  db.run(
+                    `
                       INSERT INTO appointment_history
                       (
                         appointment_id,
@@ -1840,26 +2031,26 @@ router.patch('/:id/cancel', (req, res) => {
                       )
                       VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
                       `,
-                      [
-                        target.appointment_id,
-                        changed_by,
-                        target.status,
-                        'cancelled',
-                        note || `Appointment cancelled (${scope})`,
-                      ],
-                      (historyErr) => {
-                        if (historyErr) return res.status(500).json({ error: historyErr.message });
-                        insertOneHistory(index + 1);
-                      }
-                    );
-                  };
+                    [
+                      target.appointment_id,
+                      changed_by,
+                      target.status,
+                      'cancelled',
+                      note || `Appointment cancelled (${scope})`,
+                    ],
+                    (historyErr) => {
+                      if (historyErr) return res.status(500).json({ error: historyErr.message });
+                      insertOneHistory(index + 1);
+                    }
+                  );
+                };
 
-                  insertOneHistory(0);
-                }
-              );
-            }
-          );
-        }
+                insertOneHistory(0);
+              }
+            );
+          }
+        );
+      }
       );
     }
   );
