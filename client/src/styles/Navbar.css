@@ -136,7 +136,7 @@
   font-weight: 500;
   color: #000000;
   cursor: pointer;
-  font-family: inherit;
+  font-family: 'DM Sans', Arial, sans-serif;
   transition: border-color 0.15s, color 0.15s;
 }
 

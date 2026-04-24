@@ -79,7 +79,7 @@
   font-weight: 500;
   color: #555;
   cursor: pointer;
-  font-family: inherit;
+  font-family: 'DM Sans', Arial, sans-serif;
   transition: border-color 0.15s, color 0.15s;
 }
 
