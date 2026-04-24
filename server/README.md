@@ -3,12 +3,12 @@
 This file documents the currently implemented backend endpoints in `server/`.
 
 ## Base URL
-- Default server port: `4000`
+- Default server port: `3000`
 - Health check: `GET /api/health`
 
 ## Auth
 
-Sessions use **express-session** with an HTTP-only cookie. For browser requests from the React dev app, use `fetch` with **`credentials: 'include'`**. CORS allows origins `http://localhost:3000` and `http://127.0.0.1:3000` with credentials.
+Sessions use **express-session** with an HTTP-only cookie. For browser requests from the React dev app, use `fetch` with **`credentials: 'include'`**. CORS allows origins `http://localhost:3001` and `http://127.0.0.1:3001` with credentials.
 
 ### `POST /auth/register`
 Create a new user (does not log them in).
@@ -242,7 +242,7 @@ Cancel an appointment.
 
 ## Email Configuration (Forgot Password)
 Set these environment variables in `server/.env` for Gmail:
-- `FRONTEND_URL` (example: `http://localhost:3000`) used to build reset links
+- `FRONTEND_URL` (example: `http://localhost:3001`) used to build reset links
 - `MAIL_FROM` (example: `LGTM <no-reply@lgtm.local>`)
 - `SMTP_USER` (your Gmail address)
 - `GOOGLE_APP_PASSWORD` (16-character App Password)

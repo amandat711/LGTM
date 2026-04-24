@@ -2,6 +2,7 @@
 const express = require("express");
 const cors = require("cors");
 const session = require("express-session");
+const path = require("path");
 require('dotenv').config();
 
 const app = express();
@@ -16,25 +17,34 @@ const heatmapsRouter = require('./routes/heatmaps');
 const usersRouter = require('./routes/users');
 const coursesRouter = require('./routes/courses');
 
-/** Must be explicit origins (not *) when credentials: true. localhost vs 127.0.0.1 are different origins. */
+const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:3001', 'http://127.0.0.1:3001'];
+const allowedOrigins = (process.env.CORS_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+const corsOrigins = allowedOrigins.length > 0 ? allowedOrigins : DEFAULT_ALLOWED_ORIGINS;
+
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+    origin: corsOrigins,
     credentials: true,
   })
 );
 app.use(express.json());
 
+const isProduction = process.env.NODE_ENV === 'production';
+const sessionSecret = process.env.SESSION_SECRET || 'dev-session-secret';
+
 app.use(
   session({
-    secret: 'dev-session-secret', // TODO: change to the actual session secret/env variable when deploying to production
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: 'lax',
-      secure: false,
+      sameSite: isProduction ? 'none' : 'lax',
+      secure: isProduction,
     },
   })
 );
@@ -50,6 +60,17 @@ app.use('/appointments', appointmentsRouter);
 app.use('/heatmaps', heatmapsRouter);
 app.use('/users', usersRouter);
 app.use('/courses', coursesRouter);
+
+if (isProduction) {
+  const clientBuildPath = path.join(__dirname, '..', 'client', 'build');
+  app.use(express.static(clientBuildPath));
+  app.get(/.*/, (req, res) => {
+    if (req.path.startsWith('/api/') || req.path.startsWith('/auth') || req.path.startsWith('/courses')) {
+      return res.status(404).json({ error: 'Not found.' });
+    }
+    return res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
 
 db.get("SELECT 1", (err, row) => {
   if (err) {

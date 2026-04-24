@@ -34,7 +34,7 @@ cd client
 npm install
 ```
 
-Run the dev server (opens the app, default [http://localhost:3000](http://localhost:3000)):
+Run the dev server (opens the app, default [http://localhost:3001](http://localhost:3001)):
 
 ```
 npm start
@@ -47,14 +47,14 @@ cd server
 npm install
 ```
 
-Run the API (default port **4000**):
+Run the API (default port **3000**):
 
 | Command | Use case |
 |--------|----------|
 | `npm run dev` | **Recommended for development.** Uses [nodemon](https://nodemon.io/) to restart the server when you change `.js` files. |
 | `npm start` | Runs `node index.js` once; restart manually after edits. |
 
-The React app is configured to call the API at `http://localhost:4000`. Keep the backend running while you use the frontend.
+The React app is configured to call the API at `http://localhost:3000`. Keep the backend running while you use the frontend.
 
 For route and payload details, see `server/README.md`.
 

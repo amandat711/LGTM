@@ -78,9 +78,9 @@ Implement the appointment/calendar flow in small phases so the booking system wo
 
 ### D. Dashboard events (GET /appointments)
 
-- [X] Route for "my appointments" -> `GET http://localhost:4000/appointments/my?user_id=2`
-- [X] Route for "appointments I host"-> `GET http://localhost:4000/appointments/hosting?user_id=1`
-- [X] Route for "appointments I attend"-> `GET http://localhost:4000/appointments/attending?user_id=2`
+- [X] Route for "my appointments" -> `GET http://localhost:3000/appointments/my?user_id=2`
+- [X] Route for "appointments I host"-> `GET http://localhost:3000/appointments/hosting?user_id=1`
+- [X] Route for "appointments I attend"-> `GET http://localhost:3000/appointments/attending?user_id=2`
 - [X] Sort by upcoming first
 - [X] Include status, time, location, participants
 
