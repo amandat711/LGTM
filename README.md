@@ -58,6 +58,42 @@ The React app is configured to call the API at `http://localhost:3000`. Keep the
 
 For route and payload details, see `server/README.md`.
 
+## 🌐 Production Startup (SOCS)
+
+For SOCS deployment, the reverse proxy should route your subdomain traffic to the backend on port `3000`.
+
+1. Ensure the repo is located directly at `/home/cs307-user/app`.
+2. Configure backend env vars in `server/.env`: message us for the .env
+3. Build frontend static files:
+
+```
+cd /home/cs307-user/app/client
+npm install
+npm run build
+```
+
+4. Start backend in production:
+
+```
+cd /home/cs307-user/app/server
+npm install
+NODE_ENV=production PORT=3000 npm start
+```
+
+5. Quick health check:
+
+```
+curl -i http://127.0.0.1:3000/api/health
+```
+
+Optional: keep the process running with PM2:
+
+```
+cd /home/cs307-user/app/server
+pm2 start index.js --name lgtm --update-env
+pm2 logs lgtm
+```
+
 ## 📊 Database
 
 - SQLite3 is used (no external database server required)

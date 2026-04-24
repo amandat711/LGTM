@@ -35,16 +35,20 @@ app.use(express.json());
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET || 'dev-session-secret';
 
+// SOCS terminates TLS at the reverse proxy; trust it so secure cookies can be set.
+app.set('trust proxy', true);
+
 app.use(
   session({
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: isProduction ? 'none' : 'lax',
-      secure: isProduction,
+      sameSite: 'none',
+      secure: true,
     },
   })
 );
