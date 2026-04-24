@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import IconButton from '@mui/material/IconButton';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import AuthShell from '../components/AuthShell';
 import { login } from '../api/auth';
 import { resolvePath } from '../auth/authUtils';
@@ -13,6 +16,7 @@ export default function LoginPage() {
   const redirectTo = new URLSearchParams(location.search).get('redirect');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -116,13 +120,23 @@ export default function LoginPage() {
                   <input
                     id="login-password"
                     name="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password"
                     className="login-input"
                   />
+                  <IconButton
+                    type="button"
+                    className="login-password-toggle"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    edge="end"
+                    size="small"
+                  >
+                    {showPassword ? <Visibility fontSize="small" /> : <VisibilityOff fontSize="small" />}
+                  </IconButton>
                 </div>
 
                 <div className="login-links-row">

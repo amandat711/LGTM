@@ -139,6 +139,22 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.register-input-with-toggle {
+  padding-right: 46px;
+}
+
+.register-password-toggle {
+  position: absolute !important;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #777 !important;
+}
+
+.register-password-toggle:hover {
+  color: #222 !important;
+}
+
 .register-input::placeholder {
     color: #a1a1a1;
 }

@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import IconButton from '@mui/material/IconButton';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import AuthShell from '../components/AuthShell';
 import { register } from '../api/auth';
 import { isAllowedMcGillEmail } from '../auth/authUi';
@@ -14,6 +17,8 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [department, setDepartment] = useState('');
   const [staffTitle, setStaffTitle] = useState('');
   const [error, setError] = useState('');
@@ -207,13 +212,23 @@ export default function RegisterPage() {
                   <input
                     id="register-password"
                     name="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Password"
-                    className="register-input"
+                    className="register-input register-input-with-toggle"
                   />
+                  <IconButton
+                    type="button"
+                    className="register-password-toggle"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    edge="end"
+                    size="small"
+                  >
+                    {showPassword ? <Visibility fontSize="small" /> : <VisibilityOff fontSize="small" />}
+                  </IconButton>
                 </div>
                 <p className="register-hint">
                   At least {MIN_PASSWORD_LEN} characters.
@@ -244,13 +259,23 @@ export default function RegisterPage() {
                   <input
                     id="register-confirm"
                     name="confirm"
-                    type="password"
+                    type={showConfirmPassword ? 'text' : 'password'}
                     autoComplete="new-password"
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     placeholder="Confirm password"
-                    className="register-input"
+                    className="register-input register-input-with-toggle"
                   />
+                  <IconButton
+                    type="button"
+                    className="register-password-toggle"
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    edge="end"
+                    size="small"
+                  >
+                    {showConfirmPassword ? <Visibility fontSize="small" /> : <VisibilityOff fontSize="small" />}
+                  </IconButton>
                 </div>
               </div>
 
