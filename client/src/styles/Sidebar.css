@@ -12,8 +12,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: clamp(14px, 2.2vh, 32px) 0 clamp(12px, 1.8vh, 24px);
-  gap: clamp(14px, 3.5vh, 46px);
+  padding: 20px 0 16px;
+  gap: 24px;
   flex-shrink: 0;
 }
 
@@ -21,7 +21,8 @@
 
 .side-menu-button {
   width: min(96%, 96px);
-  min-height: clamp(72px, 11vh, 96px);
+  height: 73px;
+  flex: 0 0 73px;
   border-radius: 10px;
   border: none;
   background: transparent;
@@ -136,7 +137,8 @@
 
   .side-menu-button {
     width: 72px;
-    min-height: 56px;
+    height: 56px;
+    flex: 0 0 56px;
   }
 
   .side-menu-icon-img {
