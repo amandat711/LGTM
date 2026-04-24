@@ -17,21 +17,33 @@ export default function Navbar({ logo, title, onLeftClick, user, actions = [], a
       <div className="top-bar-content">
         {/* ── Left: logo + title  OR  plain back-button ──────── */}
         <div className="top-bar-left">
-          <button
-            type="button"
-            onClick={onLeftClick}
-            className="top-bar-left-button"
-            style={{ cursor: onLeftClick ? 'pointer' : 'default' }}
-          >
-            {logo && (
-              <img
-                src={logo}
-                alt="logo"
-                className="top-bar-logo"
-              />
-            )}
-            {title && <span className="top-bar-title">{title}</span>}
-          </button>
+          {onLeftClick ? (
+            <button
+              type="button"
+              onClick={onLeftClick}
+              className="top-bar-left-button"
+            >
+              {logo && (
+                <img
+                  src={logo}
+                  alt="logo"
+                  className="top-bar-logo"
+                />
+              )}
+              {title && <span className="top-bar-title">{title}</span>}
+            </button>
+          ) : (
+            <div className="top-bar-left-button top-bar-left-button--static">
+              {logo && (
+                <img
+                  src={logo}
+                  alt="logo"
+                  className="top-bar-logo"
+                />
+              )}
+              {title && <span className="top-bar-title">{title}</span>}
+            </div>
+          )}
         </div>
         {/* ── Right: user info  +  action buttons ────────────── */}
         <div className="top-bar-right">

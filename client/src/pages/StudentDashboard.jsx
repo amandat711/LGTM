@@ -279,7 +279,6 @@ export default function StudentDashboard() {
         <Navbar
           logo={logo}
           title="Dashboard Calendar"
-          onLeftClick={() => navigate('/')}
           user={{
             displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
             role: 'student',

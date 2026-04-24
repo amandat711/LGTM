@@ -499,7 +499,6 @@ export default function CourseDetailPage() {
       <Navbar
         logo={logo}
         title="Course"
-        onLeftClick={() => navigate('/')}
         user={{
           displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
           role: currentUser.role,

@@ -52,8 +52,8 @@
 }
 
 .dash-cal-nav-btn {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 6px;
   border: 1px solid #e4e4e4;
   background: #fff;
@@ -71,6 +71,7 @@
 }
 
 .dash-cal-today-btn {
+  height: 34px;
   padding: 6px 12px;
   border-radius: 6px;
   border: 1px solid #e4e4e4;
@@ -79,7 +80,7 @@
   font-weight: 500;
   color: #555;
   cursor: pointer;
-  font-family: 'DM Sans', Arial, sans-serif;
+  font-family: inherit;
   transition: border-color 0.15s, color 0.15s;
 }
 
@@ -344,10 +345,12 @@
 
 /* If space is very tight, slightly reduce font size (still no ellipsis). */
 @media (max-width: 840px) {
+
   .dash-event-compact-title,
   .dash-event-compact-time {
     font-size: 11px;
   }
+
   .dash-event-title {
     font-size: 12px;
   }

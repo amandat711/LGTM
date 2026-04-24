@@ -17,7 +17,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  font-family:'DM Sans', Arial, sans-serif;
+  font-family: 'DM Sans', Arial, sans-serif;
   background: #f5f5f5;
   overflow: hidden;
 }
@@ -128,14 +128,17 @@
 
 .side-panel {
   width: clamp(220px, 24vw, 300px);
-  flex-shrink: 0;           /* never squish the panel when space is tight */
+  flex-shrink: 0;
+  /* never squish the panel when space is tight */
   display: flex;
   flex-direction: column;
-  overflow: hidden;         /* panel stays fixed; inner sections can scroll */
+  overflow: hidden;
+  /* panel stays fixed; inner sections can scroll */
   background: #fff;
   padding: clamp(10px, 1.2vw, 16px);
   gap: 20px;
-  min-height: 0;            /* allows the panel to scroll within a flex parent */
+  min-height: 0;
+  /* allows the panel to scroll within a flex parent */
 }
 
 .side-panel-section {
@@ -190,7 +193,7 @@
   position: relative;
 }
 
-.appointment-item > div:nth-child(2) {
+.appointment-item>div:nth-child(2) {
   grid-column: 2;
   grid-row: 1;
   flex: 1;
@@ -213,7 +216,8 @@
   flex-shrink: 0;
   grid-column: 1;
   grid-row: 1 / span 2;
-  margin-top: 6px;   /* aligns the dot with the first line of text */
+  margin-top: 6px;
+  /* aligns the dot with the first line of text */
 }
 
 /* Appointment title — the meeting name */
@@ -961,6 +965,7 @@
  */
 
 @media (max-width: 900px) {
+
   /* Give the calendar more room on tablet-sized screens. */
   .side-panel {
     width: clamp(200px, 28vw, 240px);
@@ -968,10 +973,12 @@
 }
 
 @media (max-width: 700px) {
+
   /* On phones, hide the side panel so the calendar stays usable. */
   .side-panel {
     display: none;
   }
+
   /* .side-menu responsive rule moved to Sidebar.css */
 
   .help-guide-modal {
@@ -1042,6 +1049,7 @@
   border-radius: 14px;
   padding: 14px 16px;
   font-size: 15px;
+  font-family: inherit;
   color: #111;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -1050,7 +1058,7 @@
 .booking-search-box:focus {
   /* Focus ring helps keyboard users see exactly where they are typing. */
   border-color: #E31429;
-  box-shadow: 0 0 0 4px rgba(227, 20, 41, 0.1);
+  box-shadow: inset 0 0 0 4px rgba(227, 20, 41, 0.1);
 }
 
 
