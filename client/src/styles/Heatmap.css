@@ -130,6 +130,7 @@ body {
 }
 
 .heatmap-create-fields input,
+.heatmap-create-fields select,
 .heatmap-create-fields textarea {
   width: 100%;
   border: 1.5px solid var(--border-med);
@@ -149,6 +150,7 @@ body {
 }
 
 .heatmap-create-fields input:focus,
+.heatmap-create-fields select:focus,
 .heatmap-create-fields textarea:focus {
   outline: none;
   border-color: var(--red);

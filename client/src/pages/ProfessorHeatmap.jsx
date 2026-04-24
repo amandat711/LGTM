@@ -9,7 +9,7 @@ import logo from '../assets/LGTMLogo2.png';
 import Navbar from '../components/Navbar';
 import AppSidebar from '../components/AppSidebar';
 import useAppShellSession from '../hooks/useAppShellSession';
-import { isFacultyAdmin, sessionUserToNavUser } from '../auth/authUtils';
+import { sessionUserToNavUser } from '../auth/authUtils';
 // Grid components used by professor view: personal availability and group heatmap.
 import { PersonalGrid, GroupGrid, HeatmapLegend, GridPager } from '../components/HeatmapGrid';
 // Reusable modal components for confirmations, sharing, and appointment details.
@@ -29,6 +29,7 @@ import {
   saveHeatmapSubmission,
   updateHeatmap,
 } from '../api/heatmaps';
+import { getCourses } from '../api/courses';
 import { logout } from '../api/auth';
 // Calendar-grid helpers that produce the visible day and time labels.
 import { generateDays, generateTimes } from '../utils/generateDays';
@@ -69,7 +70,6 @@ export default function ProfessorHeatmap() {
   // Session data is converted into the smaller shape this page needs.
   const { user: sessionUser } = useAppShellSession();
   const sessionNav = useMemo(() => sessionUserToNavUser(sessionUser), [sessionUser]);
-  const canCreate = isFacultyAdmin(sessionUser?.user_type);
   const isNewHeatmapRoute = eventId === 'new';
 
   // Local user object used for nav display and backend write actions.
@@ -146,6 +146,7 @@ export default function ProfessorHeatmap() {
   const [editHeatmapCourseId, setEditHeatmapCourseId] = useState('');
   const [savingHeatmapDetails, setSavingHeatmapDetails] = useState(false);
   const [deletingHeatmap, setDeletingHeatmap] = useState(false);
+  const [ownedCourses, setOwnedCourses] = useState([]);
 
   // Pull apart the bundle so render logic can stay readable below.
   const heatmap = heatmapBundle?.heatmap;
@@ -220,6 +221,38 @@ export default function ProfessorHeatmap() {
       active = false;
     };
   }, [eventId, isNewHeatmapRoute, navigate, user?.id]);
+
+  // Load courses for which this professor is an owner so the form can show course codes.
+  useEffect(() => {
+    let active = true;
+
+    if (!user?.id) {
+      setOwnedCourses([]);
+      return () => {
+        active = false;
+      };
+    }
+
+    getCourses()
+      .then((data) => {
+        if (!active) return;
+        const list = Array.isArray(data?.courses) ? data.courses : [];
+        const ownerOnly = list.filter((course) => {
+          if (course?.is_owner != null) return Boolean(course.is_owner);
+          if (course?.owner_user_id != null) return Number(course.owner_user_id) === Number(user.id);
+          return true;
+        });
+        setOwnedCourses(ownerOnly);
+      })
+      .catch(() => {
+        if (!active) return;
+        setOwnedCourses([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [user?.id]);
 
   // When a heatmap loads or changes, seed the edit form with the saved details.
   useEffect(() => {
@@ -439,10 +472,10 @@ export default function ProfessorHeatmap() {
       />
       <div className="dashboard-layout">
         <AppSidebar
-          activeId="search"
+          activeId={null}
           user={sessionUser}
           navigate={navigate}
-          canCreate={canCreate}
+          canCreate={false}
         />
         <div className="heatmap-main-content">
           <div className="heatmap-page" style={{ width: '100%' }}>
@@ -480,6 +513,22 @@ export default function ProfessorHeatmap() {
                 </label>
 
                 <label>
+                  <span>Course code</span>
+                  <select
+                    value={newHeatmapCourseId}
+                    onChange={(e) => setNewHeatmapCourseId(e.target.value)}
+                  >
+                    <option value="">Optional</option>
+                    {ownedCourses.map((course) => (
+                      <option key={course.course_id} value={String(course.course_id)}>
+                        {course.course_code}
+                        {course.course_name ? ` - ${course.course_name}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
                   <span>Description</span>
                   <textarea
                     value={newHeatmapDescription}
@@ -487,17 +536,6 @@ export default function ProfessorHeatmap() {
                     placeholder="Example: Pick every time you could attend a 30-minute project meeting this week."
                     rows={5}
                     maxLength={500}
-                  />
-                </label>
-
-                <label>
-                  <span>Course ID</span>
-                  <input
-                    type="number"
-                    min="1"
-                    value={newHeatmapCourseId}
-                    onChange={(e) => setNewHeatmapCourseId(e.target.value)}
-                    placeholder="Optional"
                   />
                 </label>
               </div>
@@ -551,6 +589,22 @@ export default function ProfessorHeatmap() {
                   </label>
 
                   <label>
+                    <span>Course code</span>
+                    <select
+                      value={editHeatmapCourseId}
+                      onChange={(e) => setEditHeatmapCourseId(e.target.value)}
+                    >
+                      <option value="">Optional</option>
+                      {ownedCourses.map((course) => (
+                        <option key={course.course_id} value={String(course.course_id)}>
+                          {course.course_code}
+                          {course.course_name ? ` - ${course.course_name}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label>
                     <span>Description</span>
                     <textarea
                       value={editHeatmapDescription}
@@ -558,17 +612,6 @@ export default function ProfessorHeatmap() {
                       placeholder="Example: Pick every time you could attend a 30-minute project meeting this week."
                       rows={4}
                       maxLength={500}
-                    />
-                  </label>
-
-                  <label>
-                    <span>Course ID</span>
-                    <input
-                      type="number"
-                      min="1"
-                      value={editHeatmapCourseId}
-                      onChange={(e) => setEditHeatmapCourseId(e.target.value)}
-                      placeholder="Optional"
                     />
                   </label>
                 </div>

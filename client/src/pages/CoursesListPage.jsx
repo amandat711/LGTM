@@ -5,13 +5,9 @@ import { isFacultyAdmin } from '../auth/authUtils';
 import { createCourse, getCourses } from '../api/courses';
 import { logout } from '../api/auth';
 import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
+import AppSidebar from '../components/AppSidebar';
 import CreateCourseModal from '../components/CreateCourseModal';
 import logo from '../assets/LGTMLogo2.png';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import SearchIcon from '@mui/icons-material/Search';
-import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
-import InfoIcon from '@mui/icons-material/Info';
 import '../styles/Dashboard.css';
 import '../styles/CoursesListPage.css';
 
@@ -170,14 +166,11 @@ export default function CoursesListPage() {
       )}
 
       <div className="dashboard-layout">
-        <Sidebar
+        <AppSidebar
           activeId="courses"
-          items={[
-            { id: 'calendar', iconComponent: CalendarMonthIcon, label: 'Calendar', onClick: () => navigate('/dashboard/student') },
-            { id: 'courses', iconComponent: CollectionsBookmarkOutlinedIcon, label: 'Courses', onClick: () => navigate('/courses') },
-            { id: 'search', iconComponent: SearchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
-          ]}
-          bottomItems={[{ id: 'help', iconComponent: InfoIcon, label: 'Help' }]}
+          user={user}
+          navigate={navigate}
+          canCreate={canCreate}
         />
 
         <div className="main-content">
