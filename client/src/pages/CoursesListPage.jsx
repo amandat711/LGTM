@@ -170,7 +170,7 @@ export default function CoursesListPage() {
           activeId="courses"
           user={user}
           navigate={navigate}
-          canCreate={canCreate}
+          canCreate={false}
         />
 
         <div className="main-content">
