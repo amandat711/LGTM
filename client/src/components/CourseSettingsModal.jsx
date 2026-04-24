@@ -210,7 +210,7 @@ export default function CourseSettingsModal({
         <>
           <span className="modal-kind-pill modal-kind-pill--event">Course</span>
           {course?.course_code ? (
-            <span className="modal-kind-pill modal-kind-pill--course">Course: {course.course_code}</span>
+            <span className="modal-kind-pill modal-kind-pill--course">{course.course_code}</span>
           ) : null}
         </>
       }
