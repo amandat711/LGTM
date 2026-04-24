@@ -5,7 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 // Shared heatmap styling for setup controls, legends, grids, and action bars.
 import '../styles/Heatmap.css';
 // Shared page chrome and session helpers.
-import logo from '../assets/logo1.png';
+import logo from '../assets/LGTMLogo2.png';
 import Navbar from '../components/Navbar';
 import AppSidebar from '../components/AppSidebar';
 import useAppShellSession from '../hooks/useAppShellSession';

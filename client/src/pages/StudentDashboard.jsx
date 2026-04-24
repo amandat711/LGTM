@@ -6,7 +6,7 @@ This code was use to help showcase upcoming appointments - user friendly */
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAppShellSession from '../hooks/useAppShellSession';
-import logo from '../assets/logo1.png';
+import logo from '../assets/LGTMLogo2.png';
 import Navbar from '../components/Navbar';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';

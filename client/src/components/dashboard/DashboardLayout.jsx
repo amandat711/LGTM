@@ -3,7 +3,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../api/auth';
-import logo from '../../assets/logo1.png';
+import logo from '../../assets/LGTMLogo2.png';
 import calendarIcon from '../../assets/calendarIcon.png';
 import coursesIcon from '../../assets/courseIcon.png';
 import searchIcon from '../../assets/searchIcon.png';

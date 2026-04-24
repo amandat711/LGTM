@@ -6,7 +6,7 @@ import useAppShellSession from '../hooks/useAppShellSession';
 import { isFacultyAdmin, resolvePath } from '../auth/authUtils';
 import Navbar from '../components/Navbar';
 import AppSidebar from '../components/AppSidebar';
-import logo from '../assets/logo1.png';
+import logo from '../assets/LGTMLogo2.png';
 import '../styles/Dashboard.css';
 
 function mapOwnerToProfessor(owner) {

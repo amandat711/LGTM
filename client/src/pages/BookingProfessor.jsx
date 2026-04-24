@@ -6,7 +6,7 @@ import { createAppointment } from '../api/appointments';
 import { logout } from '../api/auth';
 import useAppShellSession from '../hooks/useAppShellSession';
 import { isFacultyAdmin, resolvePath } from '../auth/authUtils';
-import logo from '../assets/logo1.png';
+import logo from '../assets/LGTMLogo2.png';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';
 import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';

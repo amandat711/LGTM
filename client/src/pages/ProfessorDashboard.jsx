@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom';
 // Pulls the logged-in professor info from the shared app shell/session.
 import useAppShellSession from '../hooks/useAppShellSession';
 // Shared visuals and reusable components used by the dashboard UI.
-import logo from '../assets/logo1.png';
+import logo from '../assets/LGTMLogo2.png';
 import Navbar from '../components/Navbar';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';

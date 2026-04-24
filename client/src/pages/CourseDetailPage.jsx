@@ -18,7 +18,7 @@ import Calendar from '../components/calendar/Calendar';
 import CreateAppointmentModal from '../components/CreateAppointmentModal';
 import CourseSettingsModal from '../components/CourseSettingsModal';
 import { ConfirmActionModal, InviteURLModal } from '../components/Modals';
-import logo from '../assets/logo1.png';
+import logo from '../assets/LGTMLogo2.png';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';
 import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
