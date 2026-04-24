@@ -6,6 +6,7 @@ import useAppShellSession from '../hooks/useAppShellSession';
 import { isFacultyAdmin, resolvePath } from '../auth/authUtils';
 import Navbar from '../components/Navbar';
 import AppSidebar from '../components/AppSidebar';
+import { PAGE_HELP_GUIDES } from '../data/helpGuides';
 import logo from '../assets/LGTMLogo2.png';
 import '../styles/Dashboard.css';
 
@@ -103,6 +104,7 @@ export default function BookingDiscovery() {
           user={user}
           navigate={navigate}
           canCreate={false}
+          helpGuide={PAGE_HELP_GUIDES.bookingSearch}
         />
         <div className="main-content">
           <div className="booking-page">
