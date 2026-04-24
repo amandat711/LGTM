@@ -1,11 +1,11 @@
 import React from 'react';
 import Sidebar from './Sidebar';
 import { resolvePath } from '../auth/authUtils';
-import calendarIcon from '../assets/calendarIcon.png';
-import coursesIcon from '../assets/courseIcon.png';
-import searchIcon from '../assets/searchIcon.png';
-import InfoIcon from '../assets/infoIcon.png';
-import createAvailabilityIcon from '../assets/createAvailabilityIcon.png';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import SearchIcon from '@mui/icons-material/Search';
+import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
+import InfoIcon from '@mui/icons-material/Info';
+import AddIcon from '@mui/icons-material/Add';
 
 export default function AppSidebar({
   activeId,
@@ -18,19 +18,19 @@ export default function AppSidebar({
   const items = [
     {
       id: 'calendar',
-      icon: calendarIcon,
+      iconComponent: CalendarMonthIcon,
       label: 'Calendar',
       onClick: () => navigate(resolvePath('dashboard', user)),
     },
-    { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
-    { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
+    { id: 'courses', iconComponent: CollectionsBookmarkOutlinedIcon, label: 'Courses', onClick: () => navigate('/courses') },
+    { id: 'search', iconComponent: SearchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
   ];
 
   if (canCreate) {
     items.push({
       id: 'create',
-      icon: createAvailabilityIcon,
-      label: '+ Create',
+      iconComponent: AddIcon,
+      label: 'Create',
       onClick: onCreate || (() => navigate('/heatmap/professor/new')),
     });
   }
@@ -39,7 +39,7 @@ export default function AppSidebar({
     <Sidebar
       activeId={activeId}
       items={items}
-      bottomItems={[{ id: 'help', icon: InfoIcon, label: 'Help', onClick: onHelp }]}
+      bottomItems={[{ id: 'help', iconComponent: InfoIcon, label: 'Help', onClick: onHelp }]}
     />
   );
 }

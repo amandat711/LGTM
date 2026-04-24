@@ -7,10 +7,10 @@ import { logout } from '../api/auth';
 import useAppShellSession from '../hooks/useAppShellSession';
 import { isFacultyAdmin, resolvePath } from '../auth/authUtils';
 import logo from '../assets/logo1.png';
-import calendarIcon from '../assets/calendarIcon.png';
-import coursesIcon from '../assets/courseIcon.png';
-import searchIcon from '../assets/searchIcon.png';
-import InfoIcon from '../assets/infoIcon.png';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import SearchIcon from '@mui/icons-material/Search';
+import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
+import InfoIcon from '@mui/icons-material/Info';
 import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 import BookingCalendar, { toCalendarDateKey } from '../components/BookingCalendar';
@@ -222,9 +222,9 @@ export default function BookingProfessor() {
   };
 
   const sidebarItems = [
-    { id: 'calendar', icon: calendarIcon, label: 'Dashboard', onClick: () => navigate(resolvePath('dashboard', user)) },
-    { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
-    { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
+    { id: 'calendar', iconComponent: CalendarMonthIcon, label: 'Calendar', onClick: () => navigate(resolvePath('dashboard', user)) },
+    { id: 'courses', iconComponent: CollectionsBookmarkOutlinedIcon, label: 'Courses', onClick: () => navigate('/courses') },
+    { id: 'search', iconComponent: SearchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
   ];
 
   if (loading && !professor) {
@@ -242,7 +242,7 @@ export default function BookingProfessor() {
           actions={[{ label: 'Log Out', onClick: handleLogout }]}
         />
         <div className="dashboard-layout">
-          <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', icon: InfoIcon, label: 'Help' }]} />
+          <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', iconComponent: InfoIcon, label: 'Help' }]} />
           <div className="main-content">
             <div className="booking-page">
               <p>Loading...</p>
@@ -268,7 +268,7 @@ export default function BookingProfessor() {
           actions={[{ label: 'Log Out', onClick: handleLogout }]}
         />
         <div className="dashboard-layout">
-          <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', icon: InfoIcon, label: 'Help' }]} />
+          <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', iconComponent: InfoIcon, label: 'Help' }]} />
           <div className="main-content">
             <div className="booking-page">
               <p>Professor not found.</p>
@@ -294,7 +294,7 @@ export default function BookingProfessor() {
       />
 
       <div className="dashboard-layout">
-        <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', icon: InfoIcon, label: 'Help' }]} />
+        <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', iconComponent: InfoIcon, label: 'Help' }]} />
 
         <div className="main-content">
           <div className="booking-page">

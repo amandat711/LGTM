@@ -8,10 +8,10 @@ import { useNavigate } from 'react-router-dom';
 import useAppShellSession from '../hooks/useAppShellSession';
 import logo from '../assets/logo1.png';
 import Navbar from '../components/Navbar';
-import calendarIcon from '../assets/calendarIcon.png';
-import coursesIcon from '../assets/courseIcon.png';
-import searchIcon from '../assets/searchIcon.png';
-import InfoIcon from '../assets/infoIcon.png';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import SearchIcon from '@mui/icons-material/Search';
+import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
+import InfoIcon from '@mui/icons-material/Info';
 import { DeleteConfirmModal, HelpGuideModal, SlotDetailModal } from '../components/Modals';
 import Calendar from '../components/calendar/Calendar';
 import {
@@ -300,14 +300,14 @@ export default function StudentDashboard() {
             activeId={sideTab}
             items={[
               // Calendar stays local; courses and search open their dedicated pages.
-              { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => setSideTab('calendar') },
-              { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
+              { id: 'calendar', iconComponent: CalendarMonthIcon, label: 'Calendar', onClick: () => setSideTab('calendar') },
+              { id: 'courses', iconComponent: CollectionsBookmarkOutlinedIcon, label: 'Courses', onClick: () => navigate('/courses') },
               // Search opens the booking discovery flow where students find professors.
-              { id: 'search', icon: searchIcon, iconClassName: 'side-menu-icon-img-search', label: 'Search', onClick: () => navigate('/booking/search') },
+              { id: 'search', iconComponent: SearchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
             ]}
             bottomItems={[
               // Help is kept at the bottom of the sidebar for consistent access.
-              { id: 'help', icon: InfoIcon, iconClassName: 'side-menu-icon-img-info', label: 'Help', onClick: () => setModal('help') },
+              { id: 'help', iconComponent: InfoIcon, label: 'Help', onClick: () => setModal('help') },
             ]}
           />
 

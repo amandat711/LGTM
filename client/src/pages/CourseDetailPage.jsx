@@ -19,10 +19,11 @@ import CreateAppointmentModal from '../components/CreateAppointmentModal';
 import CourseSettingsModal from '../components/CourseSettingsModal';
 import { ConfirmActionModal, InviteURLModal } from '../components/Modals';
 import logo from '../assets/logo1.png';
-import calendarIcon from '../assets/calendarIcon.png';
-import coursesIcon from '../assets/courseIcon.png';
-import searchIcon from '../assets/searchIcon.png';
-import InfoIcon from '../assets/infoIcon.png';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import SearchIcon from '@mui/icons-material/Search';
+import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
+import InfoIcon from '@mui/icons-material/Info';
+import AddIcon from '@mui/icons-material/Add';
 import '../styles/Dashboard.css';
 import '../styles/CourseDetailPage.css';
 
@@ -327,14 +328,14 @@ export default function CourseDetailPage() {
   const sidebarItems = useMemo(
     () => {
       const items = [
-        { id: 'calendar', icon: calendarIcon, label: 'Calendar', onClick: () => navigate('/dashboard/professor?tab=calendar') },
-        { id: 'courses', icon: coursesIcon, label: 'Courses', onClick: () => navigate('/courses') },
-        { id: 'search', icon: searchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
+        { id: 'calendar', iconComponent: CalendarMonthIcon, label: 'Calendar', onClick: () => navigate('/dashboard/professor?tab=calendar') },
+        { id: 'courses', iconComponent: CollectionsBookmarkOutlinedIcon, label: 'Courses', onClick: () => navigate('/courses') },
+        { id: 'search', iconComponent: SearchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
       ];
       if (detail?.course?.is_owner) {
         items.push({
           id: 'create',
-          iconText: '+',
+          iconComponent: AddIcon,
           label: 'Create',
           onClick: () => setCreateEventOpen(true),
         });
@@ -550,7 +551,7 @@ export default function CourseDetailPage() {
         <Sidebar
           activeId="courses"
           items={sidebarItems}
-          bottomItems={[{ id: 'help', icon: InfoIcon, label: 'Help' }]}
+          bottomItems={[{ id: 'help', iconComponent: InfoIcon, label: 'Help' }]}
         />
 
         <div className="main-content">

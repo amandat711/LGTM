@@ -21,7 +21,7 @@
 
 .side-menu-button {
   width: min(96%, 96px);
-  min-height: clamp(58px, 10vh, 88px);
+  min-height: clamp(72px, 11vh, 96px);
   border-radius: 10px;
   border: none;
   background: transparent;
@@ -52,8 +52,12 @@
 }
 
 .side-menu-icon {
-  font-size: 40px;
-  color: #888;
+  width: 75%;
+  height: auto;
+  max-width: 56px;
+  max-height: 56px;
+  font-size: clamp(40px, 5vw, 56px);
+  color: #000;
   line-height: 1;
   transition: color 0.15s;
 }
@@ -98,12 +102,12 @@
 /* ─── LABEL ──────────────────────────────────────────────── */
 
 .side-menu-label {
-  display: none;
-  font-size: 9px;
+  display: block;
+  font-size: 10px;
   font-weight: 500;
   color: #888;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  text-transform: none;
+  letter-spacing: 0.02em;
   line-height: 1.15;
   max-width: 100%;
   overflow-wrap: normal;

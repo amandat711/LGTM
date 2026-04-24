@@ -8,7 +8,7 @@ import '../styles/Sidebar.css';
  
  */
 export default function Sidebar({ items = [], activeId, bottomItems = [] }) {
-  function renderButton({ id, icon, iconText, label, onClick, iconClassName = '' }) {
+  function renderButton({ id, icon, iconComponent: IconComponent, iconText, label, onClick, iconClassName = '' }) {
     const isActive = id && id === activeId;
 
     return (
@@ -17,14 +17,19 @@ export default function Sidebar({ items = [], activeId, bottomItems = [] }) {
         className={`side-menu-button${isActive ? ' active' : ''}`}
         onClick={onClick}
       >
-        {icon && (
+        {IconComponent && (
+          <IconComponent
+            className={`side-menu-icon${iconClassName ? ` ${iconClassName}` : ''}`}
+          />
+        )}
+        {!IconComponent && icon && (
           <img
             src={icon}
             alt={label || ''}
             className={`side-menu-icon-img${iconClassName ? ` ${iconClassName}` : ''}`}
           />
         )}
-        {!icon && iconText && (
+        {!IconComponent && !icon && iconText && (
           <span className="side-menu-icon-text">{iconText}</span>
         )}
         {label && <span className="side-menu-label">{label}</span>}
