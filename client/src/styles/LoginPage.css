@@ -53,7 +53,7 @@
   gap: 6px;
   color: #555;
   text-decoration: none;
-  font-size: 11px;
+  font-size: 15px;
   line-height: 1;
 }
 
@@ -72,8 +72,8 @@
 }
 
 .login-subtitle {
-  margin: 4px 0 0;
-  font-size: 11px;
+  margin: 12px 0 0;
+  font-size: 15px;
   color: #666;
 }
 
@@ -93,20 +93,20 @@
   color: #9e1c1c;
   border-radius: 10px;
   padding: 9px 10px;
-  font-size: 12px;
+  font-size: 15px;
 }
 
 .login-form {
-  margin-top: 14px;
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
 }
 
 .login-field-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 10px;
 }
 
 .login-field {
@@ -133,7 +133,7 @@
   background: #ffffff;
   padding: 0 14px 0 36px;
   box-sizing: border-box;
-  font-size: 13px;
+  font-size: 15px;
   color: #111;
   outline: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
@@ -156,7 +156,7 @@
 }
 
 .login-forgot-link {
-  font-size: 11px;
+  font-size: 15px;
   color: #555;
   text-decoration: none;
 }
@@ -167,14 +167,14 @@
 }
 
 .login-submit {
-  margin: 6px auto 0;
+  margin: 14px auto 0;
   min-width: 132px;
   height: 36px;
   border: none;
   border-radius: 999px;
   background: #000;
   color: #fff;
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 700;
   padding: 0 22px;
   cursor: pointer;
