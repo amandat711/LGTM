@@ -47,7 +47,7 @@ export function expandRecurring(selectedKeys, recurringWeeks) {
  */
 // SQLite can return "YYYY-MM-DD HH:mm:ss"; JavaScript Date is happier with a "T" separator.
 export function parseSqliteDateTime(value) {
-  // Example: "2026-04-07 09:30:00" becomes "2026-04-07T09:30:00".
+  // e.g.:"2026-04-07 09:30:00" becomes "2026-04-07T09:30:00".
   return new Date(String(value).replace(' ', 'T'));
 }
 
@@ -239,7 +239,7 @@ export function mapSubmissionSlotsToKeys(submission, startHour, endHour) {
  */
 // Builds the URL for either side of the same heatmap.
 export function buildHeatmapPath(role, heatmapId) {
-  // Example: "/heatmap/professor/12" or "/heatmap/student/12".
+  // e.g.:"/heatmap/professor/12" or "/heatmap/student/12".
   return `/heatmap/${role}/${heatmapId}`;
 }
 

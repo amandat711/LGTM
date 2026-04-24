@@ -135,8 +135,8 @@ export default function ProfessorHeatmap() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   // Metadata form shown before a brand-new heatmap is created.
-  const [newHeatmapTitle, setNewHeatmapTitle] = useState('Office Hours Heatmap');
-  const [newHeatmapDescription, setNewHeatmapDescription] = useState('Shared availability collection for bookings');
+  const [newHeatmapTitle, setNewHeatmapTitle] = useState('');
+  const [newHeatmapDescription, setNewHeatmapDescription] = useState('');
   const [newHeatmapCourseId, setNewHeatmapCourseId] = useState('');
   const [creatingHeatmap, setCreatingHeatmap] = useState(false);
   // Existing heatmap details can be edited after creation without changing the availability grid.
@@ -507,7 +507,7 @@ export default function ProfessorHeatmap() {
                     type="text"
                     value={newHeatmapTitle}
                     onChange={(e) => setNewHeatmapTitle(e.target.value)}
-                    placeholder="Example: COMP 307 project check-ins"
+                    placeholder="e.g.:COMP 307 project check-ins"
                     maxLength={120}
                   />
                 </label>
@@ -533,7 +533,7 @@ export default function ProfessorHeatmap() {
                   <textarea
                     value={newHeatmapDescription}
                     onChange={(e) => setNewHeatmapDescription(e.target.value)}
-                    placeholder="Example: Pick every time you could attend a 30-minute project meeting this week."
+                    placeholder="e.g.: Pick every time you could attend a 30-minute project meeting this week."
                     rows={5}
                     maxLength={500}
                   />
@@ -583,7 +583,7 @@ export default function ProfessorHeatmap() {
                       type="text"
                       value={editHeatmapTitle}
                       onChange={(e) => setEditHeatmapTitle(e.target.value)}
-                      placeholder="Example: COMP 307 project check-ins"
+                      placeholder="e.g.:COMP 307 project check-ins"
                       maxLength={120}
                     />
                   </label>
@@ -609,7 +609,7 @@ export default function ProfessorHeatmap() {
                     <textarea
                       value={editHeatmapDescription}
                       onChange={(e) => setEditHeatmapDescription(e.target.value)}
-                      placeholder="Example: Pick every time you could attend a 30-minute project meeting this week."
+                      placeholder="e.g.:Pick every time you could attend a 30-minute project meeting this week."
                       rows={4}
                       maxLength={500}
                     />
