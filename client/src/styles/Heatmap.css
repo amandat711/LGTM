@@ -67,7 +67,7 @@ body {
 }
 
 .page-title {
-  font-family: var(--font);
+  font-family: 'DM Sans', Arial, sans-serif;
   font-size: 28px;
   font-weight: 600;
   color: var(--text);
@@ -136,7 +136,7 @@ body {
   border-radius: 7px;
   background: var(--white);
   color: var(--text);
-  font-family: var(--font);
+  font-family: 'DM Sans', Arial, sans-serif;
   font-size: 14px;
   padding: 10px 12px;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -258,7 +258,7 @@ body {
   background: var(--white);
   font-size: 13px;
   color: var(--text);
-  font-family: var(--font);
+  font-family: 'DM Sans', Arial, sans-serif;
   cursor: pointer;
 }
 
@@ -553,7 +553,7 @@ body {
   color: var(--text);
   cursor: pointer;
   transition: all 0.15s;
-  font-family: var(--font);
+  font-family: 'DM Sans', Arial, sans-serif;
 }
 
 .participant-chip:hover { border-color: #888; }
@@ -582,7 +582,7 @@ body {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s;
-  font-family: var(--font);
+  font-family: 'DM Sans', Arial, sans-serif;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -605,7 +605,7 @@ body {
 .button-danger { background: var(--white); border: 1.5px solid #cc2222; color: #cc2222; }
 .button-danger:hover { background: #cc2222; color: #fff; }
 
-.button-ghost { background: transparent; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; font-family: var(--font); }
+.button-ghost { background: transparent; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; font-family: 'DM Sans', Arial, sans-serif; }
 .button-ghost:hover { color: var(--text); }
 
 .button-small { padding: 5px 12px; font-size: 12px; }
@@ -742,7 +742,7 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-family: var(--font);
+  font-family: 'DM Sans', Arial, sans-serif;
 }
 
 .badge-success {

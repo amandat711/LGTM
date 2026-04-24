@@ -12,20 +12,12 @@
 */
 
 
-/* 
-   PAGE SHELL
-   The outermost wrapper for every dashboard page.
-   Uses flexbox column so the navbar sits at the top and the
-   layout below fills the remaining viewport height exactly.
-   overflow: hidden prevents double scrollbars — individual
-   panels scroll themselves instead.
- */
 
 .dashboard-page {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  font-family:'Segoe UI', Arial, sans-serif;
+  font-family:'DM Sans', Arial, sans-serif;
   background: #f5f5f5;
   overflow: hidden;
 }
@@ -114,9 +106,7 @@
 /* 
    MAIN CONTENT AREA
    Fills the horizontal space left after the sidebar.
-   min-width: 0 is required on flex children that contain
-   text or grids — without it the child can overflow its parent.
-   The calendar and the right panel sit side by side inside here.
+   
  */
 
 .main-content {
@@ -793,7 +783,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
-  font-family: inherit;
+  font-family: 'DM Sans', Arial, sans-serif;
 }
 
 .button-primary {
@@ -993,7 +983,7 @@
 
 
 
-/* JOCELYNE LI*/
+
 
 /* 
    BOOKING PAGES

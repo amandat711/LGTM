@@ -1,7 +1,7 @@
 /* AMANDA TRAN */
 /* Main landing page container */
 .landing-page {
-  font-family: Arial, sans-serif;
+  font-family: 'DM Sans', Arial, sans-serif;
   background: #fff;
   color: #0f0f0f;
   margin: 0;
@@ -37,7 +37,7 @@
 }
 .login-button:hover { border-color: #E31429; color: #E31429; }
 
-/* Profile icon button */
+/* Profile icon button  : NOT CUrrently used */
 .profile-button {
   width: 34px; height: 34px; border-radius: 50%; border: 1px solid #e4e4e4;
   display: flex; align-items: center; justify-content: center;
