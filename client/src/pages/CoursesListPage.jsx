@@ -150,7 +150,6 @@ export default function CoursesListPage() {
       <Navbar
         logo={logo}
         title="Course List"
-        onLeftClick={() => navigate('/')}
         user={{
           displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
           role: currentUser.role,

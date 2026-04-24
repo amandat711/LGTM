@@ -3,7 +3,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../api/auth';
-import logo from '../../assets/LGTMLogo2.png';
+import LGTMLogo2 from '../../assets/LGTMLogo2.png';
 import calendarIcon from '../../assets/calendarIcon.png';
 import coursesIcon from '../../assets/courseIcon.png';
 import searchIcon from '../../assets/searchIcon.png';
@@ -34,27 +34,22 @@ export default function DashboardLayout({
     <div className="dash-root">
       <nav className="dash-nav">
         <div className="dash-nav-left">
-          <button
-            onClick={() => navigate('/')}
+          <div
             style={{
-              background: 'none',
-              border: 'none',
-              padding: 0,
-              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
             }}
           >
             <img
-              src={logo}
+              src={LGTMLogo2}
               alt="LGTM"
               className="dash-nav-logo"
               style={{ height: '100px', width: '100px', objectFit: 'contain' }}
             />
-          </button>
+          </div>
           <span className="dash-nav-title">Dashboard</span>
         </div>
-            
+
         <div className="dash-nav-right">
           <span className="dash-nav-name">
             {user.lastName}, {user.firstName}

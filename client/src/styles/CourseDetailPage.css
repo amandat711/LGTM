@@ -56,6 +56,7 @@
   font-weight: 700;
   color: #555;
   letter-spacing: 0.04em;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-icon-btn {
@@ -99,6 +100,7 @@
   color: #333;
   line-height: 1.55;
   margin: 0;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-invite-actions {
@@ -113,19 +115,22 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  height: 34px;
   padding: 10px 18px;
-  border-radius: 10px;
-  border: 1px solid #c8c8c8;
-  background: #f5f5f5;
-  font-size: 15px;
+  border-radius: 999px;
+  border: 1px solid #000000;
+  background: #000000;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  font-family: inherit;
-  color: #222;
+  font-family: 'Inter', sans-serif;
+  color: #ffffff;
 }
 
 .course-detail-generate-btn:hover {
-  background: #ebebeb;
+  border: 1px solid #b4b4b4;
+  background: #b4b4b4;
+  color: #000000;
 }
 
 .course-detail-inline-icon {
@@ -139,7 +144,7 @@
   width: 100%;
 }
 
-/* —— Teaching staff —— */
+/* Teaching staff */
 .course-detail-section-title {
   margin: 0 0 14px;
   font-size: 20px;
@@ -166,6 +171,7 @@
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.07);
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-team-card-main {
@@ -190,6 +196,7 @@
   font-size: 16px;
   color: #0f0f0f;
   word-break: break-word;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-team-role {
@@ -197,6 +204,7 @@
   color: #555;
   margin-top: 4px;
   line-height: 1.4;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-team-actions {
@@ -213,6 +221,7 @@
   padding: 4px 6px;
   border-radius: 6px;
   color: #333;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-icon-link:hover {
@@ -222,13 +231,14 @@
 .course-detail-availability-pill {
   display: inline-block;
   padding: 6px 12px;
-  border-radius: 8px;
+  border-radius: 999px;
   border: 1px solid #d0d0d0;
   background: #fafafa;
   font-size: 13px;
   font-weight: 600;
   color: #333;
   text-decoration: none;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-availability-pill:hover {
@@ -237,13 +247,13 @@
 
 .course-detail-btn {
   border: 1px solid #c8c8c8;
-  border-radius: 8px;
+  border-radius: 999px;
   background: #f5f5f5;
   padding: 8px 14px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  font-family: inherit;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-btn:hover {
@@ -270,7 +280,7 @@
   cursor: not-allowed;
 }
 
-/* —— Events panel —— */
+/* Events panel */
 .course-detail-events-panel {
   background: #fff;
   border: 1px solid #e0e0e0;
@@ -288,6 +298,7 @@
   margin-bottom: 16px;
   padding-bottom: 4px;
   border-bottom: 1px solid #eee;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-events-title {
@@ -296,6 +307,7 @@
   font-weight: 700;
   text-align: center;
   grid-column: 2;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-events-view-toggle {
@@ -318,7 +330,7 @@
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  font-family: inherit;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-events-view-btn.active {
@@ -338,7 +350,7 @@
   font-weight: 600;
   background: #fff;
   cursor: pointer;
-  font-family: inherit;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-add-event-btn:hover {
@@ -372,6 +384,7 @@
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
   padding: 6px;
   z-index: 5000;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-add-event-item {
@@ -382,9 +395,9 @@
   border-radius: 8px;
   padding: 8px 10px;
   font-size: 14px;
-  font-family: inherit;
   color: #222;
   cursor: pointer;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-add-event-item:hover {
@@ -411,6 +424,7 @@
   overflow: hidden;
   border: 1px solid #e8e8e8;
   border-radius: 12px;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-calendar-wrap .dash-calendar-panel {
@@ -423,24 +437,28 @@
   border-radius: 12px;
   background: #fafafa;
   padding: 12px 14px;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-calendar-detail-title {
   font-size: 15px;
   font-weight: 700;
   color: #0f0f0f;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-calendar-detail-meta {
   margin-top: 4px;
   font-size: 13px;
   color: #555;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-calendar-detail-creator {
   margin-top: 6px;
   font-size: 12px;
   color: #666;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-calendar-detail-desc {
@@ -448,12 +466,14 @@
   font-size: 13px;
   color: #444;
   line-height: 1.4;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-calendar-detail-actions {
   margin-top: 10px;
   display: flex;
   justify-content: flex-end;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-event {
@@ -465,6 +485,7 @@
   border-radius: 10px;
   overflow: visible;
   border: 1px solid #e8e8e8;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-event::before {
@@ -478,6 +499,7 @@
   flex: 1;
   padding: 12px 14px 12px 12px;
   min-width: 0;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-event-title {
@@ -485,12 +507,14 @@
   font-size: 15px;
   color: #0f0f0f;
   margin-bottom: 4px;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-event-meta {
   font-size: 13px;
   color: #555;
   line-height: 1.4;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-event-creator {
@@ -498,6 +522,7 @@
   color: #666;
   margin-top: 6px;
   line-height: 1.35;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-event-desc {
@@ -505,6 +530,7 @@
   color: #666;
   margin-top: 8px;
   line-height: 1.4;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-event-gear {
@@ -518,6 +544,7 @@
   align-items: center;
   justify-content: center;
   align-self: stretch;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-event-gear:hover {
@@ -534,6 +561,7 @@
   align-items: flex-end;
   gap: 6px;
   justify-content: center;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-inline-menu {
@@ -555,6 +583,7 @@
   cursor: pointer;
   font-size: 18px;
   line-height: 1;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-inline-menu-trigger:hover {
@@ -594,7 +623,7 @@
   font-size: 13px;
   color: #222;
   cursor: pointer;
-  font-family: inherit;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-detail-inline-menu-item:hover {
