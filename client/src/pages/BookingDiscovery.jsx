@@ -98,7 +98,7 @@ export default function BookingDiscovery() {
       />
 
       <div className="dashboard-layout">
-        <AppSidebar activeId="search" user={user} navigate={navigate} canCreate={userRole === 'professor'} />
+        <AppSidebar activeId="search" user={user} navigate={navigate} canCreate={false} />
         <div className="main-content">
           <div className="booking-page">
             <section className="booking-box">
