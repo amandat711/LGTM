@@ -27,6 +27,7 @@ import {
   getMyAppointments,
   getMyInvitations,
   cancelAppointment,
+  dismissCancelledAppointment,
   updateMyParticipantStatus,
 } from '../api/appointments';
 import { getHeatmaps } from '../api/heatmaps';
@@ -74,6 +75,7 @@ export default function StudentDashboard() {
   const [error, setError] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
+  const [dismissedCancelledIds, setDismissedCancelledIds] = useState([]);
 
   const currentUser = !user
     ? { firstName: 'User', lastName: String(userId ?? '') }
@@ -99,6 +101,9 @@ export default function StudentDashboard() {
         // Merge direct appointment rows with pending invites so invite-only events show on calendar.
         const baseAppointments = data.map((appt) => mapAppointmentToCalendarEvent(appt, userId));
         const knownIds = new Set(baseAppointments.map((appt) => Number(appt.id)));
+        const studentName = !user
+          ? `User ${String(userId ?? '')}`.trim()
+          : `${user.first_name || 'User'} ${user.last_name || String(userId ?? '')}`.trim();
         const inviteOnlyAppointments = inviteData
           .filter((invite) => !knownIds.has(Number(invite.appointment_id)))
           .map((invite) => {
@@ -108,7 +113,7 @@ export default function StudentDashboard() {
               title: invite.ap_title || 'Appointment invitation',
               ownerName,
               ownerEmail: invite.inviter_email || '',
-              attendeeName: `${currentUser.firstName} ${currentUser.lastName}`.trim(),
+              attendeeName: studentName,
               attendeeEmail: user?.mcgill_email || '',
               attendeeStatus: 'pending',
               startTime: invite.start_time,
@@ -147,6 +152,13 @@ export default function StudentDashboard() {
     }
 
     loadAppointments();
+    const refreshTimer = window.setInterval(loadAppointments, 30000);
+    window.addEventListener('focus', loadAppointments);
+
+    return () => {
+      window.clearInterval(refreshTimer);
+      window.removeEventListener('focus', loadAppointments);
+    };
     // Run again if the logged-in user changes.
   }, [userId, user]);
 
@@ -171,10 +183,15 @@ export default function StudentDashboard() {
     const now = new Date();
 
     return appointments
-      .filter((a) => includeAppointmentOnWeekCalendar(a) && new Date(a.startTime) >= now)
+      .filter(
+        (a) =>
+          includeAppointmentOnWeekCalendar(a)
+          && new Date(a.startTime) >= now
+          && !(a.status === 'cancelled' && dismissedCancelledIds.includes(Number(a.id)))
+      )
       .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
       .slice(0, 10);
-  }, [appointments]);
+  }, [appointments, dismissedCancelledIds]);
 
   // Side panel shows one card per recurring series to avoid repetition.
   const upcomingPanelAppts = useMemo(() => {
@@ -213,8 +230,12 @@ export default function StudentDashboard() {
 
 
   const weekCalendarAppointments = useMemo(
-    () => appointments.filter(includeAppointmentOnWeekCalendar),
-    [appointments]
+    () => appointments.filter(
+      (appt) =>
+        includeAppointmentOnWeekCalendar(appt)
+        && !(appt.status === 'cancelled' && dismissedCancelledIds.includes(Number(appt.id)))
+    ),
+    [appointments, dismissedCancelledIds]
   );
 
   // Shrinks raw heatmap data down to just the fields this page actually needs.
@@ -280,6 +301,27 @@ export default function StudentDashboard() {
       setActiveAppt((prev) => (prev && prev.id === appointmentId ? mergeParticipantUpdate(prev) : prev));
       setError('');
       setInfoMessage('Your response was saved.');
+    } catch (err) {
+      setInfoMessage('');
+      setError(err.message);
+    }
+  }
+
+  async function handleDismissCancelledAppointment(appointmentId) {
+    const dismissedId = Number(appointmentId);
+    setDismissedCancelledIds((prev) => (
+      prev.includes(dismissedId) ? prev : [...prev, dismissedId]
+    ));
+    setAppointments((prev) => prev.filter((appt) => Number(appt.id) !== dismissedId));
+    setActiveAppt((prev) => (prev && Number(prev.id) === dismissedId ? null : prev));
+    setModal((prev) => (
+      activeAppt && Number(activeAppt.id) === dismissedId ? null : prev
+    ));
+
+    try {
+      await dismissCancelledAppointment(appointmentId, userId);
+      setError('');
+      setInfoMessage('Cancelled appointment dismissed.');
     } catch (err) {
       setInfoMessage('');
       setError(err.message);
@@ -420,7 +462,7 @@ export default function StudentDashboard() {
                               )}
                             </div>
                             <span className={`appointment-status-pill ${cls}`}>{label}</span>
-                            {appt.attendeeStatus === 'pending' && (
+                            {appt.status !== 'cancelled' && appt.attendeeStatus === 'pending' && (
                               <div style={{ display: 'grid', gap: 6 }}>
                                 <button
                                   type="button"
@@ -445,6 +487,20 @@ export default function StudentDashboard() {
                                   ×
                                 </button>
                               </div>
+                            )}
+                            {appt.status === 'cancelled' && (
+                              <button
+                                type="button"
+                                className="invite-action-button"
+                                aria-label="Delete cancelled item"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDismissCancelledAppointment(appt.id);
+                                }}
+                                title="Delete cancelled item from your dashboard"
+                              >
+                                Delete
+                              </button>
                             )}
                           </div>
                         );
@@ -538,6 +594,7 @@ export default function StudentDashboard() {
           }}
           isOwner={false}
           onUpdateMyStatus={(nextStatus) => handleUpdateMyStatus(activeAppt.id, nextStatus)}
+          onDismissCancelled={() => handleDismissCancelledAppointment(activeAppt.id)}
           onDelete={() => setModal('delete')}
           onClose={() => {
             setModal(null);

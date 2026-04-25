@@ -39,6 +39,21 @@ export async function cancelAppointment(appointmentId, changedBy, options = {}) 
   return parseJson(res);
 }
 
+export async function dismissCancelledAppointment(appointmentId, userId) {
+  const res = await fetch(`${API_BASE}/appointments/${appointmentId}/dismiss-cancellation`, {
+    ...fetchOpts,
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      user_id: Number(userId),
+    }),
+  });
+
+  return parseJson(res);
+}
+
 export async function updateAppointment(appointmentId, payload) {
   const res = await fetch(`${API_BASE}/appointments/${appointmentId}`, {
     ...fetchOpts,

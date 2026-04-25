@@ -34,6 +34,7 @@ import {
   getHostingAppointments,
   cancelAppointment,
   createDirectAppointment,
+  dismissCancelledAppointment,
   updateAppointment,
   updateMyParticipantStatus,
 } from '../api/appointments';
@@ -181,7 +182,7 @@ export default function ProfessorDashboard() {
     const visibleAppointments = appointments.filter(
       (appt) =>
         includeAppointmentOnWeekCalendar(appt)
-        && !(appt.status === 'cancelled' && dismissedCancelledIds.includes(appt.id))
+        && !(appt.status === 'cancelled' && dismissedCancelledIds.includes(Number(appt.id)))
     );
 
     // Save appointment time ranges so we can hide availability slots that overlap them.
@@ -215,7 +216,7 @@ export default function ProfessorDashboard() {
         (a) =>
           includeAppointmentOnWeekCalendar(a)
           && new Date(a.startTime) >= now
-          && !(a.status === 'cancelled' && dismissedCancelledIds.includes(a.id))
+          && !(a.status === 'cancelled' && dismissedCancelledIds.includes(Number(a.id)))
       )
       .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
       .slice(0, 5);
@@ -450,6 +451,27 @@ export default function ProfessorDashboard() {
     }
   }
 
+  async function handleDismissCancelledAppointment(appointmentId) {
+    const dismissedId = Number(appointmentId);
+    setDismissedCancelledIds((prev) => (
+      prev.includes(dismissedId) ? prev : [...prev, dismissedId]
+    ));
+    setAppointments((prev) => prev.filter((appt) => Number(appt.id) !== dismissedId));
+    setActiveAppt((prev) => (prev && Number(prev.id) === dismissedId ? null : prev));
+    setModal((prev) => (
+      activeAppt && Number(activeAppt.id) === dismissedId ? null : prev
+    ));
+
+    try {
+      await dismissCancelledAppointment(appointmentId, userId);
+      setInfoMessage('Cancelled appointment dismissed.');
+      setError('');
+    } catch (err) {
+      setInfoMessage('');
+      setError(err.message);
+    }
+  }
+
   // Small initials badge shown in the navbar profile area.
   const initials = `${currentUser.firstName?.[0] || 'U'}${currentUser.lastName?.[0] || ''}`;
 
@@ -614,15 +636,14 @@ export default function ProfessorDashboard() {
                               <button
                                 type="button"
                                 className="invite-action-button"
+                                aria-label="Delete cancelled item"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setDismissedCancelledIds((prev) => (
-                                    prev.includes(appt.id) ? prev : [...prev, appt.id]
-                                  ));
+                                  handleDismissCancelledAppointment(appt.id);
                                 }}
-                                title="Dismiss cancelled item"
+                                title="Delete cancelled item from your dashboard"
                               >
-                                Dismiss
+                                Delete
                               </button>
                             )}
                           </div>
@@ -786,6 +807,11 @@ export default function ProfessorDashboard() {
           onUpdateMyStatus={
             activeAppt.type !== 'availability'
               ? (nextStatus) => handleUpdateMyStatus(activeAppt.id, nextStatus)
+              : undefined
+          }
+          onDismissCancelled={
+            activeAppt.type !== 'availability'
+              ? () => handleDismissCancelledAppointment(activeAppt.id)
               : undefined
           }
           onEdit={

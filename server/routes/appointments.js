@@ -705,10 +705,13 @@ router.get('/my', (req, res) => {
     FROM appointments a
     JOIN appointment_participants ap
       ON a.appointment_id = ap.appointment_id
+    LEFT JOIN appointment_cancellation_dismissals acd
+      ON acd.appointment_id = a.appointment_id
+      AND acd.user_id = ap.user_id
     LEFT JOIN availabilities src
       ON a.created_from_availability = src.availability_id
     WHERE ap.user_id = ?
-      AND a.status != 'cancelled'
+      AND (a.status != 'cancelled' OR acd.appointment_id IS NULL)
     ORDER BY datetime(a.start_time) ASC
   `;
 
@@ -772,11 +775,14 @@ router.get('/hosting', (req, res) => {
     FROM appointments a
     JOIN appointment_participants ap
       ON a.appointment_id = ap.appointment_id
+    LEFT JOIN appointment_cancellation_dismissals acd
+      ON acd.appointment_id = a.appointment_id
+      AND acd.user_id = ap.user_id
     LEFT JOIN availabilities src
       ON a.created_from_availability = src.availability_id
     WHERE ap.user_id = ?
       AND ap.participant_role = 'host'
-      AND a.status != 'cancelled'
+      AND (a.status != 'cancelled' OR acd.appointment_id IS NULL)
     ORDER BY datetime(a.start_time) ASC
   `;
 
@@ -840,11 +846,14 @@ router.get('/attending', (req, res) => {
     FROM appointments a
     JOIN appointment_participants ap
       ON a.appointment_id = ap.appointment_id
+    LEFT JOIN appointment_cancellation_dismissals acd
+      ON acd.appointment_id = a.appointment_id
+      AND acd.user_id = ap.user_id
     LEFT JOIN availabilities src
       ON a.created_from_availability = src.availability_id
     WHERE ap.user_id = ?
       AND ap.participant_role = 'attendee'
-      AND a.status != 'cancelled'
+      AND (a.status != 'cancelled' OR acd.appointment_id IS NULL)
     ORDER BY datetime(a.start_time) ASC
   `;
 
@@ -1959,6 +1968,62 @@ router.patch('/:id/cancel', (req, res) => {
       );
     }
   );
+});
+
+router.patch('/:id/dismiss-cancellation', async (req, res) => {
+  const appointmentId = Number(req.params.id);
+  const userId = Number(req.body?.user_id);
+
+  if (!Number.isInteger(appointmentId) || appointmentId < 1) {
+    return res.status(400).json({ error: 'Invalid appointment id' });
+  }
+  if (!Number.isInteger(userId) || userId < 1) {
+    return res.status(400).json({ error: 'user_id is required' });
+  }
+
+  try {
+    const appointment = await dbGet(
+      `SELECT appointment_id, status FROM appointments WHERE appointment_id = ?`,
+      [appointmentId]
+    );
+    if (!appointment) {
+      return res.status(404).json({ error: 'Appointment not found' });
+    }
+    if (appointment.status !== 'cancelled') {
+      return res.status(400).json({ error: 'Only cancelled appointments can be dismissed' });
+    }
+
+    const participant = await dbGet(
+      `
+      SELECT appointment_id
+      FROM appointment_participants
+      WHERE appointment_id = ?
+        AND user_id = ?
+      `,
+      [appointmentId, userId]
+    );
+    if (!participant) {
+      return res.status(403).json({ error: 'Only appointment participants can dismiss this cancellation' });
+    }
+
+    await dbRun(
+      `
+      INSERT OR IGNORE INTO appointment_cancellation_dismissals
+        (appointment_id, user_id)
+      VALUES (?, ?)
+      `,
+      [appointmentId, userId]
+    );
+
+    routeLog('appointments', 'appointment_cancellation_dismissed', {
+      appointment_id: appointmentId,
+      user_id: userId,
+    });
+
+    return res.json({ message: 'Cancelled appointment dismissed' });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;

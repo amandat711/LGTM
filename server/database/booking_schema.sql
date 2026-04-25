@@ -220,6 +220,15 @@ CREATE TABLE appointment_history (
     FOREIGN KEY (changed_by) REFERENCES users(user_id) ON DELETE SET NULL
 );
 
+CREATE TABLE appointment_cancellation_dismissals (
+    appointment_id        INTEGER NOT NULL,
+    user_id               INTEGER NOT NULL,
+    dismissed_at          TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (appointment_id, user_id),
+    FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
 CREATE TABLE heatmaps (
     hm_id                 INTEGER PRIMARY KEY AUTOINCREMENT,
     created_by            INTEGER NOT NULL,

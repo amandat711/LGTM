@@ -67,10 +67,9 @@ export function isSameDay(d1, d2) {
   );
 }
 
-/** Bookings with row status cancelled are hidden from week calendars (still available via GET /:id if needed). */
+/** Appointment visibility is viewer-specific; cancelled rows stay visible until that user dismisses them. */
 export function includeAppointmentOnWeekCalendar(event) {
-  if (!event || event.type === 'availability') return true;
-  return event.appointmentStatus !== 'cancelled';
+  return Boolean(event);
 }
 
 const WEEKDAY_ORDER = { MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6, SU: 7 };
