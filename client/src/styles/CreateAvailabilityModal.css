@@ -11,8 +11,9 @@
 .availability-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
+  gap: 10px;
+  margin-top: 14px;
+  margin-bottom: 14px;
 }
 
 .availability-modal-subtitle {
@@ -182,6 +183,9 @@
   text-transform: none;
   letter-spacing: 0;
   box-shadow: none;
+  font-family: 'Inter', sans-serif;
+  background-color: black;
+  color: white;
 }
 
 .availability-modal-footer .MuiButton-text {
@@ -215,11 +219,11 @@
   font-size: 0.85rem;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease;
+  transition: opacity 0.15s ease, background 0.2s ease;
 }
 
 .modal-btn:hover {
-  transform: translateY(-1px);
+  transform: none;
 }
 
 .modal-btn:disabled {
@@ -321,20 +325,25 @@
 
 .visibility-toggle {
   display: inline-flex;
+  align-items: stretch;
   border: 1px solid #d1d5db;
   border-radius: 999px;
   overflow: hidden;
   width: fit-content;
+  box-sizing: border-box;
 }
 
 .visibility-toggle-btn {
   border: none;
   background: #fff;
   color: #6b7280;
-  padding: 7px 12px;
-  font-size: 0.82rem;
+  padding: 9px 14px;
+  font-size: 0.88rem;
+  line-height: 1.35;
   font-weight: 600;
+  font-family: inherit;
   cursor: pointer;
+  box-sizing: border-box;
 }
 
 .visibility-toggle-btn.active {

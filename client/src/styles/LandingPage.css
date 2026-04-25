@@ -172,12 +172,11 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s, transform 0.15s;
+  transition: background 0.15s;
 }
 
 .hero-button:hover {
   background: #b01020;
-  transform: translateY(-1px);
 }
 
 /* Short intro section under the hero */

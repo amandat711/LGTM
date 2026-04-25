@@ -749,12 +749,11 @@ body {
 .button-primary:hover {
   background: var(--red-dark);
   border-color: var(--red-dark);
-  transform: translateY(-1px);
   box-shadow: 0 3px 10px rgba(227, 20, 41, 0.25);
 }
 
 .button-primary:active {
-  transform: translateY(0);
+  transform: none;
 }
 
 .button-outline {
@@ -931,6 +930,15 @@ body {
   justify-content: flex-end;
   padding-top: 1rem;
   border-top: 1px solid var(--border);
+}
+
+.modal-footer .MuiButton-textPrimary {
+  color: #111111;
+}
+
+.modal-footer .MuiButton-textPrimary:hover {
+  color: #000000;
+  background-color: rgba(0, 0, 0, 0.06);
 }
 
 .attendee-list {
