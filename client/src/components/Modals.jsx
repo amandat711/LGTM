@@ -178,7 +178,7 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
   return (
     <Modal
       title="Confirm this slot"
-      onClose={submitting ? () => {} : onClose}
+      onClose={submitting ? () => { } : onClose}
       footer={
         <>
           <Button variant="text" onClick={onClose} disabled={submitting}>
@@ -291,41 +291,41 @@ export function SlotDetailModal({
   const participantList = Array.isArray(ap.participants) ? ap.participants : [];
   const normalizedParticipants = participantList.length > 0
     ? participantList.map((p) => ({
-        userId: p.userId || p.user_id || null,
-        name:
-          p.name
-          || `${p.first_name || ''} ${p.last_name || ''}`.trim()
-          || (p.participant_role === 'host' ? createdByName : otherPartyName)
-          || 'Unknown user',
-        email: p.email || p.mcgill_email || '',
-        role: p.role || p.participant_role || 'attendee',
-        status:
-          p.status
-          || p.participant_status
-          || (p.response_status === 'accepted'
-            ? 'confirmed'
-            : p.response_status === 'declined'
-              ? 'cancelled'
-              : 'pending'),
-      }))
+      userId: p.userId || p.user_id || null,
+      name:
+        p.name
+        || `${p.first_name || ''} ${p.last_name || ''}`.trim()
+        || (p.participant_role === 'host' ? createdByName : otherPartyName)
+        || 'Unknown user',
+      email: p.email || p.mcgill_email || '',
+      role: p.role || p.participant_role || 'attendee',
+      status:
+        p.status
+        || p.participant_status
+        || (p.response_status === 'accepted'
+          ? 'confirmed'
+          : p.response_status === 'declined'
+            ? 'cancelled'
+            : 'pending'),
+    }))
     : [
-        {
-          userId: ap.currentUserId || null,
-          name: createdByName || 'Host',
-          email: createdByEmail || '',
-          role: 'host',
-          status: 'confirmed',
-        },
-        ...((otherPartyName && otherPartyName !== '—')
-          ? [{
-              userId: null,
-              name: otherPartyName,
-              email: otherPartyEmail || '',
-              role: 'attendee',
-              status: ap.status || 'pending',
-            }]
-          : []),
-      ];
+      {
+        userId: ap.currentUserId || null,
+        name: createdByName || 'Host',
+        email: createdByEmail || '',
+        role: 'host',
+        status: 'confirmed',
+      },
+      ...((otherPartyName && otherPartyName !== '—')
+        ? [{
+          userId: null,
+          name: otherPartyName,
+          email: otherPartyEmail || '',
+          role: 'attendee',
+          status: ap.status || 'pending',
+        }]
+        : []),
+    ];
   const canUpdateMyStatus = !isAvailability && typeof onUpdateMyStatus === 'function';
   const ownerPending = isOwner && ap.myStatus === 'pending';
 
@@ -503,13 +503,12 @@ export function SlotDetailModal({
                   </div>
                   <div className="participant-status-actions">
                     {!(canUpdateMyStatus && isCurrentUser) && (
-                      <span className={`appointment-status-pill ${
-                        status === 'confirmed'
-                          ? 'status-confirmed'
-                          : status === 'cancelled'
-                            ? 'status-cancelled'
-                            : 'status-pending'
-                      }`}>
+                      <span className={`appointment-status-pill ${status === 'confirmed'
+                        ? 'status-confirmed'
+                        : status === 'cancelled'
+                          ? 'status-cancelled'
+                          : 'status-pending'
+                        }`}>
                         {status}
                       </span>
                     )}
@@ -593,6 +592,21 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
     recurrence_group_id: ap.recurrence_group_id,
   });
 
+  const startDel = ap.startTime ? new Date(ap.startTime) : null;
+  const endDel = ap.endTime ? new Date(ap.endTime) : null;
+  const deleteDateTimeLabel =
+    startDel && !Number.isNaN(startDel.getTime())
+      ? endDel && !Number.isNaN(endDel.getTime())
+        ? `${startDel.toLocaleDateString('en-CA', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+        })} · ${formatTime(ap.startTime)} – ${formatTime(ap.endTime)}`
+        : startDel.toLocaleDateString('en-CA', { weekday: 'long', month: 'long', day: 'numeric' })
+      : [typeof ap.day === 'string' || typeof ap.day === 'number' ? String(ap.day) : '', typeof ap.time === 'string' || typeof ap.time === 'number' ? String(ap.time) : '']
+        .filter(Boolean)
+        .join(' at ') || '—';
+
   return (
     <Modal
       title={confirmTitle}
@@ -641,6 +655,7 @@ export function RecurrenceScopeModal({
     <Modal
       title={`${actionLabel === 'delete' ? 'Delete' : 'Edit'} recurring event`}
       onClose={onClose}
+      className="modal--recurrence-scope"
       footer={
         <Button variant="text" onClick={onClose}>
           Cancel
@@ -650,29 +665,14 @@ export function RecurrenceScopeModal({
       {recurrenceSubtitle ? (
         <div className="modal-recurrence-line modal-recurrence-line--spaced">{recurrenceSubtitle}</div>
       ) : null}
-      <div className="modal-detail-stack">
-        <Button
-          type="button"
-          variant="outlined"
-          onClick={() => onSelect('single')}
-          sx={{ width: '100%', justifyContent: 'flex-start' }}
-        >
+      <div className="modal-detail-stack modal-detail-stack--recurrence-scope">
+        <Button type="button" variant="outlined" onClick={() => onSelect('single')}>
           This event
         </Button>
-        <Button
-          type="button"
-          variant="outlined"
-          onClick={() => onSelect('this_and_following')}
-          sx={{ width: '100%', justifyContent: 'flex-start' }}
-        >
+        <Button type="button" variant="outlined" onClick={() => onSelect('this_and_following')}>
           This and following events
         </Button>
-        <Button
-          type="button"
-          variant="outlined"
-          onClick={() => onSelect('all')}
-          sx={{ width: '100%', justifyContent: 'flex-start' }}
-        >
+        <Button type="button" variant="outlined" onClick={() => onSelect('all')}>
           All events
         </Button>
       </div>
