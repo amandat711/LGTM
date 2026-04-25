@@ -16,6 +16,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
 import InfoIcon from '@mui/icons-material/Info';
 import AddIcon from '@mui/icons-material/Add';
+import IosShareIcon from '@mui/icons-material/IosShare';
 import { DeleteConfirmModal, HelpGuideModal, RecurrenceScopeModal, SlotDetailModal } from '../components/Modals';
 import Calendar from '../components/calendar/Calendar';
 import {
@@ -52,6 +53,7 @@ import { DASHBOARD_HELP_GUIDES } from '../data/helpGuides';
 
 // Reusable sidebar component instead of hand-writing the menu here.
 import Sidebar from '../components/Sidebar';
+import ExportCalendarModal from '../components/ExportCalendarModal';
 import '../styles/Dashboard.css';
 import { logout } from '../api/auth';
 
@@ -80,6 +82,7 @@ export default function ProfessorDashboard() {
   const [sideTab, setSideTab] = useState('calendar');
   // `modal` says which popup is open, and `activeAppt` says which item it is about.
   const [modal, setModal] = useState(null);
+  const [exportCalendarOpen, setExportCalendarOpen] = useState(false);
   const [activeAppt, setActiveAppt] = useState(null);
   const [createStartTime, setCreateStartTime] = useState(null);
   const [createEndTime, setCreateEndTime] = useState(null);
@@ -514,7 +517,12 @@ export default function ProfessorDashboard() {
               { id: 'create', iconComponent: AddIcon, label: 'Create', onClick: () => setModal('createItem') },
             ]}
             bottomItems={[
-              // Help is kept at the bottom of the sidebar for consistent access.
+              {
+                id: 'export-calendar',
+                iconComponent: IosShareIcon,
+                label: 'export calendar',
+                onClick: () => setExportCalendarOpen(true),
+              },
               { id: 'help', iconComponent: InfoIcon, label: 'Help', onClick: () => setModal('help') },
             ]}
           />
@@ -875,6 +883,14 @@ export default function ProfessorDashboard() {
           onClose={() => setModal(null)}
         />
       )}
+
+      <ExportCalendarModal
+        open={exportCalendarOpen}
+        onClose={() => setExportCalendarOpen(false)}
+        userId={userId}
+        isFaculty={true}
+        exportSource="hosting"
+      />
     </>
   );
 }

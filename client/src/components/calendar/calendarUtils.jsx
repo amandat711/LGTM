@@ -138,6 +138,32 @@ export function formatRecurrenceSubtitleLine({ recurrence_rule, recurrence_group
   return '';
 }
 
+/** Availability = open slot; appointment = has attendees; event = host only (no attendees). */
+export function slotKindFromAppointment(ap) {
+  const safe = ap || {};
+  if (safe.type === 'availability') {
+    return { key: 'availability', label: 'Availability' };
+  }
+  const list = Array.isArray(safe.participants) ? safe.participants : [];
+  const hasAttendeeInList = list.some((p) => {
+    const role = String(p.role || p.participant_role || '').toLowerCase();
+    return role === 'attendee';
+  });
+  const attendeeName = String(safe.attendeeName || '').trim();
+  const attendeeEmail = String(safe.attendeeEmail || '').trim();
+  const bookedBy = String(safe.bookedBy || '').trim();
+  const bookedByLooksLikeSummary = /^\d+\/\d+ booked$/i.test(bookedBy);
+  const hasOtherParty =
+    (attendeeName && attendeeName !== '—') ||
+    !!attendeeEmail ||
+    (bookedBy && bookedBy !== '—' && !bookedByLooksLikeSummary);
+
+  if (hasAttendeeInList || hasOtherParty) {
+    return { key: 'appointment', label: 'Appointment' };
+  }
+  return { key: 'event', label: 'Event' };
+}
+
 export function statusLabel(status) {
   if (status === 'confirmed') return { label: 'Confirmed', cls: 'status-confirmed' };
   if (status === 'pending') return { label: 'Pending', cls: 'status-pending' };

@@ -441,9 +441,15 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
          FROM appointments a
          LEFT JOIN users acu ON acu.user_id = a.created_by`;
 
+    const attendeeCountSql = `(
+                SELECT COUNT(*) FROM appointment_participants apx
+                WHERE apx.appointment_id = a.appointment_id AND apx.participant_role = 'attendee'
+              ) AS attendee_count`;
+
     const apSql = (isStaff || isOwner)
       ? `SELECT a.appointment_id, a.course_id, a.capacity, a.location, a.start_time, a.end_time, a.visibility,
                 a.ap_title, a.ap_description, a.ap_color, a.scheduling_mode, a.status, a.created_at,
+                ${attendeeCountSql},
                 acu.first_name AS creator_first_name,
                 acu.last_name AS creator_last_name
          ${apFrom}
@@ -453,7 +459,7 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
                 a.ap_title, a.ap_description, a.ap_color, a.scheduling_mode, a.status, a.created_at,
                 (SELECT COUNT(*) FROM appointment_participants apv
                   WHERE apv.appointment_id = a.appointment_id AND apv.user_id = ?) AS joined_by_viewer,
-                NULL AS attendee_count,
+                ${attendeeCountSql},
                 acu.first_name AS creator_first_name,
                 acu.last_name AS creator_last_name
          ${apFrom}
