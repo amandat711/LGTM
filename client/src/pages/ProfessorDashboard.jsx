@@ -635,7 +635,7 @@ export default function ProfessorDashboard() {
                             {appt.status === 'cancelled' && (
                               <button
                                 type="button"
-                                className="invite-action-button"
+                                className="invite-action-button appointment-delete-button"
                                 aria-label="Delete cancelled item"
                                 onClick={(e) => {
                                   e.stopPropagation();
