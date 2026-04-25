@@ -257,6 +257,7 @@ export function SlotDetailModal({
   onEdit,
   onClose,
   onUpdateMyStatus,
+  onDismissCancelled,
 }) {
   const ap = appointment || {};
   const isAvailability = ap.type === 'availability';
@@ -328,6 +329,7 @@ export function SlotDetailModal({
     ];
   const canUpdateMyStatus = !isAvailability && typeof onUpdateMyStatus === 'function';
   const ownerPending = isOwner && ap.myStatus === 'pending';
+  const canDismissCancelled = !isAvailability && ap.status === 'cancelled' && typeof onDismissCancelled === 'function';
 
   const recurrenceSubtitle = formatRecurrenceSubtitleLine({
     recurrence_rule: ap.recurrence_rule,
@@ -353,10 +355,17 @@ export function SlotDetailModal({
               </IconButton>
             </Tooltip>
           ) : null}
-          {isOwner ? (
+          {isOwner && ap.status !== 'cancelled' ? (
             <Tooltip title={ownerDestructiveFooterLabel(ap)}>
               <IconButton size="small" onClick={onDelete} aria-label="Delete">
                 <DeleteOutlineOutlinedIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+          {canDismissCancelled ? (
+            <Tooltip title="Dismiss cancelled item">
+              <IconButton size="small" onClick={onDismissCancelled} aria-label="Dismiss cancelled item">
+                <CheckCircleOutlineOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           ) : null}
@@ -573,19 +582,19 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
     ? 'Delete this availability?'
     : slotKind.key === 'event'
       ? 'Delete this event?'
-      : 'Cancel appointments?';
+      : 'Cancel this appointment?';
 
   const confirmDangerLabel = isAvailability
     ? 'Yes, delete availability'
     : slotKind.key === 'event'
       ? 'Yes, delete'
-      : 'Yes, cancel appointments';
+      : 'Yes, cancel appointment';
 
   const confirmBody = isAvailability
     ? 'This will permanently delete the availability slot from your calendar.'
     : slotKind.key === 'event'
       ? 'This will permanently remove this event from your calendar.'
-      : 'This will cancel the appointment(s). The other party will receive an email to notify.';
+      : 'This will mark the appointment as cancelled for everyone. The other party will see the cancelled slot until they dismiss it, and they will receive an email notification.';
 
   const deleteRecurrenceSubtitle = formatRecurrenceSubtitleLine({
     recurrence_rule: ap.recurrence_rule,
@@ -633,7 +642,7 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
       </div>
       <div className="modal-row">
         <span className="modal-row-label">Date &amp; time</span>
-        <span className="modal-row-value">{ap.day} at {ap.time}</span>
+        <span className="modal-row-value">{deleteDateTimeLabel}</span>
       </div>
       {!isAvailability && ap.notifyEmail ? (
         <div className="modal-row">
