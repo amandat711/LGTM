@@ -3,10 +3,14 @@ const router = express.Router();
 const db = require('../config/db');
 const { routeLog } = require('../utils/routeLog');
 const {
-  sendAppointmentUpdatedByOwnerEmail,
-  sendAppointmentCancelledByOwnerEmail,
-  sendStudentEventResponseToHostEmail,
-} = require('../lib/mailer');
+  notifyAttendeesOfOwnerChange,
+  notifyHostOfStudentEventResponse,
+  notifyHostOfStudentJoin,
+  notifyAppointmentCancellation,
+  notifyHostOfBookingRequestFromAvailability,
+  notifyAttendeesOfHostBookingDecision,
+  notifyInviteesOfDirectAppointments,
+} = require('../lib/appointmentNotifications');
 
 const {
   parseDate,
@@ -60,129 +64,6 @@ function toResponseStatus(participantStatus) {
   if (participantStatus === 'confirmed') return 'accepted';
   if (participantStatus === 'cancelled') return 'declined';
   return 'pending';
-}
-
-async function notifyAttendeesOfOwnerChange({ appointmentIds, action, note }) {
-  const normalizedIds = uniqueInts(
-    (appointmentIds || [])
-      .map((id) => Number(id))
-      .filter((id) => Number.isInteger(id) && id > 0)
-  );
-  if (!normalizedIds.length) return;
-
-  const placeholders = normalizedIds.map(() => '?').join(',');
-  const rows = await dbAll(
-    `
-    SELECT
-      a.appointment_id,
-      a.ap_title,
-      a.start_time,
-      a.end_time,
-      a.location,
-      attendee.mcgill_email AS attendee_email,
-      host.first_name AS host_first_name,
-      host.last_name AS host_last_name
-    FROM appointments a
-    JOIN appointment_participants ap_attendee
-      ON ap_attendee.appointment_id = a.appointment_id
-    JOIN users attendee
-      ON attendee.user_id = ap_attendee.user_id
-    LEFT JOIN appointment_participants ap_host
-      ON ap_host.appointment_id = a.appointment_id
-      AND ap_host.participant_role = 'host'
-    LEFT JOIN users host
-      ON host.user_id = ap_host.user_id
-    WHERE a.appointment_id IN (${placeholders})
-      AND ap_attendee.participant_role = 'attendee'
-      AND ap_attendee.response_status != 'declined'
-    `,
-    normalizedIds
-  );
-
-  if (!rows.length) return;
-
-  await Promise.all(
-    rows.map((row) => {
-      const hostName = [row.host_first_name, row.host_last_name].filter(Boolean).join(' ').trim();
-      const payload = {
-        to: row.attendee_email,
-        appointmentTitle: row.ap_title,
-        startTime: row.start_time,
-        endTime: row.end_time,
-        location: row.location,
-        hostName,
-        note,
-      };
-
-      if (action === 'cancelled') {
-        return sendAppointmentCancelledByOwnerEmail(payload);
-      }
-      return sendAppointmentUpdatedByOwnerEmail(payload);
-    })
-  );
-}
-
-async function notifyHostOfStudentEventResponse({ appointmentIds, studentUserId, response }) {
-  const ids = uniqueInts(
-    (appointmentIds || [])
-      .map((id) => Number(id))
-      .filter((id) => Number.isInteger(id) && id > 0)
-  );
-  if (!ids.length || !Number.isInteger(Number(studentUserId)) || Number(studentUserId) < 1) return;
-  if (response !== 'accepted' && response !== 'declined') return;
-
-  const student = await dbGet(
-    `SELECT first_name, last_name FROM users WHERE user_id = ?`,
-    [Number(studentUserId)]
-  );
-  if (!student) return;
-  const studentName = [student.first_name, student.last_name].filter(Boolean).join(' ').trim() || 'A student';
-
-  const placeholders = ids.map(() => '?').join(',');
-  const rows = await dbAll(
-    `
-    SELECT
-      a.appointment_id,
-      a.ap_title,
-      a.start_time,
-      h.mcgill_email AS host_email
-    FROM appointments a
-    JOIN appointment_participants aph
-      ON aph.appointment_id = a.appointment_id
-      AND aph.participant_role = 'host'
-    JOIN users h
-      ON h.user_id = aph.user_id
-    WHERE a.appointment_id IN (${placeholders})
-      AND h.mcgill_email IS NOT NULL
-      AND TRIM(h.mcgill_email) != ''
-    ORDER BY datetime(a.start_time) ASC
-    `,
-    ids
-  );
-  if (!rows.length) return;
-
-  const byEmailKey = new Map();
-  for (const row of rows) {
-    const raw = String(row.host_email || '').trim();
-    if (!raw) continue;
-    const key = raw.toLowerCase();
-    if (!byEmailKey.has(key)) byEmailKey.set(key, { to: raw, appts: [] });
-    byEmailKey.get(key).appts.push(row);
-  }
-
-  await Promise.all(
-    [...byEmailKey.values()].map(({ to, appts }) => {
-      const first = appts[0];
-      return sendStudentEventResponseToHostEmail({
-        to,
-        studentName,
-        response,
-        appointmentTitle: first.ap_title,
-        startTime: first.start_time,
-        sessionCount: appts.length,
-      });
-    })
-  );
 }
 
 async function recalculateAppointmentStatus(appointmentId) {
@@ -460,6 +341,13 @@ router.post('/', (req, res) => {
                                             appointment_id: appointmentId,
                                             booked_by,
                                             availability_id,
+                                          });
+
+                                          notifyHostOfBookingRequestFromAvailability({
+                                            appointmentId,
+                                            bookedByUserId: booked_by,
+                                          }).catch((emailErr) => {
+                                            console.error('[mailer] booking request to host failed:', emailErr);
                                           });
 
                                           res.status(201).json({
@@ -783,6 +671,12 @@ router.post('/direct', async (req, res) => {
       appointment_ids: createdAppointmentIds,
       recurrence_applied: Boolean(parsedRecurrence?.enabled),
     });
+
+    if (uniqueInvitees.length > 0) {
+      notifyInviteesOfDirectAppointments(createdAppointmentIds, creatorId).catch((emailErr) => {
+        console.error('[mailer] direct appointment invite emails failed:', emailErr);
+      });
+    }
 
     return res.status(201).json({
       message: 'Direct appointment(s) created successfully',
@@ -1397,10 +1291,9 @@ router.post('/:id/join', async (req, res) => {
 
     await recalculateAppointmentStatus(appointmentId);
 
-    notifyHostOfStudentEventResponse({
+    notifyHostOfStudentJoin({
       appointmentIds: [appointmentId],
       studentUserId: userId,
-      response: 'accepted',
     }).catch((emailErr) => {
       console.error('[mailer] host notify (join) failed:', emailErr);
     });
@@ -1508,6 +1401,18 @@ router.patch('/:id/participants/:userId/status', async (req, res) => {
         response: status === 'confirmed' ? 'accepted' : 'declined',
       }).catch((emailErr) => {
         console.error('[mailer] host notify (participant status) failed:', emailErr);
+      });
+    }
+
+    if (
+      participant.participant_role === 'host' &&
+      (status === 'confirmed' || status === 'cancelled')
+    ) {
+      notifyAttendeesOfHostBookingDecision({
+        appointmentId,
+        accepted: status === 'confirmed',
+      }).catch((emailErr) => {
+        console.error('[mailer] attendee notify (host booking decision) failed:', emailErr);
       });
     }
 
@@ -1905,9 +1810,9 @@ router.patch('/:id/cancel', (req, res) => {
                       scope: 'single',
                     });
 
-                    notifyAttendeesOfOwnerChange({
+                    notifyAppointmentCancellation({
                       appointmentIds: [appointmentId],
-                      action: 'cancelled',
+                      changedByUserId: changed_by,
                       note: note || null,
                     }).catch((emailErr) => {
                       console.error('[mailer] appointment cancellation email failed:', emailErr);
@@ -2003,9 +1908,9 @@ router.patch('/:id/cancel', (req, res) => {
                       cancelled_count: ids.length,
                     });
 
-                    notifyAttendeesOfOwnerChange({
+                    notifyAppointmentCancellation({
                       appointmentIds: ids,
-                      action: 'cancelled',
+                      changedByUserId: changed_by,
                       note: note || null,
                     }).catch((emailErr) => {
                       console.error('[mailer] appointment cancellation email failed:', emailErr);

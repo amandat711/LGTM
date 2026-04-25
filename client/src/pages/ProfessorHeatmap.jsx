@@ -458,6 +458,7 @@ export default function ProfessorHeatmap() {
       navigate('/dashboard/professor');
     } catch (err) {
       setError(err.message || 'Unable to confirm group booking.');
+      throw err;
     }
   }
 

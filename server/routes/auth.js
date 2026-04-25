@@ -32,8 +32,12 @@ function buildResetLink(token) {
   return `${base}/reset-password?token=${encodeURIComponent(token)}`;
 }
 
+/** Temporary dev-only: non-McGill inbox for local testing (remove when no longer needed). */
+const AUTH_EMAIL_DOMAIN_EXCEPTION = 'kuplol123@gmail.com';
+
 function isAllowedMcGillEmail(email) {
   const e = normalizeEmail(email);
+  if (e === AUTH_EMAIL_DOMAIN_EXCEPTION) return true;
   return e.endsWith('@mail.mcgill.ca') || e.endsWith('@mcgill.ca');
 }
 
