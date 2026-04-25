@@ -71,8 +71,13 @@ export default function Navbar({
             </div>
           )}
 
-          {actions.map(({ label, onClick }, i) => (
-            <button key={i} type="button" className="top-bar-button" onClick={onClick}>
+          {actions.map(({ label, onClick, className: actionClassName }, i) => (
+            <button
+              key={i}
+              type="button"
+              className={['top-bar-button', actionClassName].filter(Boolean).join(' ')}
+              onClick={onClick}
+            >
               {label}
             </button>
           ))}
