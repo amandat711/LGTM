@@ -34,6 +34,26 @@ function ensureAppointmentRecurrenceColumns(database) {
   });
 }
 
+function ensureAppointmentCancellationDismissalsTable(database) {
+  database.run(
+    `
+    CREATE TABLE IF NOT EXISTS appointment_cancellation_dismissals (
+      appointment_id INTEGER NOT NULL,
+      user_id INTEGER NOT NULL,
+      dismissed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (appointment_id, user_id),
+      FOREIGN KEY (appointment_id) REFERENCES appointments(appointment_id) ON DELETE CASCADE,
+      FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    )
+    `,
+    (e) => {
+      if (e) {
+        console.error('CREATE appointment_cancellation_dismissals:', e.message);
+      }
+    }
+  );
+}
+
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('Database connection error:', err.message);
@@ -43,6 +63,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     // Enable foreign keys
     db.run('PRAGMA foreign_keys = ON');
     ensureAppointmentRecurrenceColumns(db);
+    ensureAppointmentCancellationDismissalsTable(db);
   }
 });
 
