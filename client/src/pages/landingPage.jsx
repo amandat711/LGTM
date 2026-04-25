@@ -42,7 +42,7 @@ export default function LandingPage() {
         <div className="hero-overlay" />
         <div className="hero-content">
           <p className="hero-subtitle">McGill University</p>
-          <h1 className="hero-title">Your McGill Booking Hub<br /></h1>
+          <h1 className="hero-title">DropIn: Your McGill Booking Hub<br /></h1>
           <button className="hero-button" onClick={() => navigate("/login")}>
             Find availabilities
           </button>
@@ -52,7 +52,7 @@ export default function LandingPage() {
       {/* Intro text */}
       <section className="intro-section">
         <p className="intro-text">
-          LGTM is more than a booking tool.
+          DropIn is more than a booking tool.
           It combines real-time availability, appointment tracking, and heatmap-based scheduling into one streamlined platform,
           giving McGill students and professors the easiest way to coordinate meetings without the usual confusion.
         </p>
@@ -64,7 +64,7 @@ export default function LandingPage() {
           <div className="feature-text">
             <h2 className="feature-title">All your appointments in one place!</h2>
             <p className="feature-text-block">
-              LGTM keeps meetings, office hours, and upcoming bookings organized in one clear dashboard.
+              DropIn keeps meetings, office hours, and upcoming bookings organized in one clear dashboard.
               Students can quickly check what is coming up, while professors can manage schedules without digging through scattered emails or calendars.
             </p>
             <button className="feature-button" onClick={() => navigate("/login")}>
@@ -84,7 +84,7 @@ export default function LandingPage() {
           <div className="feature-text">
             <h2 className="feature-title">Additional features</h2>
             <p className="feature-text-block">
-              With heatmaps and shared availability, LGTM makes it easier to spot the times that work best for everyone.
+              With heatmaps and shared availability, DropIn makes it easier to spot the times that work best for everyone.
               Instead of endless back-and-forth, students and professors can make decisions quickly and book with confidence.
             </p>
             {/* "Learn more" = the trigger*/}
@@ -119,7 +119,7 @@ export default function LandingPage() {
         </button>
         <div className="accordion-body">
           <p>
-            Instructors define their available office-hour windows directly within LGTM. Students then indicate
+            Instructors define their available office-hour windows directly within DropIn. Students then indicate
             which of those time slots are compatible with their own schedules. The platform aggregates all
             responses in real time and renders them as a unified availability heatmap — giving both instructors
             and students an immediate, accurate view of the best times to meet. This eliminates the need for
