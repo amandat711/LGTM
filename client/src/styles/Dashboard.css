@@ -846,6 +846,81 @@
 }
 
 /* 
+   EXPORT CALENDAR MODAL
+   Same modal shell as appointment detail / help; LGTM red accent and dashboard type.
+ */
+
+.export-calendar-modal {
+  max-width: 480px;
+}
+
+.export-calendar-modal .modal-body {
+  margin-bottom: 0;
+}
+
+.export-calendar-intro {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #5b6470;
+  font-weight: 500;
+}
+
+.export-calendar-participant-note {
+  margin: 0;
+}
+
+.export-calendar-radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-calendar-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.export-calendar-radio-option:hover {
+  border-color: #d0d0d0;
+  background: #fafafa;
+}
+
+.export-calendar-radio-option--selected {
+  border-color: #e31429;
+  background: #fff5f6;
+}
+
+.export-calendar-radio-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: #e31429;
+  flex-shrink: 0;
+}
+
+.export-calendar-radio-option:has(input:disabled) {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.export-calendar-error {
+  margin: 14px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b01020;
+}
+
+/* 
    HELP GUIDE MODAL
    Reusable pop-up opened by the info icon in the sidebar.
    It uses the same red accent, white surfaces, and compact dashboard typography.
