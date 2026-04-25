@@ -15,7 +15,12 @@ import CheckCircleOutlineOutlinedIcon from '@mui/icons-material/CheckCircleOutli
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import DeleteOutlineOutlinedIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import MailOutlineOutlinedIcon from '@mui/icons-material/MailOutlineOutlined';
-import { formatTime, statusLabel, formatRecurrenceSubtitleLine } from './calendar/calendarUtils';
+import {
+  formatTime,
+  statusLabel,
+  formatRecurrenceSubtitleLine,
+  slotKindFromAppointment,
+} from './calendar/calendarUtils';
 
 // ─── Shared shell ─────────────────────────────────────────────
 export function Modal({ title, onClose, children, footer, className = '', meta = null, headerActions = null }) {
@@ -217,32 +222,6 @@ function initialsForName(name) {
   const first = parts[0][0] || '';
   const last = parts.length > 1 ? parts[parts.length - 1][0] || '' : '';
   return `${first}${last}`.toUpperCase();
-}
-
-/** Availability = open slot; appointment = has attendees; event = host only (no attendees). */
-function slotKindFromAppointment(ap) {
-  const safe = ap || {};
-  if (safe.type === 'availability') {
-    return { key: 'availability', label: 'Availability' };
-  }
-  const list = Array.isArray(safe.participants) ? safe.participants : [];
-  const hasAttendeeInList = list.some((p) => {
-    const role = String(p.role || p.participant_role || '').toLowerCase();
-    return role === 'attendee';
-  });
-  const attendeeName = String(safe.attendeeName || '').trim();
-  const attendeeEmail = String(safe.attendeeEmail || '').trim();
-  const bookedBy = String(safe.bookedBy || '').trim();
-  const bookedByLooksLikeSummary = /^\d+\/\d+ booked$/i.test(bookedBy);
-  const hasOtherParty =
-    (attendeeName && attendeeName !== '—') ||
-    !!attendeeEmail ||
-    (bookedBy && bookedBy !== '—' && !bookedByLooksLikeSummary);
-
-  if (hasAttendeeInList || hasOtherParty) {
-    return { key: 'appointment', label: 'Appointment' };
-  }
-  return { key: 'event', label: 'Event' };
 }
 
 function renderTypeAndCoursePills(ap) {
