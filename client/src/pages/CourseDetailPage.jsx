@@ -18,12 +18,14 @@ import Calendar from '../components/calendar/Calendar';
 import CreateAppointmentModal from '../components/CreateAppointmentModal';
 import CourseSettingsModal from '../components/CourseSettingsModal';
 import { ConfirmActionModal, InviteURLModal } from '../components/Modals';
+import ExportCalendarModal from '../components/ExportCalendarModal';
 import logo from '../assets/LGTMLogo2.png';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';
 import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
 import InfoIcon from '@mui/icons-material/Info';
 import AddIcon from '@mui/icons-material/Add';
+import IosShareIcon from '@mui/icons-material/IosShare';
 import '../styles/Dashboard.css';
 import '../styles/CourseDetailPage.css';
 
@@ -208,6 +210,7 @@ export default function CourseDetailPage() {
   const [eventsView, setEventsView] = useState('list');
   const [editingEvent, setEditingEvent] = useState(null);
   const [confirmDeleteEvent, setConfirmDeleteEvent] = useState(null);
+  const [exportCalendarOpen, setExportCalendarOpen] = useState(false);
 
   const currentUser = useMemo(
     () => ({
@@ -280,6 +283,13 @@ export default function CourseDetailPage() {
   const canJoinCourseEvents = Boolean(!canManageCourseEvents);
   const currentUserId = userId != null ? String(userId) : '';
   const semesterLabel = course ? `${course.course_term} ${course.course_year}` : '';
+
+  const courseExportFileName = useMemo(() => {
+    const code = detail?.course?.course_code;
+    if (!code) return 'lgtm-course-calendar';
+    const safe = String(code).replace(/[^a-zA-Z0-9-_]+/g, '-').replace(/^-+|-+$/g, '') || 'course';
+    return `lgtm-${safe}-calendar`;
+  }, [detail?.course?.course_code]);
 
   const closeTransientMenus = useCallback(() => {
     if (typeof document === 'undefined') return;
@@ -546,7 +556,15 @@ export default function CourseDetailPage() {
         <Sidebar
           activeId="courses"
           items={sidebarItems}
-          bottomItems={[{ id: 'help', iconComponent: InfoIcon, label: 'Help' }]}
+          bottomItems={[
+            {
+              id: 'export-calendar',
+              iconComponent: IosShareIcon,
+              label: 'Export Calendar',
+              onClick: () => setExportCalendarOpen(true),
+            },
+            { id: 'help', iconComponent: InfoIcon, label: 'Help' },
+          ]}
         />
 
         <div className="main-content">
@@ -867,6 +885,18 @@ export default function CourseDetailPage() {
           </section>
         </div>
       </div>
+
+      {userId != null && (
+        <ExportCalendarModal
+          open={exportCalendarOpen}
+          onClose={() => setExportCalendarOpen(false)}
+          userId={Number(userId)}
+          isFaculty={isFacultyAdmin(user.user_type)}
+          exportSource="course"
+          courseAppointmentRows={detail?.appointments || []}
+          downloadFileBaseName={courseExportFileName}
+        />
+      )}
     </div>
   );
 }
