@@ -158,32 +158,36 @@ export function ConfirmActionModal({
 
 // ─────────────────────────────────────────────────────────────
 // 1. ConfirmSlotModal
-//    Owner confirms a selected time slot and sends notifications.
+//    Parent calls API on confirm; server sends confirmation email to invitees.
 // ─────────────────────────────────────────────────────────────
 export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
-  const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  function handleConfirm() {
-    setSent(true);
-    // TODO: POST /api/appointments/confirm { slotDay, slotTime, attendeeIds }
-    setTimeout(() => { onConfirm(); onClose(); }, 1200);
+  async function handleConfirm() {
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      await Promise.resolve(onConfirm());
+    } catch {
+      // Error message is set by the parent (e.g. setError on heatmap page).
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
     <Modal
       title="Confirm this slot"
-      onClose={onClose}
+      onClose={submitting ? () => {} : onClose}
       footer={
-        sent ? (
-          <span className="badge-success">✓ Notifications sent!</span>
-        ) : (
-          <>
-            <Button variant="text" onClick={onClose}>Cancel</Button>
-            <Button variant="contained" onClick={handleConfirm}>
-              Send notifications
-            </Button>
-          </>
-        )
+        <>
+          <Button variant="text" onClick={onClose} disabled={submitting}>
+            Cancel
+          </Button>
+          <Button variant="contained" onClick={handleConfirm} disabled={submitting}>
+            {submitting ? 'Confirming…' : 'Confirm'}
+          </Button>
+        </>
       }
     >
       <div className="modal-row">
@@ -206,7 +210,8 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
         </div>
       </div>
       <p style={{ marginTop: 14, fontSize: 12, color: '#aaa', lineHeight: 1.5 }}>
-        All attendees will receive an email notification. This appointment will appear on everyone's dashboard.
+        When you confirm, the appointment is created and everyone listed above receives a confirmation email. It
+        will also show on each person&apos;s dashboard.
       </p>
     </Modal>
   );
@@ -551,7 +556,7 @@ export function SlotDetailModal({
 
 // ─────────────────────────────────────────────────────────────
 // 3. DeleteConfirmModal
-//    Confirms cancellation and opens a mailto: notification.
+//    Confirms cancellation / slot removal. LGTM sends notification emails server-side.
 // ─────────────────────────────────────────────────────────────
 export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
   const ap = appointment || {};
@@ -559,19 +564,6 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
   const slotKind = isAvailability ? { key: 'availability', label: 'Availability' } : slotKindFromAppointment(ap);
 
   async function handleDelete() {
-    if (!isAvailability && ap.notifyEmail) {
-      const isEvent = slotKind.key === 'event';
-      const subject = encodeURIComponent(
-        isEvent ? `Event removed: ${ap.title}` : `Appointment cancelled: ${ap.title}`
-      );
-      const body = encodeURIComponent(
-        isEvent
-          ? `Hi,\n\nThe event "${ap.title}" on ${ap.day} at ${ap.time} has been removed from the calendar.\n\nApologies for any inconvenience.`
-          : `Hi,\n\nThe appointment "${ap.title}" on ${ap.day} at ${ap.time} has been cancelled.\n\nApologies for any inconvenience.`
-      );
-      window.open(`mailto:${ap.notifyEmail}?subject=${subject}&body=${body}`);
-    }
-
     const shouldClose = await onConfirm();
     if (shouldClose !== false) {
       onClose();
@@ -594,7 +586,7 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
     ? 'This will permanently delete the availability slot from your calendar.'
     : slotKind.key === 'event'
       ? 'This will permanently remove this event from your calendar.'
-      : 'This will cancel the appointment(s) and open your email client to notify the other party.';
+      : 'This will cancel the appointment(s). The other party will receive an email to notify.';
 
   const deleteRecurrenceSubtitle = formatRecurrenceSubtitleLine({
     recurrence_rule: ap.recurrence_rule,
@@ -629,12 +621,12 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
         <span className="modal-row-label">Date &amp; time</span>
         <span className="modal-row-value">{ap.day} at {ap.time}</span>
       </div>
-      {!isAvailability && (
+      {!isAvailability && ap.notifyEmail ? (
         <div className="modal-row">
-          <span className="modal-row-label">Notify</span>
+          <span className="modal-row-label">Email to</span>
           <span className="modal-row-value">{ap.notifyEmail}</span>
         </div>
-      )}
+      ) : null}
     </Modal>
   );
 }

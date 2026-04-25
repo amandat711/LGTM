@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { routeLog } = require('../utils/routeLog');
+const { sendHeatmapAppointmentScheduledEmail } = require('../lib/mailer');
 
 function dbGet(sql, params = []) {
   return new Promise((resolve, reject) => {
@@ -787,6 +788,29 @@ router.post('/:id/appointments', async (req, res) => {
       attendee_count: uniqueAttendeeIds.length,
       changed_by: changed_by || host_user_id,
     });
+
+    if (appointment?.participants?.length) {
+      const hostPart = appointment.participants.find((p) => p.participant_role === 'host');
+      const hostDisplay = hostPart
+        ? [hostPart.first_name, hostPart.last_name].filter(Boolean).join(' ').trim() || 'The host'
+        : 'The host';
+      for (const p of appointment.participants) {
+        const email = p.mcgill_email && String(p.mcgill_email).trim();
+        if (!email) continue;
+        const roleLabel = p.participant_role === 'host' ? 'host' : 'invitee';
+        sendHeatmapAppointmentScheduledEmail({
+          to: email,
+          roleLabel,
+          hostName: hostDisplay,
+          appointmentTitle: appointment.ap_title,
+          startTime: appointment.start_time,
+          endTime: appointment.end_time,
+          location: appointment.location,
+        }).catch((emailErr) => {
+          console.error('[mailer] heatmap appointment notify failed:', emailErr);
+        });
+      }
+    }
 
     return res.status(201).json({
       message: 'Heatmap appointment created successfully',

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { routeLog } = require('../utils/routeLog');
+const { cancelAppointmentsLinkedToAvailability } = require('../lib/appointmentNotifications');
 
 const {
   toSqliteDateTime,
@@ -990,13 +991,21 @@ router.delete('/:id', (req, res) => {
               AND status != 'cancelled'
             `,
               [availabilityId],
-              (err, countRow) => {
+              async (err, countRow) => {
                 if (err) return res.status(500).json({ error: err.message });
 
                 if (countRow.active_booking_count > 0) {
-                  return res.status(400).json({
-                    error: 'Cannot delete availability with active booking(s)',
-                  });
+                  try {
+                    await cancelAppointmentsLinkedToAvailability({
+                      availabilityId: Number(availabilityId),
+                      changedByUserId: Number(deleted_by),
+                      notifyCancellationAsUserId: Number(availability.created_by),
+                      historyNote:
+                        'Appointment cancelled because the availability slot was removed.',
+                    });
+                  } catch (cancelErr) {
+                    return res.status(500).json({ error: cancelErr.message });
+                  }
                 }
 
                 db.run(

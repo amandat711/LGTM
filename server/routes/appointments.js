@@ -2,6 +2,15 @@ const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
 const { routeLog } = require('../utils/routeLog');
+const {
+  notifyAttendeesOfOwnerChange,
+  notifyHostOfStudentEventResponse,
+  notifyHostOfStudentJoin,
+  notifyAppointmentCancellation,
+  notifyHostOfBookingRequestFromAvailability,
+  notifyAttendeesOfHostBookingDecision,
+  notifyInviteesOfDirectAppointments,
+} = require('../lib/appointmentNotifications');
 
 const {
   parseDate,
@@ -245,17 +254,17 @@ router.post('/', (req, res) => {
                   db.run(
                     insertAppointment,
                     [
-                    availability.course_id ?? null,
-                    availability.availability_id,
-                    availability.capacity,
-                    availability.location || null,
-                    availability.start_time,
-                    availability.end_time,
-                    availability.visibility || 'private',
-                    availability.av_title || 'Booked Appointment',
-                    availability.av_description || null,
-                    'calendar',
-                    'pending'
+                      availability.course_id ?? null,
+                      availability.availability_id,
+                      availability.capacity,
+                      availability.location || null,
+                      availability.start_time,
+                      availability.end_time,
+                      availability.visibility || 'private',
+                      availability.av_title || 'Booked Appointment',
+                      availability.av_description || null,
+                      'calendar',
+                      'pending'
                     ],
                     function (err) {
                       if (err) return res.status(500).json({ error: err.message });
@@ -332,6 +341,13 @@ router.post('/', (req, res) => {
                                             appointment_id: appointmentId,
                                             booked_by,
                                             availability_id,
+                                          });
+
+                                          notifyHostOfBookingRequestFromAvailability({
+                                            appointmentId,
+                                            bookedByUserId: booked_by,
+                                          }).catch((emailErr) => {
+                                            console.error('[mailer] booking request to host failed:', emailErr);
                                           });
 
                                           res.status(201).json({
@@ -655,6 +671,12 @@ router.post('/direct', async (req, res) => {
       appointment_ids: createdAppointmentIds,
       recurrence_applied: Boolean(parsedRecurrence?.enabled),
     });
+
+    if (uniqueInvitees.length > 0) {
+      notifyInviteesOfDirectAppointments(createdAppointmentIds, creatorId).catch((emailErr) => {
+        console.error('[mailer] direct appointment invite emails failed:', emailErr);
+      });
+    }
 
     return res.status(201).json({
       message: 'Direct appointment(s) created successfully',
@@ -1024,6 +1046,14 @@ router.patch('/invitations/:id/accept', async (req, res) => {
       await recalculateAppointmentStatus(apptId);
     }
 
+    notifyHostOfStudentEventResponse({
+      appointmentIds,
+      studentUserId: inviteeUserId,
+      response: 'accepted',
+    }).catch((emailErr) => {
+      console.error('[mailer] host notify (invitation accepted) failed:', emailErr);
+    });
+
     const updated = await dbGet(`SELECT * FROM invitations WHERE invitation_id = ?`, [invitationId]);
     routeLog('appointments', 'invitation_accepted', {
       invitation_id: invitationId,
@@ -1160,6 +1190,14 @@ router.patch('/invitations/:id/decline', async (req, res) => {
       await recalculateAppointmentStatus(apptId);
     }
 
+    notifyHostOfStudentEventResponse({
+      appointmentIds,
+      studentUserId: inviteeUserId,
+      response: 'declined',
+    }).catch((emailErr) => {
+      console.error('[mailer] host notify (invitation declined) failed:', emailErr);
+    });
+
     const updated = await dbGet(`SELECT * FROM invitations WHERE invitation_id = ?`, [invitationId]);
     routeLog('appointments', 'invitation_declined', {
       invitation_id: invitationId,
@@ -1253,6 +1291,13 @@ router.post('/:id/join', async (req, res) => {
 
     await recalculateAppointmentStatus(appointmentId);
 
+    notifyHostOfStudentJoin({
+      appointmentIds: [appointmentId],
+      studentUserId: userId,
+    }).catch((emailErr) => {
+      console.error('[mailer] host notify (join) failed:', emailErr);
+    });
+
     const participant = await dbGet(
       `
       SELECT appointment_id, user_id, participant_role, response_status
@@ -1345,6 +1390,31 @@ router.patch('/:id/participants/:userId/status', async (req, res) => {
       `,
       [appointmentId, participantUserId]
     );
+
+    if (
+      participant.participant_role !== 'host' &&
+      (status === 'confirmed' || status === 'cancelled')
+    ) {
+      notifyHostOfStudentEventResponse({
+        appointmentIds: [appointmentId],
+        studentUserId: participantUserId,
+        response: status === 'confirmed' ? 'accepted' : 'declined',
+      }).catch((emailErr) => {
+        console.error('[mailer] host notify (participant status) failed:', emailErr);
+      });
+    }
+
+    if (
+      participant.participant_role === 'host' &&
+      (status === 'confirmed' || status === 'cancelled')
+    ) {
+      notifyAttendeesOfHostBookingDecision({
+        appointmentId,
+        accepted: status === 'confirmed',
+      }).catch((emailErr) => {
+        console.error('[mailer] attendee notify (host booking decision) failed:', emailErr);
+      });
+    }
 
     routeLog('appointments', 'participant_status_updated', {
       appointment_id: appointmentId,
@@ -1639,6 +1709,15 @@ router.patch('/:id', async (req, res) => {
       scope: hasRecurringSeries ? scope : 'single',
       updated_count: updatedRows.length,
     });
+
+    notifyAttendeesOfOwnerChange({
+      appointmentIds: updatedRows.map((row) => row.appointment_id),
+      action: 'updated',
+      note: note || null,
+    }).catch((emailErr) => {
+      console.error('[mailer] appointment update email failed:', emailErr);
+    });
+
     return res.json({
       message: 'Appointment updated successfully',
       scope: hasRecurringSeries ? scope : 'single',
@@ -1731,6 +1810,14 @@ router.patch('/:id/cancel', (req, res) => {
                       scope: 'single',
                     });
 
+                    notifyAppointmentCancellation({
+                      appointmentIds: [appointmentId],
+                      changedByUserId: changed_by,
+                      note: note || null,
+                    }).catch((emailErr) => {
+                      console.error('[mailer] appointment cancellation email failed:', emailErr);
+                    });
+
                     res.json({
                       message: 'Appointment cancelled successfully',
                       appointment: updatedAppointment
@@ -1762,73 +1849,82 @@ router.patch('/:id/cancel', (req, res) => {
       };
 
       resolveRecurringSource((srcErr, sourceAvailability) => {
-          if (srcErr) return res.status(500).json({ error: srcErr.message });
+        if (srcErr) return res.status(500).json({ error: srcErr.message });
 
-          const recurrenceGroupId = sourceAvailability?.recurrence_group_id || null;
-          if (!recurrenceGroupId || scope === 'single') {
-            return runSingleCancel();
-          }
+        const recurrenceGroupId = sourceAvailability?.recurrence_group_id || null;
+        if (!recurrenceGroupId || scope === 'single') {
+          return runSingleCancel();
+        }
 
-          const pivotDate = pivot_instance_date || sourceAvailability?.recurrence_instance_date || appointment.start_time;
-          let scopedWhere = sourceAvailability?.source_type === 'appointments'
-            ? `a.recurrence_group_id = ?`
-            : `a.created_from_availability IN (
+        const pivotDate = pivot_instance_date || sourceAvailability?.recurrence_instance_date || appointment.start_time;
+        let scopedWhere = sourceAvailability?.source_type === 'appointments'
+          ? `a.recurrence_group_id = ?`
+          : `a.created_from_availability IN (
               SELECT availability_id
               FROM availabilities
               WHERE recurrence_group_id = ?
             )`;
-          const scopedParams = [recurrenceGroupId];
-          if (scope === 'this_and_following') {
-            scopedWhere = sourceAvailability?.source_type === 'appointments'
-              ? `a.recurrence_group_id = ? AND datetime(a.start_time) >= datetime(?)`
-              : `a.created_from_availability IN (
+        const scopedParams = [recurrenceGroupId];
+        if (scope === 'this_and_following') {
+          scopedWhere = sourceAvailability?.source_type === 'appointments'
+            ? `a.recurrence_group_id = ? AND datetime(a.start_time) >= datetime(?)`
+            : `a.created_from_availability IN (
               SELECT availability_id
               FROM availabilities
               WHERE recurrence_group_id = ?
                 AND recurrence_instance_date IS NOT NULL
                 AND date(recurrence_instance_date) >= date(?)
             )`;
-            scopedParams.push(pivotDate);
-          }
+          scopedParams.push(pivotDate);
+        }
 
-          db.all(
-            `SELECT a.appointment_id, a.status
+        db.all(
+          `SELECT a.appointment_id, a.status
              FROM appointments a
              WHERE ${scopedWhere}
                AND a.status != 'cancelled'`,
-            scopedParams,
-            (targetErr, targets) => {
-              if (targetErr) return res.status(500).json({ error: targetErr.message });
-              if (!targets.length) {
-                return res.status(400).json({ error: 'No active appointments found in selected recurrence scope' });
-              }
+          scopedParams,
+          (targetErr, targets) => {
+            if (targetErr) return res.status(500).json({ error: targetErr.message });
+            if (!targets.length) {
+              return res.status(400).json({ error: 'No active appointments found in selected recurrence scope' });
+            }
 
-              const ids = targets.map((t) => t.appointment_id);
-              const placeholders = ids.map(() => '?').join(',');
+            const ids = targets.map((t) => t.appointment_id);
+            const placeholders = ids.map(() => '?').join(',');
 
-              db.run(
-                `UPDATE appointments SET status = 'cancelled' WHERE appointment_id IN (${placeholders})`,
-                ids,
-                function (updateErr) {
-                  if (updateErr) return res.status(500).json({ error: updateErr.message });
+            db.run(
+              `UPDATE appointments SET status = 'cancelled' WHERE appointment_id IN (${placeholders})`,
+              ids,
+              function (updateErr) {
+                if (updateErr) return res.status(500).json({ error: updateErr.message });
 
-                  const insertOneHistory = (index) => {
-                    if (index >= targets.length) {
-                      routeLog('appointments', 'appointment_cancelled', {
-                        appointment_ids: ids,
-                        changed_by,
-                        scope,
-                        cancelled_count: ids.length,
-                      });
-                      return res.json({
-                        message: 'Recurring appointments cancelled successfully',
-                        scope,
-                        cancelled_count: ids.length,
-                      });
-                    }
-                    const target = targets[index];
-                    db.run(
-                      `
+                const insertOneHistory = (index) => {
+                  if (index >= targets.length) {
+                    routeLog('appointments', 'appointment_cancelled', {
+                      appointment_ids: ids,
+                      changed_by,
+                      scope,
+                      cancelled_count: ids.length,
+                    });
+
+                    notifyAppointmentCancellation({
+                      appointmentIds: ids,
+                      changedByUserId: changed_by,
+                      note: note || null,
+                    }).catch((emailErr) => {
+                      console.error('[mailer] appointment cancellation email failed:', emailErr);
+                    });
+
+                    return res.json({
+                      message: 'Recurring appointments cancelled successfully',
+                      scope,
+                      cancelled_count: ids.length,
+                    });
+                  }
+                  const target = targets[index];
+                  db.run(
+                    `
                       INSERT INTO appointment_history
                       (
                         appointment_id,
@@ -1840,26 +1936,26 @@ router.patch('/:id/cancel', (req, res) => {
                       )
                       VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, ?)
                       `,
-                      [
-                        target.appointment_id,
-                        changed_by,
-                        target.status,
-                        'cancelled',
-                        note || `Appointment cancelled (${scope})`,
-                      ],
-                      (historyErr) => {
-                        if (historyErr) return res.status(500).json({ error: historyErr.message });
-                        insertOneHistory(index + 1);
-                      }
-                    );
-                  };
+                    [
+                      target.appointment_id,
+                      changed_by,
+                      target.status,
+                      'cancelled',
+                      note || `Appointment cancelled (${scope})`,
+                    ],
+                    (historyErr) => {
+                      if (historyErr) return res.status(500).json({ error: historyErr.message });
+                      insertOneHistory(index + 1);
+                    }
+                  );
+                };
 
-                  insertOneHistory(0);
-                }
-              );
-            }
-          );
-        }
+                insertOneHistory(0);
+              }
+            );
+          }
+        );
+      }
       );
     }
   );

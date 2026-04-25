@@ -2,7 +2,10 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const db = require('../config/db');
-const { sendForgotPasswordEmail } = require('../lib/mailer');
+const {
+  sendForgotPasswordEmail,
+  sendPasswordChangedEmail,
+} = require('../lib/mailer');
 const { MIN_PASSWORD_LEN, RESET_TOKEN_TTL_MS } = require('../constants/auth');
 const { FRONTEND_URL } = require('../constants/config');
 
@@ -29,8 +32,12 @@ function buildResetLink(token) {
   return `${base}/reset-password?token=${encodeURIComponent(token)}`;
 }
 
+/** Temporary dev-only: non-McGill inbox for local testing (remove when no longer needed). */
+const AUTH_EMAIL_DOMAIN_EXCEPTION = 'kuplol123@gmail.com';
+
 function isAllowedMcGillEmail(email) {
   const e = normalizeEmail(email);
+  if (e === AUTH_EMAIL_DOMAIN_EXCEPTION) return true;
   return e.endsWith('@mail.mcgill.ca') || e.endsWith('@mcgill.ca');
 }
 
@@ -163,6 +170,7 @@ router.post('/register', (req, res) => {
                 department: normalizedDepartment || null,
                 staff_title: normalizedStaffTitle || null,
               };
+
               res.status(201).json({ user });
             }
           );
@@ -352,6 +360,21 @@ router.post('/reset-password', (req, res) => {
                     console.error(markUsedErr);
                     return res.status(500).json({ error: 'Could not reset password.' });
                   }
+
+                  db.get(
+                    `SELECT mcgill_email FROM users WHERE user_id = ?`,
+                    [tokenRow.user_id],
+                    (emailLookupErr, userRow) => {
+                      if (emailLookupErr) {
+                        console.error('[mailer] password-changed lookup failed:', emailLookupErr);
+                      } else if (userRow?.mcgill_email) {
+                        sendPasswordChangedEmail({ to: userRow.mcgill_email }).catch((emailErr) => {
+                          console.error('[mailer] password changed email failed:', emailErr);
+                        });
+                      }
+                    }
+                  );
+
                   return res.json({ ok: true, message: 'Password reset successful.' });
                 }
               );
