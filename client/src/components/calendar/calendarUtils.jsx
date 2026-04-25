@@ -81,24 +81,34 @@ function weekdayOrder(code) {
 }
 
 function weekdayLabel(code) {
+  if (typeof code !== 'string' || !code) return '';
   return WEEKDAY_LABEL[code] || code;
 }
 
 function summarizeParsedRecurrence(recurrence) {
   if (!recurrence?.enabled) return '';
 
-  const sortedDays = [...(recurrence.byWeekdays || [])].sort((a, b) => weekdayOrder(a) - weekdayOrder(b));
-  const dayNames = sortedDays.map(weekdayLabel);
+  const sortedDays = [...(recurrence.byWeekdays || [])]
+    .filter((d) => typeof d === 'string' && d.length > 0)
+    .sort((a, b) => weekdayOrder(a) - weekdayOrder(b));
+  const dayNames = sortedDays.map(weekdayLabel).filter(Boolean);
 
-  let summary = `Repeats every ${recurrence.interval} week${recurrence.interval > 1 ? 's' : ''}`;
+  const interval = Math.max(1, Math.floor(Number(recurrence.interval)) || 1);
+
+  let summary = `Repeats every ${interval} week${interval > 1 ? 's' : ''}`;
   if (dayNames.length > 0) {
     summary += dayNames.length <= 2 ? ` on ${dayNames.join(' and ')}` : ` on ${dayNames.join(', ')}`;
   }
 
-  if (recurrence.endType === 'on' && recurrence.until) {
-    summary += ` until ${recurrence.until}`;
-  } else if (recurrence.endType === 'after' && recurrence.count) {
-    summary += ` for ${recurrence.count} occurrence${recurrence.count !== 1 ? 's' : ''}`;
+  if (recurrence.endType === 'on' && recurrence.until != null && recurrence.until !== '') {
+    const until =
+      typeof recurrence.until === 'string' || typeof recurrence.until === 'number'
+        ? String(recurrence.until)
+        : '';
+    if (until) summary += ` until ${until}`;
+  } else if (recurrence.endType === 'after' && recurrence.count != null && recurrence.count !== '') {
+    const count = Math.max(1, Math.floor(Number(recurrence.count)) || 1);
+    summary += ` for ${count} occurrence${count !== 1 ? 's' : ''}`;
   }
 
   return summary;
@@ -125,17 +135,16 @@ function parseRecurrenceRulePayload(rule) {
  */
 export function formatRecurrenceSubtitleLine({ recurrence_rule, recurrence_group_id } = {}) {
   const parsed = parseRecurrenceRulePayload(recurrence_rule);
+  let line = '';
   if (parsed?.enabled) {
-    return summarizeParsedRecurrence(parsed);
-  }
-  if (typeof recurrence_rule === 'string' && recurrence_rule.trim() && !parsed) {
+    line = summarizeParsedRecurrence(parsed);
+  } else if (typeof recurrence_rule === 'string' && recurrence_rule.trim() && !parsed) {
     const t = recurrence_rule.trim();
-    return t.length > 100 ? `${t.slice(0, 97)}…` : t;
+    line = t.length > 100 ? `${t.slice(0, 97)}…` : t;
+  } else if (Number(recurrence_group_id) > 0) {
+    line = 'Part of a recurring series';
   }
-  if (Number(recurrence_group_id) > 0) {
-    return 'Part of a recurring series';
-  }
-  return '';
+  return typeof line === 'string' ? line : '';
 }
 
 /** Availability = open slot; appointment = has attendees; event = host only (no attendees). */

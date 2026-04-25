@@ -113,13 +113,29 @@ export default function BookingDiscovery() {
               <p className="booking-help-text">
                 Search professors by name, department, or email to view booking availability.
               </p>
-              <input
-                className="booking-search-box"
-                type="search"
-                placeholder="Search for a professor"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
+              <div className={`booking-search-wrap${query.trim() ? ' booking-search-wrap--has-value' : ''}`}>
+                <input
+                  className="booking-search-box"
+                  type="text"
+                  inputMode="search"
+                  enterKeyHint="search"
+                  autoComplete="off"
+                  placeholder="Search for a professor"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  aria-label="Search for a professor"
+                />
+                {query.trim() ? (
+                  <button
+                    type="button"
+                    className="booking-search-clear"
+                    onClick={() => setQuery('')}
+                    aria-label="Clear search"
+                  >
+                    <span aria-hidden="true">×</span>
+                  </button>
+                ) : null}
+              </div>
               {loading && <p style={{ marginTop: 12, color: '#666' }}>Loading professors...</p>}
               {error && <p style={{ marginTop: 12, color: '#d13434' }}>{error}</p>}
             </section>

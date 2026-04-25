@@ -173,121 +173,121 @@ export default function RecurrenceModal({
     <Modal
       title="Custom recurrence"
       onClose={onClose}
-      className="recurrence-modal"
+      className="modal--recurrence"
       meta={<span className="modal-kind-pill modal-kind-pill--event">Recurring rule</span>}
       footer={
-        <>
+        <div className="recurrence-modal-footer-actions">
           <Button type="button" variant="text" color="error" onClick={onRemove}>
             Remove recurrence
           </Button>
           <Button type="button" variant="text" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="button" variant="contained" onClick={validateAndSave}>
+          <Button type="button" variant="contained" className="recurrence-btn footer" onClick={validateAndSave}>
             Save
           </Button>
-        </>
+        </div>
       }
     >
-      <p className="recurrence-modal-subtitle">
+      {/* <p className="recurrence-modal-subtitle">
         Set how this availability repeats.
-      </p>
+      </p> */}
       <div className="recurrence-modal-content">
-          <div className="recurrence-section">
-            <label className="recurrence-label">Repeat every</label>
-            <div className="recurrence-repeat-row">
+        <div className="recurrence-section">
+          <label className="recurrence-label">Repeat every</label>
+          <div className="recurrence-repeat-row">
+            <input
+              id="repeat-interval"
+              type="number"
+              min="1"
+              value={recurrence.interval}
+              onChange={handleIntervalChange}
+              className="recurrence-interval-input"
+            />
+            <span className="recurrence-inline-label">week(s)</span>
+          </div>
+        </div>
+
+        <div className="recurrence-section">
+          <label className="recurrence-label">Repeat on</label>
+          <div className="recurrence-weekday-chips">
+            {WEEKDAYS.map(({ code, label, full }) => {
+              const selected = recurrence.byWeekdays.includes(code);
+
+              return (
+                <button
+                  key={code}
+                  type="button"
+                  className={`recurrence-weekday-chip ${selected ? 'selected' : ''}`}
+                  onClick={() => toggleWeekday(code)}
+                  aria-pressed={selected}
+                  title={full}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="recurrence-section">
+          <label className="recurrence-label">Ends</label>
+
+          <div className="recurrence-radio-group">
+            <label className="recurrence-radio-row">
               <input
-                id="repeat-interval"
+                type="radio"
+                name="end-type"
+                value="never"
+                checked={recurrence.endType === 'never'}
+                onChange={() => handleEndTypeChange('never')}
+              />
+              <span>Never</span>
+            </label>
+
+            <label className="recurrence-radio-row">
+              <input
+                type="radio"
+                name="end-type"
+                value="on"
+                checked={recurrence.endType === 'on'}
+                onChange={() => handleEndTypeChange('on')}
+              />
+              <span>On</span>
+              <input
+                type="date"
+                value={recurrence.until}
+                onChange={handleUntilChange}
+                className="recurrence-date-input"
+                disabled={recurrence.endType !== 'on'}
+              />
+            </label>
+
+            <label className="recurrence-radio-row">
+              <input
+                type="radio"
+                name="end-type"
+                value="after"
+                checked={recurrence.endType === 'after'}
+                onChange={() => handleEndTypeChange('after')}
+              />
+              <span>After</span>
+              <input
                 type="number"
                 min="1"
-                value={recurrence.interval}
-                onChange={handleIntervalChange}
-                className="recurrence-interval-input"
+                value={recurrence.count}
+                onChange={handleCountChange}
+                className="recurrence-count-input"
+                disabled={recurrence.endType !== 'after'}
               />
-              <span className="recurrence-inline-label">week(s)</span>
-            </div>
+              <span className="recurrence-inline-label">occurrence(s)</span>
+            </label>
           </div>
+        </div>
 
-          <div className="recurrence-section">
-            <label className="recurrence-label">Repeat on</label>
-            <div className="recurrence-weekday-chips">
-              {WEEKDAYS.map(({ code, label, full }) => {
-                const selected = recurrence.byWeekdays.includes(code);
-
-                return (
-                  <button
-                    key={code}
-                    type="button"
-                    className={`recurrence-weekday-chip ${selected ? 'selected' : ''}`}
-                    onClick={() => toggleWeekday(code)}
-                    aria-pressed={selected}
-                    title={full}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="recurrence-section">
-            <label className="recurrence-label">Ends</label>
-
-            <div className="recurrence-radio-group">
-              <label className="recurrence-radio-row">
-                <input
-                  type="radio"
-                  name="end-type"
-                  value="never"
-                  checked={recurrence.endType === 'never'}
-                  onChange={() => handleEndTypeChange('never')}
-                />
-                <span>Never</span>
-              </label>
-
-              <label className="recurrence-radio-row">
-                <input
-                  type="radio"
-                  name="end-type"
-                  value="on"
-                  checked={recurrence.endType === 'on'}
-                  onChange={() => handleEndTypeChange('on')}
-                />
-                <span>On</span>
-                <input
-                  type="date"
-                  value={recurrence.until}
-                  onChange={handleUntilChange}
-                  className="recurrence-date-input"
-                  disabled={recurrence.endType !== 'on'}
-                />
-              </label>
-
-              <label className="recurrence-radio-row">
-                <input
-                  type="radio"
-                  name="end-type"
-                  value="after"
-                  checked={recurrence.endType === 'after'}
-                  onChange={() => handleEndTypeChange('after')}
-                />
-                <span>After</span>
-                <input
-                  type="number"
-                  min="1"
-                  value={recurrence.count}
-                  onChange={handleCountChange}
-                  className="recurrence-count-input"
-                  disabled={recurrence.endType !== 'after'}
-                />
-                <span className="recurrence-inline-label">occurrence(s)</span>
-              </label>
-            </div>
-          </div>
-
-          {validationError && (
-            <div className="recurrence-error-message">{validationError}</div>
-          )}
+        {validationError && (
+          <div className="recurrence-error-message">{validationError}</div>
+        )}
       </div>
     </Modal>
   );
