@@ -16,6 +16,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
 import InfoIcon from '@mui/icons-material/Info';
 import AddIcon from '@mui/icons-material/Add';
+import IosShareIcon from '@mui/icons-material/IosShare';
 import { DeleteConfirmModal, HelpGuideModal, RecurrenceScopeModal, SlotDetailModal } from '../components/Modals';
 import Calendar from '../components/calendar/Calendar';
 import {
@@ -51,7 +52,8 @@ import CreateAppointmentModal from '../components/CreateAppointmentModal';
 import { DASHBOARD_HELP_GUIDES } from '../data/helpGuides';
 
 // Reusable sidebar component instead of hand-writing the menu here.
-import Sidebar from '../components/Sidebar'; 
+import Sidebar from '../components/Sidebar';
+import ExportCalendarModal from '../components/ExportCalendarModal';
 import '../styles/Dashboard.css';
 import { logout } from '../api/auth';
 
@@ -80,6 +82,7 @@ export default function ProfessorDashboard() {
   const [sideTab, setSideTab] = useState('calendar');
   // `modal` says which popup is open, and `activeAppt` says which item it is about.
   const [modal, setModal] = useState(null);
+  const [exportCalendarOpen, setExportCalendarOpen] = useState(false);
   const [activeAppt, setActiveAppt] = useState(null);
   const [createStartTime, setCreateStartTime] = useState(null);
   const [createEndTime, setCreateEndTime] = useState(null);
@@ -168,7 +171,7 @@ export default function ProfessorDashboard() {
     [user, userId]
   );
 
-  
+
   // The calendar shows two kinds of blocks:
   // 1. real appointments
   // 2. availability slots that are still open
@@ -357,14 +360,14 @@ export default function ProfessorDashboard() {
         setActiveAppt((prev) =>
           prev
             ? {
-                ...prev,
-                title: updatedAvailability.av_title || prev.title,
-                location: updatedAvailability.location || prev.location,
-                startTime: updatedAvailability.start_time,
-                endTime: updatedAvailability.end_time,
-                visibility: updatedAvailability.visibility,
-                capacity: updatedAvailability.capacity,
-              }
+              ...prev,
+              title: updatedAvailability.av_title || prev.title,
+              location: updatedAvailability.location || prev.location,
+              startTime: updatedAvailability.start_time,
+              endTime: updatedAvailability.end_time,
+              visibility: updatedAvailability.visibility,
+              capacity: updatedAvailability.capacity,
+            }
             : prev
         );
       }
@@ -516,7 +519,12 @@ export default function ProfessorDashboard() {
               { id: 'create', iconComponent: AddIcon, label: 'Create', onClick: () => setModal('createItem') },
             ]}
             bottomItems={[
-              // Help is kept at the bottom of the sidebar for consistent access.
+              {
+                id: 'export-calendar',
+                iconComponent: IosShareIcon,
+                label: 'export calendar',
+                onClick: () => setExportCalendarOpen(true),
+              },
               { id: 'help', iconComponent: InfoIcon, label: 'Help', onClick: () => setModal('help') },
             ]}
           />
@@ -547,143 +555,142 @@ export default function ProfessorDashboard() {
             {rightPanelOpen && (
               <aside className="side-panel">
                 {/* Quick look at what is coming up soon. */}
-              <div className="side-panel-section side-panel-section-upcoming">
-                <div className="side-panel-title">Upcoming appointments</div>
-                <div className="side-panel-scroll">
-                  {upcomingAppts.length === 0 ? (
-                    // Empty state keeps the panel useful even when the professor is free.
-                    <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
-                  ) : (
-                    upcomingAppts.map((appt) => {
-                      // Convert raw status into label + CSS class for the pill.
-                      const { label, cls } = statusLabel(appt.status);
+                <div className="side-panel-section side-panel-section-upcoming">
+                  <div className="side-panel-title">Upcoming appointments</div>
+                  <div className="side-panel-scroll">
+                    {upcomingAppts.length === 0 ? (
+                      // Empty state keeps the panel useful even when the professor is free.
+                      <p style={{ fontSize: 12, color: '#aaa' }}>No upcoming appointments.</p>
+                    ) : (
+                      upcomingAppts.map((appt) => {
+                        // Convert raw status into label + CSS class for the pill.
+                        const { label, cls } = statusLabel(appt.status);
 
-                      return (
-                        // Each card is clickable so the professor can inspect or cancel it.
-                        <div
-                          key={appt.id}
-                          className="appointment-item"
-                          onClick={() => {
-                            setActiveAppt(appt);
-                            setModal('detail');
-                          }}
-                        >
-                          <div className="appointment-color-dot" style={{ background: appt.color }} />
-                          <div>
-                            <h4>{appt.title || 'Untitled appointment'}</h4>
-                            <h6>{appt.ownerName}</h6>
-                            <p>{formatDate(appt.startTime)}</p>
-                            <p>{appt.location}</p>
-                          </div>
-                          <span className={`appointment-status-pill ${cls}`}>{label}</span>
-                          {appt.status === 'pending' && (
-                            <div style={{ display: 'grid', gap: 6 }}>
-                              <button
-                                type="button"
-                                className="invite-action-button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleUpdateMyStatus(appt.id, 'confirmed');
-                                }}
-                                title="Accept request"
-                              >
-                                ✓
-                              </button>
-                              <button
-                                type="button"
-                                className="invite-action-button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleUpdateMyStatus(appt.id, 'cancelled');
-                                }}
-                                title="Decline request"
-                              >
-                                ×
-                              </button>
+                        return (
+                          // Each card is clickable so the professor can inspect or cancel it.
+                          <div
+                            key={appt.id}
+                            className="appointment-item"
+                            onClick={() => {
+                              setActiveAppt(appt);
+                              setModal('detail');
+                            }}
+                          >
+                            <div className="appointment-color-dot" style={{ background: appt.color }} />
+                            <div>
+                              <h4>{appt.title || 'Untitled appointment'}</h4>
+                              <h6>{appt.ownerName}</h6>
+                              <p>{formatDate(appt.startTime)}</p>
+                              <p>{appt.location}</p>
                             </div>
-                          )}
-                          {appt.status === 'cancelled' && (
-                            <button
-                              type="button"
-                              className="invite-action-button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDismissedCancelledIds((prev) => (
-                                  prev.includes(appt.id) ? prev : [...prev, appt.id]
-                                ));
-                              }}
-                              title="Dismiss cancelled item"
-                            >
-                              Dismiss
-                            </button>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
+                            <span className={`appointment-status-pill ${cls}`}>{label}</span>
+                            {appt.status === 'pending' && (
+                              <div style={{ display: 'grid', gap: 6 }}>
+                                <button
+                                  type="button"
+                                  className="invite-action-button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUpdateMyStatus(appt.id, 'confirmed');
+                                  }}
+                                  title="Accept request"
+                                >
+                                  ✓
+                                </button>
+                                <button
+                                  type="button"
+                                  className="invite-action-button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleUpdateMyStatus(appt.id, 'cancelled');
+                                  }}
+                                  title="Decline request"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            )}
+                            {appt.status === 'cancelled' && (
+                              <button
+                                type="button"
+                                className="invite-action-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDismissedCancelledIds((prev) => (
+                                    prev.includes(appt.id) ? prev : [...prev, appt.id]
+                                  ));
+                                }}
+                                title="Dismiss cancelled item"
+                              >
+                                Dismiss
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div className="side-panel-divider" />
+                <div className="side-panel-divider" />
 
-              {/* Heatmap section:
+                {/* Heatmap section:
                   create a new one fast or reopen a recent one. */}
-              <div className="side-panel-section side-panel-section-heatmap">
-                <div className="side-panel-title">Heatmap tools</div>
-                <button
-                  className="top-bar-button"
-                  style={{
-                    width: '100%',
-                    padding: 10,
-                    fontSize: 13,
-                    borderRadius: 8,
-                    marginBottom: 8,
-                    textAlign: 'center',
-                  }}
-                  onClick={() => navigate('/heatmap/professor/new')}
-                >
-                  + Create new heatmap
-                </button>
-                <p style={{ fontSize: 11, color: '#aaa', lineHeight: 1.6 }}>
-                  Create a heatmap, share the link with students, and approve their
-                  submissions from the heatmap page.
-                </p>
+                <div className="side-panel-section side-panel-section-heatmap">
+                  <div className="side-panel-title">Heatmap tools</div>
+                  <button
+                    className="top-bar-button"
+                    style={{
+                      width: '100%',
+                      fontSize: 13,
+                      borderRadius: 8,
+                      marginBottom: 8,
+                      textAlign: 'center',
+                    }}
+                    onClick={() => navigate('/heatmap/professor/new')}
+                  >
+                    + Create new heatmap
+                  </button>
+                  <p style={{ fontSize: 11, color: '#aaa', lineHeight: 1.6 }}>
+                    Create a heatmap, share the link with students, and approve their
+                    submissions from the heatmap page.
+                  </p>
 
-                {/* Small preview list of recent heatmaps for quick access. */}
-                <div className="side-panel-scroll" style={{ marginTop: 12, display: 'grid', gap: 10 }}>
-                  {heatmaps.length === 0 ? (
-                    <p style={{ fontSize: 12, color: '#888', margin: 0 }}>No heatmaps created yet.</p>
-                  ) : (
-                    heatmaps.slice(0, 4).map((heatmap) => (
-                      // Recent heatmap card shows pending work and links back to the heatmap page.
-                      <div key={heatmap.id} className="invite-item">
-                        <div className={`invite-dot${heatmap.pendingCount > 0 ? '' : ' responded'}`} />
-                        <div>
-                          <h4>{heatmap.title}</h4>
-                          <p>
-                            {heatmap.pendingCount} pending · {heatmap.submissionCount} submission{heatmap.submissionCount !== 1 ? 's' : ''}
-                          </p>
-                          <p style={{ color: '#888' }}>
-                            Created {new Date(heatmap.createdAt).toLocaleDateString('en-CA', {
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </p>
+                  {/* Small preview list of recent heatmaps for quick access. */}
+                  <div className="side-panel-scroll" style={{ marginTop: 12, display: 'grid', gap: 10 }}>
+                    {heatmaps.length === 0 ? (
+                      <p style={{ fontSize: 12, color: '#888', margin: 0 }}>No heatmaps created yet.</p>
+                    ) : (
+                      heatmaps.slice(0, 4).map((heatmap) => (
+                        // Recent heatmap card shows pending work and links back to the heatmap page.
+                        <div key={heatmap.id} className="invite-item">
+                          <div className={`invite-dot${heatmap.pendingCount > 0 ? '' : ' responded'}`} />
+                          <div>
+                            <h4>{heatmap.title}</h4>
+                            <p>
+                              {heatmap.pendingCount} pending · {heatmap.submissionCount} submission{heatmap.submissionCount !== 1 ? 's' : ''}
+                            </p>
+                            <p style={{ color: '#888' }}>
+                              Created {new Date(heatmap.createdAt).toLocaleDateString('en-CA', {
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </p>
+                          </div>
+                          <button
+                            className="invite-action-button"
+                            onClick={() => navigate(`/heatmap/professor/${heatmap.id}`)}
+                            title="Open heatmap"
+                          >
+                            &gt;
+                          </button>
                         </div>
-                        <button
-                          className="invite-action-button"
-                          onClick={() => navigate(`/heatmap/professor/${heatmap.id}`)}
-                          title="Open heatmap"
-                        >
-                          &gt;
-                        </button>
-                      </div>
-                    ))
-                  )}
+                      ))
+                    )}
+                  </div>
                 </div>
-              </div>
-            </aside>
-          )}
+              </aside>
+            )}
           </div>
         </div>
       </div>
@@ -784,16 +791,16 @@ export default function ProfessorDashboard() {
           onEdit={
             activeAppt.type === 'availability'
               ? () => {
-                  setPendingRecurrenceAction(null);
-                  setPendingAvailabilityPayload(null);
-                  setModal('editAvailability');
-                }
+                setPendingRecurrenceAction(null);
+                setPendingAvailabilityPayload(null);
+                setModal('editAvailability');
+              }
               : isHostOnlyEvent(activeAppt)
                 ? () => {
-                    setPendingRecurrenceAction(null);
-                    setPendingAvailabilityPayload(null);
-                    setModal('editAppointment');
-                  }
+                  setPendingRecurrenceAction(null);
+                  setPendingAvailabilityPayload(null);
+                  setModal('editAppointment');
+                }
                 : undefined
           }
           onDelete={() => {
@@ -878,6 +885,14 @@ export default function ProfessorDashboard() {
           onClose={() => setModal(null)}
         />
       )}
+
+      <ExportCalendarModal
+        open={exportCalendarOpen}
+        onClose={() => setExportCalendarOpen(false)}
+        userId={userId}
+        isFaculty={true}
+        exportSource="hosting"
+      />
     </>
   );
 }

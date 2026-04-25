@@ -7,6 +7,7 @@ import { logout } from '../api/auth';
 import Navbar from '../components/Navbar';
 import AppSidebar from '../components/AppSidebar';
 import CreateCourseModal from '../components/CreateCourseModal';
+import { PAGE_HELP_GUIDES } from '../data/helpGuides';
 import logo from '../assets/LGTMLogo2.png';
 import '../styles/Dashboard.css';
 import '../styles/CoursesListPage.css';
@@ -149,7 +150,6 @@ export default function CoursesListPage() {
       <Navbar
         logo={logo}
         title="Course List"
-        onLeftClick={() => navigate('/')}
         user={{
           displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
           role: currentUser.role,
@@ -171,6 +171,7 @@ export default function CoursesListPage() {
           user={user}
           navigate={navigate}
           canCreate={false}
+          helpGuide={PAGE_HELP_GUIDES.courses}
         />
 
         <div className="main-content">

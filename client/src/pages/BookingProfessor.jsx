@@ -7,14 +7,11 @@ import { logout } from '../api/auth';
 import useAppShellSession from '../hooks/useAppShellSession';
 import { isFacultyAdmin, resolvePath } from '../auth/authUtils';
 import logo from '../assets/LGTMLogo2.png';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import SearchIcon from '@mui/icons-material/Search';
-import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
-import InfoIcon from '@mui/icons-material/Info';
 import Navbar from '../components/Navbar';
-import Sidebar from '../components/Sidebar';
+import AppSidebar from '../components/AppSidebar';
 import BookingCalendar, { toCalendarDateKey } from '../components/BookingCalendar';
 import { InviteURLModal } from '../components/Modals';
+import { PAGE_HELP_GUIDES } from '../data/helpGuides';
 
 function formatSlotTime(value) {
   return new Intl.DateTimeFormat('en-CA', {
@@ -221,12 +218,6 @@ export default function BookingProfessor() {
     }
   };
 
-  const sidebarItems = [
-    { id: 'calendar', iconComponent: CalendarMonthIcon, label: 'Calendar', onClick: () => navigate(resolvePath('dashboard', user)) },
-    { id: 'courses', iconComponent: CollectionsBookmarkOutlinedIcon, label: 'Courses', onClick: () => navigate('/courses') },
-    { id: 'search', iconComponent: SearchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
-  ];
-
   if (loading && !professor) {
     return (
       <div className="dashboard-page">
@@ -242,7 +233,13 @@ export default function BookingProfessor() {
           actions={[{ label: 'Log Out', onClick: handleLogout }]}
         />
         <div className="dashboard-layout">
-          <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', iconComponent: InfoIcon, label: 'Help' }]} />
+          <AppSidebar
+            activeId="search"
+            user={user}
+            navigate={navigate}
+            canCreate={false}
+            helpGuide={PAGE_HELP_GUIDES.bookingProfessor}
+          />
           <div className="main-content">
             <div className="booking-page">
               <p>Loading...</p>
@@ -268,7 +265,13 @@ export default function BookingProfessor() {
           actions={[{ label: 'Log Out', onClick: handleLogout }]}
         />
         <div className="dashboard-layout">
-          <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', iconComponent: InfoIcon, label: 'Help' }]} />
+          <AppSidebar
+            activeId="search"
+            user={user}
+            navigate={navigate}
+            canCreate={false}
+            helpGuide={PAGE_HELP_GUIDES.bookingProfessor}
+          />
           <div className="main-content">
             <div className="booking-page">
               <p>Professor not found.</p>
@@ -294,7 +297,13 @@ export default function BookingProfessor() {
       />
 
       <div className="dashboard-layout">
-        <Sidebar activeId="search" items={sidebarItems} bottomItems={[{ id: 'help', iconComponent: InfoIcon, label: 'Help' }]} />
+        <AppSidebar
+          activeId="search"
+          user={user}
+          navigate={navigate}
+          canCreate={false}
+          helpGuide={PAGE_HELP_GUIDES.bookingProfessor}
+        />
 
         <div className="main-content">
           <div className="booking-page">

@@ -12,6 +12,7 @@ import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import SearchIcon from '@mui/icons-material/Search';
 import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
 import InfoIcon from '@mui/icons-material/Info';
+import IosShareIcon from '@mui/icons-material/IosShare';
 import { DeleteConfirmModal, HelpGuideModal, SlotDetailModal } from '../components/Modals';
 import Calendar from '../components/calendar/Calendar';
 import {
@@ -34,6 +35,7 @@ import { DASHBOARD_HELP_GUIDES } from '../data/helpGuides';
 
 // Reusable sidebar component instead of hardcoding the left menu here.
 import Sidebar from '../components/Sidebar';
+import ExportCalendarModal from '../components/ExportCalendarModal';
 import '../styles/Dashboard.css';
 
 
@@ -61,6 +63,7 @@ export default function StudentDashboard() {
 
   // Keeps track of which modal is open and which appointment the student clicked.
   const [modal, setModal] = useState(null);
+  const [exportCalendarOpen, setExportCalendarOpen] = useState(false);
   const [activeAppt, setActiveAppt] = useState(null);
 
   // Stores any heatmap invitations tied to this student.
@@ -323,7 +326,6 @@ export default function StudentDashboard() {
         <Navbar
           logo={logo}
           title="Dashboard Calendar"
-          onLeftClick={() => navigate('/')}
           user={{
             displayName: `${currentUser.lastName}, ${currentUser.firstName}`,
             role: 'student',
@@ -351,7 +353,12 @@ export default function StudentDashboard() {
               { id: 'search', iconComponent: SearchIcon, label: 'Search', onClick: () => navigate('/booking/search') },
             ]}
             bottomItems={[
-              // Help is kept at the bottom of the sidebar for consistent access.
+              {
+                id: 'export-calendar',
+                iconComponent: IosShareIcon,
+                label: 'export calendar',
+                onClick: () => setExportCalendarOpen(true),
+              },
               { id: 'help', iconComponent: InfoIcon, label: 'Help', onClick: () => setModal('help') },
             ]}
           />
@@ -568,6 +575,14 @@ export default function StudentDashboard() {
           onClose={() => setModal(null)}
         />
       )}
+
+      <ExportCalendarModal
+        open={exportCalendarOpen}
+        onClose={() => setExportCalendarOpen(false)}
+        userId={userId}
+        isFaculty={false}
+        exportSource="my"
+      />
     </>
   );
 }

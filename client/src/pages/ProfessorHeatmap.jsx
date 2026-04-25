@@ -10,6 +10,7 @@ import Navbar from '../components/Navbar';
 import AppSidebar from '../components/AppSidebar';
 import useAppShellSession from '../hooks/useAppShellSession';
 import { sessionUserToNavUser } from '../auth/authUtils';
+import { PAGE_HELP_GUIDES } from '../data/helpGuides';
 // Grid components used by professor view: personal availability and group heatmap.
 import { PersonalGrid, GroupGrid, HeatmapLegend, GridPager } from '../components/HeatmapGrid';
 // Reusable modal components for confirmations, sharing, and appointment details.
@@ -477,6 +478,7 @@ export default function ProfessorHeatmap() {
           user={sessionUser}
           navigate={navigate}
           canCreate={false}
+          helpGuide={PAGE_HELP_GUIDES.professorHeatmap}
         />
         <div className="heatmap-main-content">
           <div className="heatmap-page" style={{ width: '100%' }}>

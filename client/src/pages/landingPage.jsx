@@ -30,7 +30,6 @@ export default function LandingPage() {
       <div className="landing-top-bar">
         <Navbar
           logo={LGTMLogo2}
-          onLeftClick={() => navigate('/')}
           actions={[
             { label: "Login", onClick: () => navigate("/login") },
           ]}

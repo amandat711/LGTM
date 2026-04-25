@@ -10,6 +10,7 @@ import Navbar from '../components/Navbar';
 import AppSidebar from '../components/AppSidebar';
 import useAppShellSession from '../hooks/useAppShellSession';
 import { isFacultyAdmin, sessionUserToNavUser } from '../auth/authUtils';
+import { PAGE_HELP_GUIDES } from '../data/helpGuides';
 import { logout } from '../api/auth';
 // Student view uses the professor-availability grid, where only professor slots are selectable.
 import { ProfAvailGrid, GridPager } from '../components/HeatmapGrid';
@@ -254,6 +255,7 @@ export default function StudentHeatmap() {
           user={sessionUser}
           navigate={navigate}
           canCreate={canCreate}
+          helpGuide={PAGE_HELP_GUIDES.studentHeatmap}
         />
         <div className="heatmap-main-content">
           <div className="heatmap-page" style={{ width: '100%' }}>

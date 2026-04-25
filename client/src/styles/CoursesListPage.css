@@ -22,17 +22,20 @@
 .courses-add-btn {
   flex-shrink: 0;
   align-self: center;
-  border: 1px solid #c8c8c8;
+  border: 1px solid #000000;
   border-radius: 10px;
-  background: #f5f5f5;
-  padding: 10px 18px;
-  font-size: 15px;
+  background: #000000;
+  color: white;
+  padding: 0px 18px;
+  height: 34px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
 
 .courses-add-btn:hover {
-  background: #ebebeb;
+  background: #E31429;
+  border: 1px solid #E31429;
 }
 
 .courses-shell {
@@ -44,6 +47,7 @@
   margin: 0 0 10px;
   font-size: 42px;
   font-weight: 800;
+  font-family: 'Inter', sans-serif;
 }
 
 .term-chip-row {
@@ -51,6 +55,7 @@
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 20px;
+  font-family: inherit;
 }
 
 .term-chip {
@@ -58,12 +63,13 @@
   padding: 5px 12px;
   font-size: 12px;
   font-weight: 700;
+  font-family: inherit;
 }
 
 .term-chip-btn {
   border: 2px solid transparent;
   cursor: pointer;
-  font: inherit;
+  font-family: 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 700;
   transition: box-shadow 0.15s ease, transform 0.1s ease;
@@ -85,39 +91,55 @@
 .term-chip--v0 {
   background: #e8f1ff;
   color: #0d3b66;
+  font-family: 'Inter', sans-serif;
 }
+
 .term-chip--v1 {
   background: #e6f7f4;
   color: #0d4f45;
+  font-family: 'Inter', sans-serif;
 }
+
 .term-chip--v2 {
   background: #f1e8ff;
   color: #3b1d6e;
+  font-family: 'Inter', sans-serif;
 }
+
 .term-chip--v3 {
   background: #e8f6e8;
   color: #1a4d1f;
+  font-family: 'Inter', sans-serif;
 }
+
 .term-chip--v4 {
   background: #fff4e0;
   color: #6b4200;
+  font-family: 'Inter', sans-serif;
 }
+
 .term-chip--v5 {
   background: #ffe8ef;
   color: #7a1535;
+  font-family: 'Inter', sans-serif;
 }
+
 .term-chip--v6 {
   background: #e8eef2;
   color: #2c3d47;
+  font-family: 'Inter', sans-serif;
 }
+
 .term-chip--v7 {
   background: #e8ecff;
   color: #1e2f7a;
+  font-family: 'Inter', sans-serif;
 }
 
 .courses-subtitle {
   margin: 16px 0 12px;
   font-size: 32px;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-grid {
@@ -153,39 +175,55 @@
   padding: 3px 10px;
   font-size: 11px;
   font-weight: 700;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-term-pill--v0 {
   background: #cfe8ff;
   color: #004a7c;
+  font-family: 'Inter', sans-serif;
 }
+
 .course-term-pill--v1 {
   background: #c5efe0;
   color: #065a4a;
+  font-family: 'Inter', sans-serif;
 }
+
 .course-term-pill--v2 {
   background: #e8d9ff;
   color: #4a1f8c;
+  font-family: 'Inter', sans-serif;
 }
+
 .course-term-pill--v3 {
   background: #cfe9cf;
   color: #145a1a;
+  font-family: 'Inter', sans-serif;
 }
+
 .course-term-pill--v4 {
   background: #ffe8c2;
   color: #7a4f00;
+  font-family: 'Inter', sans-serif;
 }
+
 .course-term-pill--v5 {
   background: #ffd6e3;
   color: #8c1a3d;
+  font-family: 'Inter', sans-serif;
 }
+
 .course-term-pill--v6 {
   background: #d8e0e6;
   color: #2a3a44;
+  font-family: 'Inter', sans-serif;
 }
+
 .course-term-pill--v7 {
   background: #d8e0ff;
   color: #2436a3;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-role-pill {
@@ -195,28 +233,34 @@
   color: #6f4f00;
   font-size: 11px;
   font-weight: 700;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-code {
   font-size: 23px;
   font-weight: 800;
   margin-bottom: 4px;
+  font-family: 'Inter', sans-serif;
 }
 
 .course-name {
   font-size: 14px;
   color: #2b2b2b;
+  font-family: 'Inter', sans-serif;
 }
 
 .archive-group {
   margin-bottom: 18px;
+  font-family: inherit;
 }
 
 .archive-label {
   margin: 0 0 10px;
   font-size: 26px;
+  font-family: inherit;
 }
 
 .courses-error {
   color: #b00020;
+  font-family: inherit;
 }

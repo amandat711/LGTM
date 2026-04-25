@@ -17,7 +17,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  font-family:'DM Sans', Arial, sans-serif;
+  font-family: 'DM Sans', Arial, sans-serif;
   background: #f5f5f5;
   overflow: hidden;
 }
@@ -128,14 +128,17 @@
 
 .side-panel {
   width: clamp(220px, 24vw, 300px);
-  flex-shrink: 0;           /* never squish the panel when space is tight */
+  flex-shrink: 0;
+  /* never squish the panel when space is tight */
   display: flex;
   flex-direction: column;
-  overflow: hidden;         /* panel stays fixed; inner sections can scroll */
+  overflow: hidden;
+  /* panel stays fixed; inner sections can scroll */
   background: #fff;
   padding: clamp(10px, 1.2vw, 16px);
   gap: 20px;
-  min-height: 0;            /* allows the panel to scroll within a flex parent */
+  min-height: 0;
+  /* allows the panel to scroll within a flex parent */
 }
 
 .side-panel-section {
@@ -190,7 +193,7 @@
   position: relative;
 }
 
-.appointment-item > div:nth-child(2) {
+.appointment-item>div:nth-child(2) {
   grid-column: 2;
   grid-row: 1;
   flex: 1;
@@ -213,7 +216,8 @@
   flex-shrink: 0;
   grid-column: 1;
   grid-row: 1 / span 2;
-  margin-top: 6px;   /* aligns the dot with the first line of text */
+  margin-top: 6px;
+  /* aligns the dot with the first line of text */
 }
 
 /* Appointment title — the meeting name */
@@ -842,6 +846,81 @@
 }
 
 /* 
+   EXPORT CALENDAR MODAL
+   Same modal shell as appointment detail / help; LGTM red accent and dashboard type.
+ */
+
+.export-calendar-modal {
+  max-width: 480px;
+}
+
+.export-calendar-modal .modal-body {
+  margin-bottom: 0;
+}
+
+.export-calendar-intro {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #5b6470;
+  font-weight: 500;
+}
+
+.export-calendar-participant-note {
+  margin: 0;
+}
+
+.export-calendar-radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-calendar-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.export-calendar-radio-option:hover {
+  border-color: #d0d0d0;
+  background: #fafafa;
+}
+
+.export-calendar-radio-option--selected {
+  border-color: #e31429;
+  background: #fff5f6;
+}
+
+.export-calendar-radio-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: #e31429;
+  flex-shrink: 0;
+}
+
+.export-calendar-radio-option:has(input:disabled) {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.export-calendar-error {
+  margin: 14px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b01020;
+}
+
+/* 
    HELP GUIDE MODAL
    Reusable pop-up opened by the info icon in the sidebar.
    It uses the same red accent, white surfaces, and compact dashboard typography.
@@ -961,6 +1040,7 @@
  */
 
 @media (max-width: 900px) {
+
   /* Give the calendar more room on tablet-sized screens. */
   .side-panel {
     width: clamp(200px, 28vw, 240px);
@@ -968,10 +1048,12 @@
 }
 
 @media (max-width: 700px) {
+
   /* On phones, hide the side panel so the calendar stays usable. */
   .side-panel {
     display: none;
   }
+
   /* .side-menu responsive rule moved to Sidebar.css */
 
   .help-guide-modal {
@@ -1042,6 +1124,7 @@
   border-radius: 14px;
   padding: 14px 16px;
   font-size: 15px;
+  font-family: inherit;
   color: #111;
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -1050,7 +1133,7 @@
 .booking-search-box:focus {
   /* Focus ring helps keyboard users see exactly where they are typing. */
   border-color: #E31429;
-  box-shadow: 0 0 0 4px rgba(227, 20, 41, 0.1);
+  box-shadow: inset 0 0 0 4px rgba(227, 20, 41, 0.1);
 }
 
 
