@@ -491,15 +491,15 @@ export default function StudentDashboard() {
                             {appt.status === 'cancelled' && (
                               <button
                                 type="button"
-                                className="invite-action-button"
-                                aria-label="Delete cancelled item"
+                                className="invite-action-button appointment-delete-button"
+                                aria-label="Dismiss cancelled item"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDismissCancelledAppointment(appt.id);
                                 }}
-                                title="Delete cancelled item from your dashboard"
+                                title="Dismiss cancelled item from your dashboard"
                               >
-                                Delete
+                                Dismiss
                               </button>
                             )}
                           </div>
