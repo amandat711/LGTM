@@ -1,3 +1,4 @@
+// AMANDA TRAN
 /**
  * Generates an array of day objects for the grid header.
  *

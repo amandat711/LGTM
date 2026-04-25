@@ -1,3 +1,4 @@
+// AMANDA TRAN
 export const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const MONTHS = [

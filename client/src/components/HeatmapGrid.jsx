@@ -1,3 +1,4 @@
+// AMANDA TRAN
 import React from 'react';
 import { studentAvailabilityColor, thresholdHeatColor } from '../utils/heatColor';
 import { useDragSelect } from '../hooks/useDragSelect';

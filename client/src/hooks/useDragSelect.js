@@ -1,3 +1,4 @@
+// AMANDA TRAN
 import { useRef, useEffect, useCallback } from 'react';
 
 export function useDragSelect(selected, setSelected) {

@@ -1,3 +1,4 @@
+// AMANDA TRAN
 import React, { useMemo, useState } from 'react';
 import Sidebar from './Sidebar';
 import { isFacultyAdmin, resolvePath } from '../auth/authUtils';

@@ -1,3 +1,4 @@
+-- AMANDA TRAN
 PRAGMA foreign_keys = ON;
 
 DROP TABLE IF EXISTS appointment_history;
