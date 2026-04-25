@@ -110,11 +110,18 @@ router.post('/:courseId/admins', requireAuth, loadUser, (req, res) => {
                   [req.user.user_id, existing.assignment_id],
                   (upErr) => {
                     if (upErr) return res.status(500).json({ error: upErr.message });
-                    return res.status(200).json({
-                      message: 'Course admin reactivated.',
-                      assignment_id: existing.assignment_id,
-                      user: userPayload,
-                    });
+                    return db.run(
+                      `UPDATE users SET user_type = 'course_admin' WHERE user_id = ?`,
+                      [targetId],
+                      (typeErr) => {
+                        if (typeErr) return res.status(500).json({ error: typeErr.message });
+                        return res.status(200).json({
+                          message: 'Course admin reactivated.',
+                          assignment_id: existing.assignment_id,
+                          user: { ...userPayload, user_type: 'course_admin' },
+                        });
+                      }
+                    );
                   }
                 );
               }
@@ -125,11 +132,19 @@ router.post('/:courseId/admins', requireAuth, loadUser, (req, res) => {
                 [courseId, targetId, req.user.user_id],
                 function onInsert(insErr) {
                   if (insErr) return res.status(500).json({ error: insErr.message });
-                  res.status(201).json({
-                    message: 'Course admin assigned.',
-                    assignment_id: this.lastID,
-                    user: userPayload,
-                  });
+                  const assignmentId = this.lastID;
+                  db.run(
+                    `UPDATE users SET user_type = 'course_admin' WHERE user_id = ?`,
+                    [targetId],
+                    (typeErr) => {
+                      if (typeErr) return res.status(500).json({ error: typeErr.message });
+                      res.status(201).json({
+                        message: 'Course admin assigned.',
+                        assignment_id: assignmentId,
+                        user: { ...userPayload, user_type: 'course_admin' },
+                      });
+                    }
+                  );
                 }
               );
             }
