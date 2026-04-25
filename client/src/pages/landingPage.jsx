@@ -27,10 +27,16 @@ export default function LandingPage() {
   return (
     <div className="landing-page">
       {/* Top navigation bar */}
+      {/* logo + login/sign up buttons */}
       <div className="landing-top-bar">
         <Navbar
           logo={LGTMLogo2}
           actions={[
+            {
+              label: "Sign up",
+              onClick: () => navigate("/register"),
+              className: "sign-up",
+            },
             { label: "Login", onClick: () => navigate("/login") },
           ]}
         />
