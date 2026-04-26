@@ -92,6 +92,34 @@ export default function BookingProfessor() {
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
 
+  async function refreshSlots() {
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const data = await getProfessorPublicAvailabilities(professorId);
+
+      const upcoming = Array.isArray(data)
+        ? data.filter((slot) => new Date(slot.end_time) > new Date())
+          .sort((first, second) => new Date(first.start_time) - new Date(second.start_time))
+        : [];
+
+      setSlots(upcoming);
+      setSelectedSlot((current) => (
+        current && upcoming.some((slot) => slot.availability_id === current.availability_id)
+          ? current
+          : null
+      ));
+    } catch (err) {
+      setSlots([]);
+      setSelectedSlot(null);
+      setError('Unable to load availability slots from backend.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const currentUser = useMemo(
     () => !user
       ? { firstName: 'User', lastName: '' }
@@ -138,27 +166,8 @@ export default function BookingProfessor() {
     let active = true;
 
     async function loadSlots() {
-      setLoading(true);
-      setError('');
-      setMessage('');
-
-      try {
-        const data = await getProfessorPublicAvailabilities(professorId);
-        if (!active) return;
-
-        const upcoming = Array.isArray(data)
-          ? data.filter((slot) => new Date(slot.end_time) > new Date())
-            .sort((first, second) => new Date(first.start_time) - new Date(second.start_time))
-          : [];
-
-        setSlots(upcoming);
-      } catch (err) {
-        if (!active) return;
-        setSlots([]);
-        setError('Unable to load availability slots from backend.');
-      } finally {
-        if (active) setLoading(false);
-      }
+      if (!active) return;
+      await refreshSlots();
     }
 
     loadSlots();
@@ -213,6 +222,7 @@ export default function BookingProfessor() {
       await createAppointment(selectedSlot.availability_id, bookerId);
       setStatus('success');
       setMessage('Your booking is confirmed! It will appear on your dashboard shortly.');
+      await refreshSlots();
     } catch (err) {
       setStatus('error');
       setError(err.message || 'Unable to confirm booking.');
