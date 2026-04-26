@@ -1,4 +1,5 @@
-/*AMANDA TRAN*/
+/* AMANDA TRAN (30% contribution) - ChatGPT (7% contribution) for Amanda  */
+//penAI. (2026). ChatGPT. https://chat.openai.com/
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Button from '@mui/material/Button';
@@ -22,11 +23,12 @@ import {
   slotKindFromAppointment,
 } from './calendar/calendarUtils';
 
-// ─── Shared shell ─────────────────────────────────────────────
+// One modal frame shared by all of the popups below.
 export function Modal({ title, onClose, children, footer, className = '', meta = null, headerActions = null }) {
   return (
     <div
       className="modal-overlay"
+      // Only close when the backdrop itself is clicked, not when a user clicks inside the modal.
       onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className={`modal${className ? ` ${className}` : ''}`}>
@@ -47,11 +49,9 @@ export function Modal({ title, onClose, children, footer, className = '', meta =
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// HelpGuideModal
-//    Reusable detailed instructions popup for page-specific help.
-// ─────────────────────────────────────────────────────────────
+// Shows the page-specific help text from helpGuides.js.
 export function HelpGuideModal({ guide, onClose }) {
+  // Some pages may open help before the guide is loaded, so keep the modal safe by default.
   const safeGuide = guide || {};
 
   return (
@@ -101,10 +101,7 @@ export function HelpGuideModal({ guide, onClose }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// ConfirmActionModal
-//    Small reusable confirmation popup for destructive or important actions.
-// ─────────────────────────────────────────────────────────────
+// Small confirmation dialog used when an action needs one last check.
 export function ConfirmActionModal({
   title,
   message,
@@ -136,6 +133,7 @@ export function ConfirmActionModal({
         </>
       }
     >
+      {/* Details are optional so the same modal can work for short and detailed confirmations. */}
       {message && (
         <p className="modal-description">
           {message}
@@ -156,20 +154,18 @@ export function ConfirmActionModal({
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 1. ConfirmSlotModal
-//    Parent calls API on confirm; server sends confirmation email to invitees.
-// ─────────────────────────────────────────────────────────────
+// Final professor step after choosing a heatmap slot.
 export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
   const [submitting, setSubmitting] = useState(false);
 
   async function handleConfirm() {
+    // Prevent double-clicks from creating duplicate appointments.
     if (submitting) return;
     setSubmitting(true);
     try {
       await Promise.resolve(onConfirm());
     } catch {
-      // Error message is set by the parent (e.g. setError on heatmap page).
+      // The heatmap page owns the user-facing error message.
     } finally {
       setSubmitting(false);
     }
@@ -217,10 +213,8 @@ export function ConfirmSlotModal({ slot, attendees, onConfirm, onClose }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 2. SlotDetailModal
-//    Click any booked appointment to view details.
-// ─────────────────────────────────────────────────────────────
+
+// Builds the little initials avatar shown beside each participant.
 function initialsForName(name) {
   const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return 'U';
@@ -230,6 +224,7 @@ function initialsForName(name) {
 }
 
 function renderTypeAndCoursePills(ap) {
+  // The detail modal can represent an appointment, event, availability, or course-linked item.
   const kind = slotKindFromAppointment(ap);
   const courseCode = ap?.course_code ?? ap?.courseCode ?? null;
   return (
@@ -242,7 +237,7 @@ function renderTypeAndCoursePills(ap) {
   );
 }
 
-/** Primary destructive action in the detail modal footer (host/professor only). */
+// The delete button means different things depending on the calendar item.
 function ownerDestructiveFooterLabel(ap) {
   if ((ap || {}).type === 'availability') return 'Delete availability';
   const kind = slotKindFromAppointment(ap).key;
@@ -250,6 +245,7 @@ function ownerDestructiveFooterLabel(ap) {
   return 'Cancel appointments';
 }
 
+// Main detail popup for appointments, events, and availability blocks.
 export function SlotDetailModal({
   appointment,
   isOwner,
@@ -290,6 +286,9 @@ export function SlotDetailModal({
     ? (otherPartyEmail || '')
     : (isOwner ? (ap.attendeeEmail || '') : (ap.ownerEmail || ''));
   const participantList = Array.isArray(ap.participants) ? ap.participants : [];
+
+  // Newer API responses include participants. Older calendar rows only have
+  // owner/attendee fields, so this fallback keeps the modal working for both.
   const normalizedParticipants = participantList.length > 0
     ? participantList.map((p) => ({
       userId: p.userId || p.user_id || null,
@@ -327,10 +326,13 @@ export function SlotDetailModal({
         }]
         : []),
     ];
+
+  // These flags control which actions are actually safe to show for the current user/item.
   const canUpdateMyStatus = !isAvailability && typeof onUpdateMyStatus === 'function';
   const ownerPending = isOwner && ap.myStatus === 'pending';
   const canDismissCancelled = !isAvailability && ap.status === 'cancelled' && typeof onDismissCancelled === 'function';
 
+  // Recurring slots get a small hint so users know what series they are touching.
   const recurrenceSubtitle = formatRecurrenceSubtitleLine({
     recurrence_rule: ap.recurrence_rule,
     recurrence_group_id: ap.recurrence_group_id,
@@ -348,6 +350,7 @@ export function SlotDetailModal({
       meta={renderTypeAndCoursePills(ap)}
       headerActions={
         <>
+          {/* Owners can edit open availability and host-only events from the details modal. */}
           {isOwner && onEdit ? (
             <Tooltip title={slotKind.key === 'availability' ? 'Edit availability' : 'Edit event'}>
               <IconButton size="small" onClick={onEdit} aria-label="Edit">
@@ -362,6 +365,7 @@ export function SlotDetailModal({
               </IconButton>
             </Tooltip>
           ) : null}
+          {/* Cancelled items are kept visible until each user dismisses them. */}
           {canDismissCancelled ? (
             <Tooltip title="Dismiss cancelled item">
               <IconButton size="small" onClick={onDismissCancelled} aria-label="Dismiss cancelled item">
@@ -522,6 +526,7 @@ export function SlotDetailModal({
                       </span>
                     )}
                     {canUpdateMyStatus && isCurrentUser && (
+                      // Only the logged-in participant gets the status dropdown.
                       <div className="participant-status-edit-wrap">
                         <CheckCircleOutlineOutlinedIcon className="modal-inline-icon participant-status-icon" fontSize="inherit" />
                         <select
@@ -562,16 +567,14 @@ export function SlotDetailModal({
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 3. DeleteConfirmModal
-//    Confirms cancellation / slot removal. LGTM sends notification emails server-side.
-// ─────────────────────────────────────────────────────────────
+// Confirmation for deleting availability, deleting an event, or cancelling a booking.
 export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
   const ap = appointment || {};
   const isAvailability = ap.type === 'availability';
   const slotKind = isAvailability ? { key: 'availability', label: 'Availability' } : slotKindFromAppointment(ap);
 
   async function handleDelete() {
+    // Parents can return false when another modal, like recurrence scope, needs to stay open.
     const shouldClose = await onConfirm();
     if (shouldClose !== false) {
       onClose();
@@ -603,6 +606,7 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
 
   const startDel = ap.startTime ? new Date(ap.startTime) : null;
   const endDel = ap.endTime ? new Date(ap.endTime) : null;
+  // Older callers may pass plain day/time text, so this falls back when ISO times are missing.
   const deleteDateTimeLabel =
     startDel && !Number.isNaN(startDel.getTime())
       ? endDel && !Number.isNaN(endDel.getTime())
@@ -654,6 +658,7 @@ export function DeleteConfirmModal({ appointment, onConfirm, onClose }) {
   );
 }
 
+// Lets the user choose how much of a recurring series should be changed.
 export function RecurrenceScopeModal({
   actionLabel = 'update',
   onSelect,
@@ -675,6 +680,7 @@ export function RecurrenceScopeModal({
         <div className="modal-recurrence-line modal-recurrence-line--spaced">{recurrenceSubtitle}</div>
       ) : null}
       <div className="modal-detail-stack modal-detail-stack--recurrence-scope">
+        {/* These values match the recurrence_scope options expected by the backend. */}
         <Button type="button" variant="outlined" onClick={() => onSelect('single')}>
           This event
         </Button>
@@ -689,12 +695,10 @@ export function RecurrenceScopeModal({
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 4. InviteURLModal
-//    Generates a shareable booking link for owners.
-// ─────────────────────────────────────────────────────────────
+// Shareable link modal for sending a heatmap to students.
 export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
   const [copied, setCopied] = useState(false);
+  // Default keeps the modal usable in local/demo mode even if no URL was generated yet.
   const shareURL = inviteURL || `${window.location.origin}/heatmap`;
 
   function handleCopy() {
@@ -737,10 +741,7 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// 5. ApproveSubmissionModal
-//    Professor reviews a student's availability submission.
-// ─────────────────────────────────────────────────────────────
+// Formats a student's submitted slot into the compact radio-button label.
 function formatSlotLabel(slot) {
   if (!slot?.startTime || !slot?.endTime) return 'Unknown time';
 
@@ -765,6 +766,7 @@ export function ApproveSubmissionModal({ submission, onApprove, onDecline, onClo
   const slotOptions = useMemo(() => s.slots || [], [s.slots]);
   const [selectedSlotId, setSelectedSlotId] = useState(slotOptions[0]?.id || null);
 
+  // If the professor opens a different student's submission, reset to that submission's first slot.
   useEffect(() => {
     setSelectedSlotId(slotOptions[0]?.id || null);
   }, [slotOptions]);

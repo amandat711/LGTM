@@ -1,4 +1,3 @@
-// AMANDA TRAN
 import { API_BASE } from '../constants/config';
 
 async function handleResponse(res) {

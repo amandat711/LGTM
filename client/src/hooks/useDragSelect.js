@@ -1,4 +1,4 @@
-// AMANDA TRAN
+// AMANDA TRAN (100% contribution)
 import { useRef, useEffect, useCallback } from 'react';
 
 export function useDragSelect(selected, setSelected) {

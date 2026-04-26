@@ -1,4 +1,6 @@
-/*AMANDA TRAN*/
+/* AMANDA TRAN (93% contribution) - - ChatGPT (7% contribution) => final refractor + logic check up for smooth UX.
+//penAI. (2026). ChatGPT. https://chat.openai.com/
+ */ 
 // React state/effect hooks plus router helpers for route-based heatmap pages.
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';

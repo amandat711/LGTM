@@ -1,4 +1,4 @@
-/*AMANDA TRAN*/
+/* AMANDA TRAN (99% contribution) - Creation */
 /* Rita Zhang */
 
 import React from 'react';
