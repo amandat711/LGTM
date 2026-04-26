@@ -32,7 +32,7 @@
 }
 
 body {
-  font-family: var(--font);
+  font-family: "Inter", sans-serif;
   color: var(--text);
   background: #fff;
   -webkit-font-smoothing: antialiased;
@@ -73,27 +73,26 @@ body {
 }
 
 .page-label {
-  font-size: 11px;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
   font-weight: 600;
   color: var(--red);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   margin-bottom: 6px;
 }
 
 .page-title {
-  /* font-family: 'DM Sans', Arial, sans-serif; */
+  font-family: "Inter", sans-serif;
   font-size: 28px;
   font-weight: 600;
-  color: var(--text);
-  letter-spacing: -0.02em;
+  color: black;
   line-height: 1.25;
   margin-bottom: 6px;
 }
 
 .page-subtitle {
+  font-family: "Inter", sans-serif;
   font-size: 14px;
-  color: var(--text-muted);
+  color: rgb(110, 110, 110);
 }
 
 /* ─── New heatmap details card ───────────────────────────── */
@@ -113,13 +112,14 @@ body {
 }
 
 .heatmap-create-copy h3 {
+  font-family: "Inter", sans-serif;
   font-size: 16px;
   font-weight: 600;
   color: var(--text);
-  margin-bottom: 6px;
 }
 
 .heatmap-create-copy p {
+  font-family: "Inter", sans-serif;
   font-size: 13px;
   line-height: 1.65;
   color: var(--text-muted);
@@ -137,11 +137,10 @@ body {
 }
 
 .heatmap-create-fields span {
-  font-size: 10px;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+  color: black;
+  font-family: "Inter", sans-serif;
 }
 
 .heatmap-create-fields input,
@@ -152,13 +151,14 @@ body {
   border-radius: 7px;
   background: var(--white);
   color: var(--text);
-  /* font-family: 'DM Sans', Arial, sans-serif; */
+  font-family: "Inter", sans-serif;
   font-size: 14px;
   padding: 10px 12px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .heatmap-create-fields textarea {
+  font-family: "Inter", sans-serif;
   resize: vertical;
   min-height: 120px;
   line-height: 1.55;
@@ -169,7 +169,51 @@ body {
 .heatmap-create-fields textarea:focus {
   outline: none;
   border-color: var(--red);
-  box-shadow: 0 0 0 4px rgba(227, 20, 41, 0.08);
+  box-shadow: inset 0 0 0 4px rgba(227, 20, 41, 0.08);
+}
+
+.heatmap-create-fields input::placeholder,
+.heatmap-create-fields select::placeholder,
+.heatmap-create-fields textarea::placeholder {
+  color: rgb(110, 110, 110);
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+}
+
+/* New heatmap form: error lines up with Create / Cancel (override .confirm-bar flex) */
+.confirm-bar.heatmap-create-confirm-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.heatmap-create-confirm-error-slot {
+  min-width: 0;
+}
+
+.heatmap-create-confirm-error {
+  margin: 0;
+  color: #cc2222;
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.heatmap-create-confirm-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+@media (max-width: 600px) {
+  .confirm-bar.heatmap-create-confirm-bar {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ─── Existing heatmap details card ───────────────────────── */
@@ -287,7 +331,7 @@ body {
   background: var(--white);
   font-size: 13px;
   color: var(--text);
-  /* font-family: 'DM Sans', Arial, sans-serif; */
+  font-family: "Inter", sans-serif;
   cursor: pointer;
 }
 
@@ -934,13 +978,57 @@ body {
   border-top: 1px solid var(--border);
 }
 
-.modal-footer .MuiButton-textPrimary {
-  color: #111111;
+/* MUI modal footers: match app button chrome (dashboard / availability modals) */
+.modal-footer .MuiButton-root {
+  border-radius: 6px;
+  min-height: 36px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: 'Inter', 'DM Sans', sans-serif;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  box-shadow: none;
 }
 
+.modal-footer .MuiButton-text,
+.modal-footer .MuiButton-textPrimary {
+  border: 1.5px solid #ccc;
+  background: #fff;
+  color: #111;
+}
+
+.modal-footer .MuiButton-text:hover,
 .modal-footer .MuiButton-textPrimary:hover {
-  color: #000000;
-  background-color: rgba(0, 0, 0, 0.06);
+  background: #f8f8f8;
+  border-color: #bdbdbd;
+  color: #000;
+}
+
+.modal-footer .MuiButton-outlined.MuiButton-colorError {
+  background: #E31429;
+  border: 1.5px solid #E31429;
+  color: #fff;
+}
+
+.modal-footer .MuiButton-outlined.MuiButton-colorError:hover {
+  background: #f26373;
+  border-color: #f26373;
+  color: #fff;
+  box-shadow: none;
+}
+
+.modal-footer .MuiButton-containedPrimary {
+  background: #E31429;
+  border: 1.5px solid #E31429;
+  color: #fff;
+}
+
+.modal-footer .MuiButton-containedPrimary:hover {
+  background: #b01020;
+  border-color: #b01020;
+  color: #fff;
+  box-shadow: none;
 }
 
 .attendee-list {
