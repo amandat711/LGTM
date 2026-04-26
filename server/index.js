@@ -16,6 +16,7 @@ const authRouter = require('./routes/auth');
 const heatmapsRouter = require('./routes/heatmaps');
 const usersRouter = require('./routes/users');
 const coursesRouter = require('./routes/courses');
+const calendarSyncRouter = require('./routes/calendarSync');
 
 const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:3001', 'http://127.0.0.1:3001'];
 const allowedOrigins = (process.env.CORS_ORIGINS || '')
@@ -64,6 +65,7 @@ app.use('/appointments', appointmentsRouter);
 app.use('/heatmaps', heatmapsRouter);
 app.use('/users', usersRouter);
 app.use('/courses', coursesRouter);
+app.use('/calendar-sync', calendarSyncRouter);
 
 if (isProduction) {
   const clientBuildPath = path.join(__dirname, '..', 'client', 'build');

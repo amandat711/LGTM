@@ -13,6 +13,7 @@ import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBook
 import InfoIcon from '@mui/icons-material/Info';
 import AddIcon from '@mui/icons-material/Add';
 import IosShareIcon from '@mui/icons-material/IosShare';
+import SyncIcon from '@mui/icons-material/Sync';
 import { DeleteConfirmModal, HelpGuideModal, RecurrenceScopeModal, SlotDetailModal } from '../components/Modals';
 import Calendar from '../components/calendar/Calendar';
 import {
@@ -50,6 +51,7 @@ import { DASHBOARD_HELP_GUIDES } from '../data/helpGuides';
 
 import Sidebar from '../components/Sidebar';
 import ExportCalendarModal from '../components/ExportCalendarModal';
+import SyncCalendarModal from '../components/SyncCalendarModal';
 import '../styles/Dashboard.css';
 import { logout } from '../api/auth';
 
@@ -70,6 +72,7 @@ export default function ProfessorDashboard() {
   const [availabilities, setAvailabilities] = useState([]);
   const [sideTab, setSideTab] = useState('calendar');
   const [modal, setModal] = useState(null);
+  const [syncCalendarOpen, setSyncCalendarOpen] = useState(false);
   const [exportCalendarOpen, setExportCalendarOpen] = useState(false);
   const [activeAppt, setActiveAppt] = useState(null);
   const [createStartTime, setCreateStartTime] = useState(null);
@@ -509,6 +512,12 @@ export default function ProfessorDashboard() {
             ]}
             bottomItems={[
               {
+                id: 'sync-calendar',
+                iconComponent: SyncIcon,
+                label: 'Sync Calendar',
+                onClick: () => setSyncCalendarOpen(true),
+              },
+              {
                 id: 'export-calendar',
                 iconComponent: IosShareIcon,
                 label: 'Export Calendar',
@@ -862,6 +871,11 @@ export default function ProfessorDashboard() {
           onClose={() => setModal(null)}
         />
       )}
+
+      <SyncCalendarModal
+        open={syncCalendarOpen}
+        onClose={() => setSyncCalendarOpen(false)}
+      />
 
       <ExportCalendarModal
         open={exportCalendarOpen}

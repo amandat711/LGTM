@@ -171,6 +171,7 @@ CREATE TABLE appointments (
                               CHECK (status IN ('pending', 'waiting_confirmation', 'confirmed', 'cancelled', 'rescheduled')),
     recurrence_rule           TEXT,
     recurrence_group_id       INTEGER,
+    ics_sequence              INTEGER NOT NULL DEFAULT 0 CHECK (ics_sequence >= 0),
     created_at                TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CHECK (datetime(end_time) > datetime(start_time)),
     FOREIGN KEY (course_id) REFERENCES courses(course_id) ON DELETE SET NULL,
@@ -230,6 +231,17 @@ CREATE TABLE appointment_cancellation_dismissals (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
+CREATE TABLE calendar_sync_feeds (
+    user_id               INTEGER PRIMARY KEY,
+    token_value           TEXT NOT NULL UNIQUE,
+    token_hash            TEXT NOT NULL UNIQUE,
+    created_at            TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    rotated_at            TEXT,
+    last_accessed_at      TEXT,
+    is_active             INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
 CREATE TABLE heatmaps (
     hm_id                 INTEGER PRIMARY KEY AUTOINCREMENT,
     created_by            INTEGER NOT NULL,
@@ -277,3 +289,4 @@ CREATE INDEX idx_invitations_invitee ON invitations(invitee_user_id);
 CREATE INDEX idx_heatmap_submissions_heatmap ON hm_availability_submissions(heatmap_id);
 CREATE INDEX idx_heatmap_slots_submission ON hm_submitted_time_slots(submission_id);
 CREATE INDEX idx_password_reset_tokens_user ON password_reset_tokens(user_id);
+CREATE INDEX idx_calendar_sync_feeds_token_hash ON calendar_sync_feeds(token_hash);

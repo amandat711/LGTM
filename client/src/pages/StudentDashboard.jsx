@@ -11,6 +11,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import CollectionsBookmarkOutlinedIcon from '@mui/icons-material/CollectionsBookmarkOutlined';
 import InfoIcon from '@mui/icons-material/Info';
 import IosShareIcon from '@mui/icons-material/IosShare';
+import SyncIcon from '@mui/icons-material/Sync';
 import { DeleteConfirmModal, HelpGuideModal, SlotDetailModal } from '../components/Modals';
 import Calendar from '../components/calendar/Calendar';
 import {
@@ -35,6 +36,7 @@ import { DASHBOARD_HELP_GUIDES } from '../data/helpGuides';
 // Reusable sidebar component instead of hardcoding the left menu here.
 import Sidebar from '../components/Sidebar';
 import ExportCalendarModal from '../components/ExportCalendarModal';
+import SyncCalendarModal from '../components/SyncCalendarModal';
 import '../styles/Dashboard.css';
 
 
@@ -62,6 +64,7 @@ export default function StudentDashboard() {
 
   // Keeps track of which modal is open and which appointment the student clicked.
   const [modal, setModal] = useState(null);
+  const [syncCalendarOpen, setSyncCalendarOpen] = useState(false);
   const [exportCalendarOpen, setExportCalendarOpen] = useState(false);
   const [activeAppt, setActiveAppt] = useState(null);
 
@@ -394,6 +397,12 @@ export default function StudentDashboard() {
             ]}
             bottomItems={[
               {
+                id: 'sync-calendar',
+                iconComponent: SyncIcon,
+                label: 'Sync Calendar',
+                onClick: () => setSyncCalendarOpen(true),
+              },
+              {
                 id: 'export-calendar',
                 iconComponent: IosShareIcon,
                 label: 'Export Calendar',
@@ -632,6 +641,11 @@ export default function StudentDashboard() {
           onClose={() => setModal(null)}
         />
       )}
+
+      <SyncCalendarModal
+        open={syncCalendarOpen}
+        onClose={() => setSyncCalendarOpen(false)}
+      />
 
       <ExportCalendarModal
         open={exportCalendarOpen}

@@ -83,7 +83,7 @@ export default function ExportCalendarModal({
 
   return (
     <Modal
-      title="Export calendar"
+      title="Export Calendar"
       onClose={handleRequestClose}
       className="export-calendar-modal"
       footer={

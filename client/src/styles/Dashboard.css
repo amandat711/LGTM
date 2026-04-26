@@ -1051,7 +1051,7 @@
 }
 
 /* 
-   EXPORT CALENDAR MODAL
+   Export Calendar MODAL
    Same modal shell as appointment detail / help; LGTM red accent and dashboard type.
  */
 
@@ -1123,6 +1123,47 @@
   font-size: 13px;
   font-weight: 600;
   color: #b01020;
+}
+
+.sync-calendar-modal {
+  max-width: 560px;
+}
+
+.sync-calendar-url-block {
+  margin-top: 10px;
+}
+
+.sync-calendar-url-label {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sync-calendar-url-input {
+  width: 100%;
+  font-size: 12px;
+}
+
+.sync-calendar-instructions {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.sync-calendar-instructions p {
+  margin: 0;
+  font-size: 13px;
+  color: #444;
+  line-height: 1.45;
+}
+
+.sync-calendar-note {
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: #6b7280;
 }
 
 @media (max-width: 768px) {

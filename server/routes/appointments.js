@@ -92,8 +92,14 @@ async function recalculateAppointmentStatus(appointmentId) {
         new_status: 'confirmed',
         reason: 'no_participants',
       });
+      await dbRun(
+        `UPDATE appointments
+         SET status = 'confirmed',
+             ics_sequence = COALESCE(ics_sequence, 0) + 1
+         WHERE appointment_id = ?`,
+        [appointmentId]
+      );
     }
-    await dbRun(`UPDATE appointments SET status = 'confirmed' WHERE appointment_id = ?`, [appointmentId]);
     return;
   }
 
@@ -109,7 +115,15 @@ async function recalculateAppointmentStatus(appointmentId) {
     });
   }
 
-  await dbRun(`UPDATE appointments SET status = ? WHERE appointment_id = ?`, [nextStatus, appointmentId]);
+  if (appointment.status !== nextStatus) {
+    await dbRun(
+      `UPDATE appointments
+       SET status = ?,
+           ics_sequence = COALESCE(ics_sequence, 0) + 1
+       WHERE appointment_id = ?`,
+      [nextStatus, appointmentId]
+    );
+  }
 }
 
 function dbRun(sql, params = []) {
@@ -1669,7 +1683,7 @@ router.patch('/:id', async (req, res) => {
       return res.status(404).json({ error: 'No appointments matched selected recurrence scope' });
     }
 
-    await dbRun(`UPDATE appointments SET ${updateFields.join(', ')} WHERE ${targetWhere}`, [
+    await dbRun(`UPDATE appointments SET ${updateFields.join(', ')}, ics_sequence = COALESCE(ics_sequence, 0) + 1 WHERE ${targetWhere}`, [
       ...updateParams,
       ...targetParams,
     ]);
@@ -1778,7 +1792,8 @@ router.patch('/:id/cancel', (req, res) => {
         db.run(
           `
           UPDATE appointments
-          SET status = 'cancelled'
+          SET status = 'cancelled',
+              ics_sequence = COALESCE(ics_sequence, 0) + 1
           WHERE appointment_id = ?
           `,
           [appointmentId],
@@ -1904,7 +1919,10 @@ router.patch('/:id/cancel', (req, res) => {
             const placeholders = ids.map(() => '?').join(',');
 
             db.run(
-              `UPDATE appointments SET status = 'cancelled' WHERE appointment_id IN (${placeholders})`,
+              `UPDATE appointments
+               SET status = 'cancelled',
+                   ics_sequence = COALESCE(ics_sequence, 0) + 1
+               WHERE appointment_id IN (${placeholders})`,
               ids,
               function (updateErr) {
                 if (updateErr) return res.status(500).json({ error: updateErr.message });
