@@ -60,9 +60,9 @@ export function HelpGuideModal({ guide, onClose }) {
       onClose={onClose}
       className="help-guide-modal"
       footer={
-        <Button variant="contained" onClick={onClose}>
+        <button type="button" className="button button-primary" onClick={onClose}>
           Got it
-        </Button>
+        </button>
       }
     >
       <div className="help-guide">

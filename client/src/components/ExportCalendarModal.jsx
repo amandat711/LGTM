@@ -88,9 +88,6 @@ export default function ExportCalendarModal({
       className="export-calendar-modal"
       footer={
         <>
-          <button type="button" className="button button-ghost" onClick={onClose} disabled={busy}>
-            Cancel
-          </button>
           <button type="button" className="button button-primary" onClick={handleDownload} disabled={busy}>
             {busy ? 'Preparing…' : 'Download .ics'}
           </button>

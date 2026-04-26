@@ -71,9 +71,6 @@ export default function SyncCalendarModal({ open, onClose }) {
       className="sync-calendar-modal"
       footer={
         <>
-          <button type="button" className="button button-ghost" onClick={onClose} disabled={busy}>
-            Close
-          </button>
           <button
             type="button"
             className="button button-outline"
