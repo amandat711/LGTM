@@ -1,4 +1,4 @@
-/* AMANDA TRAN */
+/* AMANDA TRAN (100% contribution) */
 /* Page-specific help content shown when the user clicks the info icon. */
 
 export const DASHBOARD_HELP_GUIDES = {

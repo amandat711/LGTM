@@ -1,10 +1,10 @@
-/*AMANDA TRAN*/
+/* AMANDA TRAN (84% contribution) - Creation */
 
 import React from 'react';
 import '../styles/Sidebar.css';
 
-/**
- * Sidebar — reusable left navigation bar used across dashboard pages.
+/*
+  Sidebar — reusable left navigation bar used across dashboard pages.
  
  */
 export default function Sidebar({ items = [], activeId, bottomItems = [] }) {

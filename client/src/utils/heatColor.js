@@ -1,4 +1,4 @@
-// AMANDA TRAN
+// AMANDA TRAN (100% contribution)
 export function heatColor(count, max) {
   if (count === 0 || max === 0) return '#efefef';
   const ratio = count / max;
