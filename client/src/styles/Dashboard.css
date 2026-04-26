@@ -1,4 +1,5 @@
-/* AMANDA TRAN (43% contribution) & JOCELYNE LI */
+/* AMANDA TRAN (70% contribution) & JOCELYNE LI */
+/* rita zhang -> changed css */
 
 
 
@@ -17,7 +18,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  font-family: 'DM Sans', Arial, sans-serif;
+  font-family: 'Inter', sans-serif;
   background: #f5f5f5;
   overflow: hidden;
 }
@@ -807,7 +808,7 @@
   min-height: 36px;
   padding: 8px 16px;
   font-size: 13px;
-  font-family: 'Inter', 'DM Sans', sans-serif;
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
   text-transform: none;
   letter-spacing: 0;
@@ -855,6 +856,29 @@
   border-color: #b01020;
   color: #fff;
   box-shadow: none;
+}
+
+/* url field in modal */
+.copy-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  min-width: 0;
+}
+
+.copy-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 5px;
+  border: 1px solid #e4e4e4;
+  background: #f8f8f8;
+  font-size: 12px;
+  color: #6b6b6b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
 }
 
 /*modifying recurring events -> this menu*/
@@ -936,11 +960,13 @@
   background: #E31429;
   color: #fff;
   border: 1.5px solid #E31429;
+  box-shadow: none;
 }
 
 .button-primary:hover {
   background: #b01020;
   border-color: #b01020;
+  box-shadow: none;
 }
 
 .button-outline {

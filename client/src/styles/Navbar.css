@@ -1,4 +1,6 @@
 /* AMANDA TRAN (83% contribution) - Creation */
+/* rita zhang -> changed the buttons and navigation bar layout, added mobile responsiveness */
+
 .top-bar {
   position: sticky;
   top: 0;
@@ -15,7 +17,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 72px;
+  min-height: 72px;
   width: 100%;
   margin: 0;
   padding: 0 26px;
@@ -64,6 +66,10 @@
 .top-bar-right {
   gap: 12px;
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .top-bar-logo {
@@ -151,4 +157,152 @@
   background: black;
   border-color: none;
   color: white;
+}
+
+/* RESPONSIVENESS */
+
+/* desktop buttons */
+.top-bar-actions-desktop {
+  display: flex;
+  gap: 8px;
+}
+
+.top-bar-actions-mobile {
+  display: none;
+}
+
+
+/* drop down container */
+.top-bar-actions-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* hamburger menu */
+.top-bar-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: white;
+  border: 2px solid #000;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.top-bar-icon-button:hover {
+  background: black;
+}
+
+/* icon */
+.top-bar-menu-icon {
+  font-size: 20px;
+  color: black;
+}
+
+.top-bar-icon-button:hover .top-bar-menu-icon {
+  color: white;
+}
+
+/* panel */
+.top-bar-actions-overlay {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 999999;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+}
+
+.top-bar-actions-panel {
+  margin: 65px 12px 0 0;
+  width: fit-content;
+  min-width: 160px;
+  background: white;
+  /* border: 2px solid #000; */
+  border-radius: 8px;
+  padding: 12px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.top-bar-panel-button {
+  width: 100%;
+  max-width: 180px;
+  margin: 0 auto;
+
+  background: white;
+  border: 2px solid #000;
+  border-radius: 5px;
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.top-bar-panel-button:hover {
+  background: black;
+  color: white;
+}
+
+
+@media (max-width: 480px),
+(max-width: 768px) {
+  .top-bar-actions-desktop {
+    display: none;
+  }
+
+  .top-bar-actions-mobile {
+    display: block;
+    position: relative;
+  }
+
+  .top-bar-content {
+    padding: 8px 14px;
+    gap: 10px;
+  }
+
+  .top-bar-logo {
+    content: url('../../public/LGTMLogo1.png');
+    height: 44px;
+  }
+
+  .top-bar-icon-button {
+    width: 34px;
+    height: 34px;
+  }
+
+  .top-bar-menu-icon {
+    font-size: 18px;
+  }
+
+  .top-bar-title {
+    font-size: 13px;
+    max-width: 140px;
+  }
+
+  .top-bar-right {
+    gap: 8px;
+  }
+
+  .top-bar-user-info {
+    display: none;
+  }
+
+  .top-bar-button {
+    height: 32px;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
 }

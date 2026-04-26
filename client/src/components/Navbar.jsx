@@ -1,9 +1,11 @@
 /* AMANDA TRAN (99% contribution) - Creation */
-/* Rita Zhang */
+/* Rita Zhang -> added the mobile responsiveness and dropdown menu for smaller screens */
 
-import React from 'react';
+import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import '../styles/Navbar.css';
 import NotificationPanel from './dashboard/NotificationPanel';
+import MenuIcon from '@mui/icons-material/Menu';
 
 export default function Navbar({
   logo,
@@ -13,6 +15,8 @@ export default function Navbar({
   actions = [],
   appointments = [],
 }) {
+  const [menuOpen, setMenuOpen] = useState(false); // responsive menu for smaller screens
+
   const badgeClass = user?.role === 'professor' ? 'role-tag-professor' : 'role-tag-student';
 
   const badgeLabel =
@@ -71,18 +75,65 @@ export default function Navbar({
             </div>
           )}
 
-          {actions.map(({ label, onClick, className: actionClassName }, i) => (
-            <button
-              key={i}
-              type="button"
-              className={['top-bar-button', actionClassName].filter(Boolean).join(' ')}
-              onClick={onClick}
-            >
-              {label}
-            </button>
-          ))}
+          {/* desktop buttons */}
+          <div className="top-bar-actions-desktop">
+            {actions.map(({ label, onClick, className: actionClassName }, i) => (
+              <button
+                key={i}
+                type="button"
+                className={['top-bar-button', actionClassName].filter(Boolean).join(' ')}
+                onClick={onClick}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          {/* mobile menu button */}
+          {actions.length > 0 && (
+            <div className="top-bar-actions-mobile">
+              <button
+                type="button"
+                className="top-bar-icon-button"
+                onClick={() => setMenuOpen((open) => !open)}
+                aria-label="Menu"
+              >
+                <MenuIcon className="top-bar-menu-icon" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* separate panel for mobile view */}
+      {menuOpen && createPortal(
+        <div
+          className="top-bar-actions-overlay"
+          onClick={() => setMenuOpen(false)}
+        >
+          <div
+            className="top-bar-actions-panel"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {actions.map(({ label, onClick, className: actionClassName }, i) => (
+              <button
+                key={i}
+                type="button"
+                className={['top-bar-panel-button', actionClassName]
+                  .filter(Boolean)
+                  .join(' ')}
+                onClick={() => {
+                  setMenuOpen(false);
+                  onClick?.();
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>,
+        document.body
+      )}
     </nav>
   );
 }
