@@ -5,6 +5,7 @@
 - Frontend: React
 - Backend: Node.js (Express)
 - Database: SQLite3
+- Hosting: SOCS + Cloudfare
 
 ## Project Structure
 
