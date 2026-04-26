@@ -482,471 +482,478 @@ export default function ProfessorHeatmap() {
         />
         <div className="heatmap-main-content">
           <div className="heatmap-page" style={{ width: '100%' }}>
-        {isNewHeatmapRoute ? (
-          <>
-            <div className="page-header">
-              <div className="page-label">New heatmap</div>
-              <h1 className="page-title">Create heatmap appointment</h1>
-              <p className="page-subtitle">
-                Add a title and description before choosing the availability times students can respond to.
-              </p>
-            </div>
-
-            {error && <p style={{ color: '#cc2222', marginBottom: 16 }}>{error}</p>}
-
-            <form className="heatmap-create-card" onSubmit={handleCreateHeatmap}>
-              <div className="heatmap-create-copy">
-                <h3>Appointment details</h3>
-                <p>
-                  Students will see this title and description when they open the heatmap link.
-                  Keep it specific so they know what meeting or office-hour block they are responding to.
-                </p>
-              </div>
-
-              <div className="heatmap-create-fields">
-                <label>
-                  <span>Heatmap appointment title</span>
-                  <input
-                    type="text"
-                    value={newHeatmapTitle}
-                    onChange={(e) => setNewHeatmapTitle(e.target.value)}
-                    placeholder="e.g.:COMP 307 project check-ins"
-                    maxLength={120}
-                  />
-                </label>
-
-                <label>
-                  <span>Course code</span>
-                  <select
-                    value={newHeatmapCourseId}
-                    onChange={(e) => setNewHeatmapCourseId(e.target.value)}
-                  >
-                    <option value="">Optional</option>
-                    {ownedCourses.map((course) => (
-                      <option key={course.course_id} value={String(course.course_id)}>
-                        {course.course_code}
-                        {course.course_name ? ` - ${course.course_name}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  <span>Description</span>
-                  <textarea
-                    value={newHeatmapDescription}
-                    onChange={(e) => setNewHeatmapDescription(e.target.value)}
-                    placeholder="e.g.: Pick every time you could attend a 30-minute project meeting this week."
-                    rows={5}
-                    maxLength={500}
-                  />
-                </label>
-              </div>
-
-              <div className="confirm-bar">
-                <button className="button button-primary" type="submit" disabled={creatingHeatmap}>
-                  {creatingHeatmap ? 'Creating...' : 'Create heatmap'}
-                </button>
-                <button className="button button-outline" type="button" onClick={() => navigate('/dashboard/professor')}>
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </>
-        ) : (
-          <>
-        {/* Page intro explains what the professor is doing on this screen. */}
-        <div className="page-header">
-          <div className="page-label">Professor Dashboard</div>
-          <h1 className="page-title">Set your availability</h1>
-          <p className="page-subtitle">Mark when you're free. Choose whether slots repeat weekly.</p>
-        </div>
-
-        {/* Lightweight page feedback while data loads or if a backend call fails. */}
-        {loading && <p style={{ color: '#666', marginBottom: 16 }}>Loading heatmap...</p>}
-        {error && <p style={{ color: '#cc2222', marginBottom: 16 }}>{error}</p>}
-
-        {/* Professor-owned heatmap metadata can be renamed or removed from this control card. */}
-        {heatmap && (
-          <div className="heatmap-details-card">
-            {isEditingHeatmapDetails ? (
-              <form className="heatmap-details-form" onSubmit={handleSaveHeatmapDetails}>
-                <div className="heatmap-details-copy">
-                  <span>Heatmap appointment</span>
-                  <h3>Edit title and description</h3>
-                  <p>
-                    These details are shown to students when they open the invite link.
+            {isNewHeatmapRoute ? (
+              <>
+                <div className="page-header">
+                  <div className="page-label">New heatmap</div>
+                  <h1 className="page-title">Create heatmap appointment</h1>
+                  <p className="page-subtitle">
+                    Add a title and description before choosing the availability times students can respond to.
                   </p>
                 </div>
 
-                <div className="heatmap-create-fields">
-                  <label>
-                    <span>Heatmap appointment title</span>
-                    <input
-                      type="text"
-                      value={editHeatmapTitle}
-                      onChange={(e) => setEditHeatmapTitle(e.target.value)}
-                      placeholder="e.g.:COMP 307 project check-ins"
-                      maxLength={120}
-                    />
-                  </label>
+                <form className="heatmap-create-card" onSubmit={handleCreateHeatmap}>
+                  <div className="heatmap-create-copy">
+                    <h3>Appointment details</h3>
+                    <p>
+                      Students will see this title and description when they open the heatmap link.
+                      Keep it specific so they know what meeting or office-hour block they are responding to.
+                    </p>
+                  </div>
 
-                  <label>
-                    <span>Course code</span>
-                    <select
-                      value={editHeatmapCourseId}
-                      onChange={(e) => setEditHeatmapCourseId(e.target.value)}
-                    >
-                      <option value="">Optional</option>
-                      {ownedCourses.map((course) => (
-                        <option key={course.course_id} value={String(course.course_id)}>
-                          {course.course_code}
-                          {course.course_name ? ` - ${course.course_name}` : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <div className="heatmap-create-fields">
+                    <label>
+                      <span>Heatmap appointment title</span>
+                      <input
+                        type="text"
+                        value={newHeatmapTitle}
+                        onChange={(e) => setNewHeatmapTitle(e.target.value)}
+                        placeholder="e.g.: COMP 307 project check-ins"
+                        maxLength={120}
+                      />
+                    </label>
 
-                  <label>
-                    <span>Description</span>
-                    <textarea
-                      value={editHeatmapDescription}
-                      onChange={(e) => setEditHeatmapDescription(e.target.value)}
-                      placeholder="e.g.:Pick every time you could attend a 30-minute project meeting this week."
-                      rows={4}
-                      maxLength={500}
-                    />
-                  </label>
-                </div>
+                    <label>
+                      <span>Course code</span>
+                      <select
+                        value={newHeatmapCourseId}
+                        onChange={(e) => setNewHeatmapCourseId(e.target.value)}
+                      >
+                        <option value="">Optional</option>
+                        {ownedCourses.map((course) => (
+                          <option key={course.course_id} value={String(course.course_id)}>
+                            {course.course_code}
+                            {course.course_name ? ` - ${course.course_name}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
 
-                <div className="heatmap-details-actions">
-                  <button className="button button-primary" type="submit" disabled={savingHeatmapDetails}>
-                    {savingHeatmapDetails ? 'Saving...' : 'Save details'}
-                  </button>
-                  <button
-                    className="button button-outline"
-                    type="button"
-                    onClick={() => {
-                      setEditHeatmapTitle(heatmap.title || '');
-                      setEditHeatmapDescription(heatmap.description || '');
-                      setEditHeatmapCourseId(heatmap.courseId ? String(heatmap.courseId) : '');
-                      setIsEditingHeatmapDetails(false);
-                    }}
-                    disabled={savingHeatmapDetails}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <>
-                <div className="heatmap-details-copy">
-                  <span>Heatmap appointment</span>
-                  <h3>{heatmap.title || 'Untitled heatmap'}</h3>
-                  <p>{heatmap.description || 'No description added yet.'}</p>
-                  {heatmap.courseId && (
-                    <p>Course: {heatmap.courseCode || `#${heatmap.courseId}`}{heatmap.courseName ? ` - ${heatmap.courseName}` : ''}</p>
-                  )}
-                </div>
+                    <label>
+                      <span>Description</span>
+                      <textarea
+                        value={newHeatmapDescription}
+                        onChange={(e) => setNewHeatmapDescription(e.target.value)}
+                        placeholder="e.g.: Pick every time you could attend a 30-minute project meeting this week."
+                        rows={5}
+                        maxLength={500}
+                      />
+                    </label>
+                  </div>
 
-                <div className="heatmap-details-actions">
-                  <button className="button button-outline" onClick={() => setIsEditingHeatmapDetails(true)}>
-                    Edit details
-                  </button>
-                  <button className="button button-danger" onClick={() => setModal('deleteHeatmap')}>
-                    Delete heatmap
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Top mode cards switch between professor availability and the group heatmap. */}
-        <div className="mode-cards mode-cards-two">
-          <div className={`mode-card${tab === 'personal' ? ' active' : ''}`} onClick={() => setTab('personal')}>
-            <div className="mode-card-icon professor"></div>
-            <h4>My availability</h4>
-            <p>Click and drag to mark times you're free. Set recurring or one-time.</p>
-          </div>
-
-          <div className={`mode-card${tab === 'group' ? ' active' : ''}`} onClick={() => setTab('group')}>
-            <div className="mode-card-icon professor">🌡️</div>
-            <h4>Availability heatmap</h4>
-            <p>See all students' availability at once. Darker cells = more students free.</p>
-          </div>
-        </div>
-
-        {/* First-time setup controls for choosing the visible week and hours. */}
-        {!setupDone && (
-          <div className="setup-banner">
-            <div className="setup-banner-left">
-              <h3>Set the date range</h3>
-              <p>Choose which week and hours to display on the grid.</p>
-            </div>
-            <div className="setup-controls">
-              <div className="setup-field">
-                <label>Start date</label>
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => {
-                    const nextStart = e.target.value;
-                    setStartDate(nextStart);
-                    if (compareIsoDates(endDate, nextStart) < 0) {
-                      setEndDate(nextStart);
-                    }
-                  }}
-                />
-              </div>
-              <div className="setup-field">
-                <label>End date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  min={startDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                />
-              </div>
-              <div className="setup-field">
-                <label>From</label>
-                <select value={startHour} onChange={(e) => setStartHour(Number(e.target.value))}>
-                  {[6, 7, 8, 9, 10, 11, 12].map((h) => (
-                    <option key={h} value={h}>{h <= 12 ? h : h - 12}:00 {h < 12 ? 'AM' : 'PM'}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="setup-field">
-                <label>To</label>
-                <select value={endHour} onChange={(e) => setEndHour(Number(e.target.value))}>
-                  {[13, 14, 15, 16, 17, 18, 19, 20, 21].map((h) => (
-                    <option key={h} value={h}>{h <= 12 ? h : h - 12}:00 {h < 12 ? 'AM' : 'PM'}</option>
-                  ))}
-                </select>
-              </div>
-              <button className="button button-primary" style={{ alignSelf: 'flex-end' }} onClick={handleApplyDateRange}>
-                Apply
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Compact summary after setup is applied, with a button to edit the range again. */}
-        {setupDone && (
-          <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
-              Showing <strong style={{ color: 'var(--text)' }}>{days[0]?.date} – {days[days.length - 1]?.date}</strong> of {countInclusiveDays(startDate, endDate)} days, {startHour <= 12 ? startHour : startHour - 12}:00 {startHour < 12 ? 'AM' : 'PM'} {' – '} {endHour <= 12 ? endHour : endHour - 12}:00 {endHour < 12 ? 'AM' : 'PM'}
-            </span>
-            <button className="button button-ghost button-small" onClick={() => setSetupDone(false)}>
-              Change
-            </button>
-          </div>
-        )}
-
-        {/* Personal tab: professor selects and saves their own available time slots. */}
-        {tab === 'personal' && (
-          <>
-            <p className="section-label">Click or drag to mark when you're free</p>
-            <div className="grid-outer">
-              <GridPager
-                rangeLabel={gridRangeLabel}
-                canGoBack={canPageBack}
-                canGoForward={canPageForward}
-                onPrev={showPreviousDays}
-                onNext={showNextDays}
-              >
-                <PersonalGrid days={days} times={times} selected={profSelected} setSelected={setProfSelected} />
-              </GridPager>
-            </div>
-
-            {/* Recurrence controls decide whether selected slots apply once or repeat weekly. */}
-            <div style={{ marginTop: '1.25rem', padding: '1rem 1.25rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
-                <input type="radio" name="recurrence" checked={!isRecurring} onChange={() => setIsRecurring(false)} style={{ accentColor: 'var(--red)', width: 16, height: 16 }} />
-                <span>
-                  <strong>One-time only</strong>
-                  <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>
-                    — visible for {startDate} – {endDate}
-                  </span>
-                </span>
-              </label>
-
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
-                <input type="radio" name="recurrence" checked={isRecurring} onChange={() => setIsRecurring(true)} style={{ accentColor: 'var(--red)', width: 16, height: 16 }} />
-                <span>
-                  <strong>Recurring</strong>
-                  <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>— repeat for</span>
-                </span>
-              </label>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <select
-                  value={recurringWeeks}
-                  onChange={(e) => setRecurringWeeks(Number(e.target.value))}
-                  disabled={!isRecurring}
-                  style={{ padding: '5px 10px', borderRadius: 6, border: '1.5px solid var(--border-med)', background: isRecurring ? '#fff' : 'var(--surface2)', color: isRecurring ? 'var(--text)' : 'var(--text-faint)', fontSize: 13, cursor: isRecurring ? 'pointer' : 'default', fontFamily: 'inherit' }}
-                >
-                  {[2, 3, 4, 5, 6, 8, 10, 12].map((w) => (
-                    <option key={w} value={w}>{w} weeks</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Save/share controls for the professor's selected slots. */}
-            <div className="confirm-bar">
-              <button className="button button-primary" onClick={saveProfAvailability}>
-                {isRecurring ? `Save & repeat for ${recurringWeeks} weeks` : 'Save for this week'}
-              </button>
-              <button className="button button-outline" onClick={() => setProfSelected(new Set())}>
-                Clear all
-              </button>
-              <button className="button button-outline" onClick={() => setModal('invite')}>
-                Share invite link
-              </button>
-              <span className="selected-info">
-                <strong>{profSelected.size}</strong> slot{profSelected.size !== 1 ? 's' : ''} selected
-              </span>
-            </div>
-          </>
-        )}
-
-        {/* Group tab: professor sees all student availability as one combined heatmap. */}
-        {tab === 'group' && (
-          <>
-            <p className="section-label">All respondents ({participants.length})</p>
-            {participants.length === 0 ? (
-              <div className="empty-state">
-                <h4>No student availability yet</h4>
-                <p>Once students share their availability, you'll see it here. Darker cells mean more students are free at that time.</p>
-              </div>
-            ) : (
-              <>
-                <div className="participants">
-                  {participants.map((participant) => (
-                    // Clicking a chip toggles whether that student is included in the group heatmap.
-                    <div
-                      key={participant.name}
-                      className={`participant-chip${activeNames.has(participant.name) ? ' active' : ' inactive'}`}
-                      onClick={() => {
-                        setActive((prev) => {
-                          const next = new Set(prev);
-                          next.has(participant.name) ? next.delete(participant.name) : next.add(participant.name);
-                          return next;
-                        });
-                      }}
-                    >
-                      <span className="participant-chip-dot" style={{ background: participant.color }} />
-                      {participant.name}
+                  <div className="confirm-bar heatmap-create-confirm-bar">
+                    <div className="heatmap-create-confirm-error-slot" aria-live="polite">
+                      {error ? (
+                        <p className="heatmap-create-confirm-error" role="alert">
+                          {error}
+                        </p>
+                      ) : null}
                     </div>
-                  ))}
+                    <div className="heatmap-create-confirm-actions">
+                      <button className="button button-primary" type="submit" disabled={creatingHeatmap}>
+                        {creatingHeatmap ? 'Creating...' : 'Create heatmap'}
+                      </button>
+                      <button className="button button-outline" type="button" onClick={() => navigate('/dashboard/professor')}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </>
+            ) : (
+              <>
+                {/* Page intro explains what the professor is doing on this screen. */}
+                <div className="page-header">
+                  <div className="page-label">Professor Dashboard</div>
+                  <h1 className="page-title">Set your availability</h1>
+                  <p className="page-subtitle">Mark when you're free. Choose whether slots repeat weekly.</p>
                 </div>
-                <HeatmapLegend max={participants.filter((participant) => activeNames.has(participant.name)).length} />
-                <p className="section-label">Hover a cell to see who's free — click to select a booking slot</p>
-                <div className="grid-outer">
-                  <GridPager
-                    rangeLabel={gridRangeLabel}
-                    canGoBack={canPageBack}
-                    canGoForward={canPageForward}
-                    onPrev={showPreviousDays}
-                    onNext={showNextDays}
-                  >
-                    {/* Selecting a group cell stores the slot and participant metadata for confirmation. */}
-                    <GroupGrid
-                      days={days}
-                      times={times}
-                      participants={participants}
-                      activeNames={activeNames}
-                      selectedKeys={groupKeys}
-                      setSelectedKeys={setGroupKeys}
-                      onSelectKey={(key, meta) => {
-                        setGroupMetaByKey((prev) => ({ ...prev, [key]: meta }));
-                      }}
-                    />
-                  </GridPager>
+
+                {/* Lightweight page feedback while data loads or if a backend call fails. */}
+                {loading && <p style={{ color: '#666', marginBottom: 16 }}>Loading heatmap...</p>}
+                {error && <p style={{ color: '#cc2222', marginBottom: 16 }}>{error}</p>}
+
+                {/* Professor-owned heatmap metadata can be renamed or removed from this control card. */}
+                {heatmap && (
+                  <div className="heatmap-details-card">
+                    {isEditingHeatmapDetails ? (
+                      <form className="heatmap-details-form" onSubmit={handleSaveHeatmapDetails}>
+                        <div className="heatmap-details-copy">
+                          <span>Heatmap appointment</span>
+                          <h3>Edit title and description</h3>
+                          <p>
+                            These details are shown to students when they open the invite link.
+                          </p>
+                        </div>
+
+                        <div className="heatmap-create-fields">
+                          <label>
+                            <span>Heatmap appointment title</span>
+                            <input
+                              type="text"
+                              value={editHeatmapTitle}
+                              onChange={(e) => setEditHeatmapTitle(e.target.value)}
+                              placeholder="e.g.:COMP 307 project check-ins"
+                              maxLength={120}
+                            />
+                          </label>
+
+                          <label>
+                            <span>Course code</span>
+                            <select
+                              value={editHeatmapCourseId}
+                              onChange={(e) => setEditHeatmapCourseId(e.target.value)}
+                            >
+                              <option value="">Optional</option>
+                              {ownedCourses.map((course) => (
+                                <option key={course.course_id} value={String(course.course_id)}>
+                                  {course.course_code}
+                                  {course.course_name ? ` - ${course.course_name}` : ''}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+
+                          <label>
+                            <span>Description</span>
+                            <textarea
+                              value={editHeatmapDescription}
+                              onChange={(e) => setEditHeatmapDescription(e.target.value)}
+                              placeholder="e.g.:Pick every time you could attend a 30-minute project meeting this week."
+                              rows={4}
+                              maxLength={500}
+                            />
+                          </label>
+                        </div>
+
+                        <div className="heatmap-details-actions">
+                          <button className="button button-primary" type="submit" disabled={savingHeatmapDetails}>
+                            {savingHeatmapDetails ? 'Saving...' : 'Save details'}
+                          </button>
+                          <button
+                            className="button button-outline"
+                            type="button"
+                            onClick={() => {
+                              setEditHeatmapTitle(heatmap.title || '');
+                              setEditHeatmapDescription(heatmap.description || '');
+                              setEditHeatmapCourseId(heatmap.courseId ? String(heatmap.courseId) : '');
+                              setIsEditingHeatmapDetails(false);
+                            }}
+                            disabled={savingHeatmapDetails}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <div className="heatmap-details-copy">
+                          <span>Heatmap appointment</span>
+                          <h3>{heatmap.title || 'Untitled heatmap'}</h3>
+                          <p>{heatmap.description || 'No description added yet.'}</p>
+                          {heatmap.courseId && (
+                            <p>Course: {heatmap.courseCode || `#${heatmap.courseId}`}{heatmap.courseName ? ` - ${heatmap.courseName}` : ''}</p>
+                          )}
+                        </div>
+
+                        <div className="heatmap-details-actions">
+                          <button className="button button-outline" onClick={() => setIsEditingHeatmapDetails(true)}>
+                            Edit details
+                          </button>
+                          <button className="button button-danger" onClick={() => setModal('deleteHeatmap')}>
+                            Delete heatmap
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* Top mode cards switch between professor availability and the group heatmap. */}
+                <div className="mode-cards mode-cards-two">
+                  <div className={`mode-card${tab === 'personal' ? ' active' : ''}`} onClick={() => setTab('personal')}>
+                    <div className="mode-card-icon professor"></div>
+                    <h4>My availability</h4>
+                    <p>Click and drag to mark times you're free. Set recurring or one-time.</p>
+                  </div>
+
+                  <div className={`mode-card${tab === 'group' ? ' active' : ''}`} onClick={() => setTab('group')}>
+                    <div className="mode-card-icon professor">🌡️</div>
+                    <h4>Availability heatmap</h4>
+                    <p>See all students' availability at once. Darker cells = more students free.</p>
+                  </div>
                 </div>
-                <div className="confirm-bar">
-                  <button className="button button-primary" onClick={() => setModal('confirm')} disabled={groupKeys.size === 0}>
-                    Confirm selected slot{groupKeys.size !== 1 ? 's' : ''}
-                  </button>
-                  <button className="button button-outline" onClick={() => { setGroupKeys(new Set()); setGroupMetaByKey({}); }}>
-                    Clear selected
-                  </button>
-                  <span className="selected-info">
-                    {groupKeys.size > 0
-                      ? <><strong>{groupKeys.size}</strong> slot{groupKeys.size !== 1 ? 's' : ''} selected. Drag across cells to select more.</>
-                      : 'Click or drag cells to select one or more group booking slots'}
-                  </span>
-                </div>
+
+                {/* First-time setup controls for choosing the visible week and hours. */}
+                {!setupDone && (
+                  <div className="setup-banner">
+                    <div className="setup-banner-left">
+                      <h3>Set the date range</h3>
+                      <p>Choose which week and hours to display on the grid.</p>
+                    </div>
+                    <div className="setup-controls">
+                      <div className="setup-field">
+                        <label>Start date</label>
+                        <input
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => {
+                            const nextStart = e.target.value;
+                            setStartDate(nextStart);
+                            if (compareIsoDates(endDate, nextStart) < 0) {
+                              setEndDate(nextStart);
+                            }
+                          }}
+                        />
+                      </div>
+                      <div className="setup-field">
+                        <label>End date</label>
+                        <input
+                          type="date"
+                          value={endDate}
+                          min={startDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                        />
+                      </div>
+                      <div className="setup-field">
+                        <label>From</label>
+                        <select value={startHour} onChange={(e) => setStartHour(Number(e.target.value))}>
+                          {[6, 7, 8, 9, 10, 11, 12].map((h) => (
+                            <option key={h} value={h}>{h <= 12 ? h : h - 12}:00 {h < 12 ? 'AM' : 'PM'}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="setup-field">
+                        <label>To</label>
+                        <select value={endHour} onChange={(e) => setEndHour(Number(e.target.value))}>
+                          {[13, 14, 15, 16, 17, 18, 19, 20, 21].map((h) => (
+                            <option key={h} value={h}>{h <= 12 ? h : h - 12}:00 {h < 12 ? 'AM' : 'PM'}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <button className="button button-primary" style={{ alignSelf: 'flex-end' }} onClick={handleApplyDateRange}>
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Compact summary after setup is applied, with a button to edit the range again. */}
+                {setupDone && (
+                  <div style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                      Showing <strong style={{ color: 'var(--text)' }}>{days[0]?.date} – {days[days.length - 1]?.date}</strong> of {countInclusiveDays(startDate, endDate)} days, {startHour <= 12 ? startHour : startHour - 12}:00 {startHour < 12 ? 'AM' : 'PM'} {' – '} {endHour <= 12 ? endHour : endHour - 12}:00 {endHour < 12 ? 'AM' : 'PM'}
+                    </span>
+                    <button className="button button-ghost button-small" onClick={() => setSetupDone(false)}>
+                      Change
+                    </button>
+                  </div>
+                )}
+
+                {/* Personal tab: professor selects and saves their own available time slots. */}
+                {tab === 'personal' && (
+                  <>
+                    <p className="section-label">Click or drag to mark when you're free</p>
+                    <div className="grid-outer">
+                      <GridPager
+                        rangeLabel={gridRangeLabel}
+                        canGoBack={canPageBack}
+                        canGoForward={canPageForward}
+                        onPrev={showPreviousDays}
+                        onNext={showNextDays}
+                      >
+                        <PersonalGrid days={days} times={times} selected={profSelected} setSelected={setProfSelected} />
+                      </GridPager>
+                    </div>
+
+                    {/* Recurrence controls decide whether selected slots apply once or repeat weekly. */}
+                    <div style={{ marginTop: '1.25rem', padding: '1rem 1.25rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius)', display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
+                        <input type="radio" name="recurrence" checked={!isRecurring} onChange={() => setIsRecurring(false)} style={{ accentColor: 'var(--red)', width: 16, height: 16 }} />
+                        <span>
+                          <strong>One-time only</strong>
+                          <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>
+                            — visible for {startDate} – {endDate}
+                          </span>
+                        </span>
+                      </label>
+
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13 }}>
+                        <input type="radio" name="recurrence" checked={isRecurring} onChange={() => setIsRecurring(true)} style={{ accentColor: 'var(--red)', width: 16, height: 16 }} />
+                        <span>
+                          <strong>Recurring</strong>
+                          <span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>— repeat for</span>
+                        </span>
+                      </label>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <select
+                          value={recurringWeeks}
+                          onChange={(e) => setRecurringWeeks(Number(e.target.value))}
+                          disabled={!isRecurring}
+                          style={{ padding: '5px 10px', borderRadius: 6, border: '1.5px solid var(--border-med)', background: isRecurring ? '#fff' : 'var(--surface2)', color: isRecurring ? 'var(--text)' : 'var(--text-faint)', fontSize: 13, cursor: isRecurring ? 'pointer' : 'default', fontFamily: 'inherit' }}
+                        >
+                          {[2, 3, 4, 5, 6, 8, 10, 12].map((w) => (
+                            <option key={w} value={w}>{w} weeks</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Save/share controls for the professor's selected slots. */}
+                    <div className="confirm-bar">
+                      <button className="button button-primary" onClick={saveProfAvailability}>
+                        {isRecurring ? `Save & repeat for ${recurringWeeks} weeks` : 'Save for this week'}
+                      </button>
+                      <button className="button button-outline" onClick={() => setProfSelected(new Set())}>
+                        Clear all
+                      </button>
+                      <button className="button button-outline" onClick={() => setModal('invite')}>
+                        Share invite link
+                      </button>
+                      <span className="selected-info">
+                        <strong>{profSelected.size}</strong> slot{profSelected.size !== 1 ? 's' : ''} selected
+                      </span>
+                    </div>
+                  </>
+                )}
+
+                {/* Group tab: professor sees all student availability as one combined heatmap. */}
+                {tab === 'group' && (
+                  <>
+                    <p className="section-label">All respondents ({participants.length})</p>
+                    {participants.length === 0 ? (
+                      <div className="empty-state">
+                        <h4>No student availability yet</h4>
+                        <p>Once students share their availability, you'll see it here. Darker cells mean more students are free at that time.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="participants">
+                          {participants.map((participant) => (
+                            // Clicking a chip toggles whether that student is included in the group heatmap.
+                            <div
+                              key={participant.name}
+                              className={`participant-chip${activeNames.has(participant.name) ? ' active' : ' inactive'}`}
+                              onClick={() => {
+                                setActive((prev) => {
+                                  const next = new Set(prev);
+                                  next.has(participant.name) ? next.delete(participant.name) : next.add(participant.name);
+                                  return next;
+                                });
+                              }}
+                            >
+                              <span className="participant-chip-dot" style={{ background: participant.color }} />
+                              {participant.name}
+                            </div>
+                          ))}
+                        </div>
+                        <HeatmapLegend max={participants.filter((participant) => activeNames.has(participant.name)).length} />
+                        <p className="section-label">Hover a cell to see who's free — click to select a booking slot</p>
+                        <div className="grid-outer">
+                          <GridPager
+                            rangeLabel={gridRangeLabel}
+                            canGoBack={canPageBack}
+                            canGoForward={canPageForward}
+                            onPrev={showPreviousDays}
+                            onNext={showNextDays}
+                          >
+                            {/* Selecting a group cell stores the slot and participant metadata for confirmation. */}
+                            <GroupGrid
+                              days={days}
+                              times={times}
+                              participants={participants}
+                              activeNames={activeNames}
+                              selectedKeys={groupKeys}
+                              setSelectedKeys={setGroupKeys}
+                              onSelectKey={(key, meta) => {
+                                setGroupMetaByKey((prev) => ({ ...prev, [key]: meta }));
+                              }}
+                            />
+                          </GridPager>
+                        </div>
+                        <div className="confirm-bar">
+                          <button className="button button-primary" onClick={() => setModal('confirm')} disabled={groupKeys.size === 0}>
+                            Confirm selected slot{groupKeys.size !== 1 ? 's' : ''}
+                          </button>
+                          <button className="button button-outline" onClick={() => { setGroupKeys(new Set()); setGroupMetaByKey({}); }}>
+                            Clear selected
+                          </button>
+                          <span className="selected-info">
+                            {groupKeys.size > 0
+                              ? <><strong>{groupKeys.size}</strong> slot{groupKeys.size !== 1 ? 's' : ''} selected. Drag across cells to select more.</>
+                              : 'Click or drag cells to select one or more group booking slots'}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+
+                {/* Modal for confirming one group booking slot. */}
+                {modal === 'confirm' && groupKeys.size > 0 && (
+                  <ConfirmSlotModal
+                    slot={{
+                      day: { date: `${groupKeys.size} selected slots`, short: 'Group' },
+                      timeLabel: 'Multiple time slots',
+                    }}
+                    attendees={Array.from(new Map(
+                      Array.from(groupKeys)
+                        .flatMap((key) => groupMetaByKey[key]?.who || [])
+                        .map((participant) => [participant.userId, participant])
+                    ).values())}
+                    onConfirm={handleConfirmSlot}
+                    onClose={() => setModal(null)}
+                  />
+                )}
+
+                {/* Appointment detail modal, kept here for consistency with other calendar pages. */}
+                {modal === 'detail' && activeAppt && (
+                  <SlotDetailModal appointment={activeAppt} isOwner onDelete={() => setModal('delete')} onClose={() => setModal(null)} />
+                )}
+
+                {/* Delete confirmation modal for appointment detail flow. */}
+                {modal === 'delete' && activeAppt && (
+                  <DeleteConfirmModal
+                    appointment={{ ...activeAppt, notifyEmail: activeAppt.ownerEmail }}
+                    onConfirm={() => setActiveAppt(null)}
+                    onClose={() => setModal('detail')}
+                  />
+                )}
+
+                {/* Shareable student invite link for this heatmap. */}
+                {modal === 'invite' && (
+                  <InviteURLModal
+                    ownerEmail={heatmap?.hostEmail || user.email}
+                    eventTitle={heatmap?.title || 'Heatmap Booking'}
+                    inviteURL={`${window.location.origin}/heatmap/student/${currentHeatmapId}`}
+                    title="Share your booking page"
+                    description="Share this link so students can open the heatmap, mark their availability, and send it back to you."
+                    contextLabel="Booking page for"
+                    tip="Tip: paste this into your course slides or email signature."
+                    onClose={() => setModal(null)}
+                  />
+                )}
+
+                {/* Branded confirmation before removing this heatmap and its availability submissions. */}
+                {modal === 'deleteHeatmap' && (
+                  <ConfirmActionModal
+                    title="Delete this heatmap?"
+                    message="This will remove the heatmap link and all availability submissions connected to it. Existing appointments already created from the heatmap will stay on the dashboard."
+                    details={[
+                      { label: 'Heatmap', value: heatmap?.title || 'Untitled heatmap' },
+                      { label: 'Submissions', value: `${participantSubmissions.length} student response${participantSubmissions.length !== 1 ? 's' : ''}` },
+                    ]}
+                    confirmLabel="Delete heatmap"
+                    danger
+                    isWorking={deletingHeatmap}
+                    onConfirm={handleDeleteHeatmap}
+                    onClose={() => setModal(null)}
+                  />
+                )}
+
               </>
             )}
-          </>
-        )}
-
-        {/* Modal for confirming one group booking slot. */}
-        {modal === 'confirm' && groupKeys.size > 0 && (
-          <ConfirmSlotModal
-            slot={{
-              day: { date: `${groupKeys.size} selected slots`, short: 'Group' },
-              timeLabel: 'Multiple time slots',
-            }}
-            attendees={Array.from(new Map(
-              Array.from(groupKeys)
-                .flatMap((key) => groupMetaByKey[key]?.who || [])
-                .map((participant) => [participant.userId, participant])
-            ).values())}
-            onConfirm={handleConfirmSlot}
-            onClose={() => setModal(null)}
-          />
-        )}
-
-        {/* Appointment detail modal, kept here for consistency with other calendar pages. */}
-        {modal === 'detail' && activeAppt && (
-          <SlotDetailModal appointment={activeAppt} isOwner onDelete={() => setModal('delete')} onClose={() => setModal(null)} />
-        )}
-
-        {/* Delete confirmation modal for appointment detail flow. */}
-        {modal === 'delete' && activeAppt && (
-          <DeleteConfirmModal
-            appointment={{ ...activeAppt, notifyEmail: activeAppt.ownerEmail }}
-            onConfirm={() => setActiveAppt(null)}
-            onClose={() => setModal('detail')}
-          />
-        )}
-
-        {/* Shareable student invite link for this heatmap. */}
-        {modal === 'invite' && (
-          <InviteURLModal
-            ownerEmail={heatmap?.hostEmail || user.email}
-            eventTitle={heatmap?.title || 'Heatmap Booking'}
-            inviteURL={`${window.location.origin}/heatmap/student/${currentHeatmapId}`}
-            title="Share your booking page"
-            description="Share this link so students can open the heatmap, mark their availability, and send it back to you."
-            contextLabel="Booking page for"
-            tip="Tip: paste this into your course slides or email signature."
-            onClose={() => setModal(null)}
-          />
-        )}
-
-        {/* Branded confirmation before removing this heatmap and its availability submissions. */}
-        {modal === 'deleteHeatmap' && (
-          <ConfirmActionModal
-            title="Delete this heatmap?"
-            message="This will remove the heatmap link and all availability submissions connected to it. Existing appointments already created from the heatmap will stay on the dashboard."
-            details={[
-              { label: 'Heatmap', value: heatmap?.title || 'Untitled heatmap' },
-              { label: 'Submissions', value: `${participantSubmissions.length} student response${participantSubmissions.length !== 1 ? 's' : ''}` },
-            ]}
-            confirmLabel="Delete heatmap"
-            danger
-            isWorking={deletingHeatmap}
-            onConfirm={handleDeleteHeatmap}
-            onClose={() => setModal(null)}
-          />
-        )}
-
-          </>
-        )}
           </div>
         </div>
       </div>
