@@ -44,7 +44,6 @@ My work included:
 - Fixing footer logo alignment.
 - Fixing landing page navbar behavior.
 - Removing dead landing page code.
-- Updating the page name and branding around dropIn/McGill Scheduling Hub.
 
 Relevant files I worked on included:
 
@@ -108,7 +107,7 @@ Relevant files included:
 
 ### 6. Student Dashboard
 
-I worked heavily on the student dashboard.
+
 
 I built and improved the student dashboard in:
 
@@ -131,7 +130,7 @@ My work included:
 
 ### 7. Professor Dashboard
 
-I also worked heavily on the professor dashboard.
+
 
 I built and improved the professor dashboard in:
 
@@ -533,6 +532,9 @@ My work included:
 - Improving the cancelled appointment behavior across student and professor dashboards.
 
 This contribution improved the user experience because cancelled appointments In short, I contributed heavily to the landing page, navigation/dashboard UI, student/professor heatmap system, heatmap frontend utilities/components, Appointment Cancellation behaviour and Dashboard block dismissal (cleanup for better view), and the backend heatmap that made the feature work end to end.
+
+
+IF ANY of THE PERCENTAGES NEXT TO AMANDA TRAN COMMENTS ARE DIFFERENT FROM THE ONES BELLOW. IT'S BECAUSE ANOTHER TEAMATE HAS CHANGED THEM - I WILL PROVIDE YOU (IF YOU TRULY NEED IT VIA EMAIL) WITH A CHART THAT DETAILED THE # OF MODIFICATIONS AND COMMITS MADE FOR EACH PERSON IF THERE IS ANY DOUBT IN MY CONTRIBUTIONS. THE CHART SHOWS THE NUMBER OF COMMITS AND MODIFICATIONS DONE BY EACH TEAMATE AS OF APRIL 25TH (AFTER OUR FIRST DEMO).
 
 ## Summary of AI/Template/Bootstrap Usage in My Personnel Code
 
