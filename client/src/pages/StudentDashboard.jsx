@@ -1,6 +1,4 @@
-//AMANDA TRAN
-/*GENERATED CODE FROM ChatGPT - INDICATED IN THE RELEVANT SECTION BELLOW : 
-This code was use to help showcase upcoming appointments - user friendly */
+//AMANDA TRAN (40% Contribution) - Creation + Frontend logic 
 
 // Core React hooks plus router navigation for moving between pages.
 import { useEffect, useMemo, useState } from 'react';

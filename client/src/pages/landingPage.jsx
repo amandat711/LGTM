@@ -1,4 +1,5 @@
-//AMANDA TRAN
+// AMANDA TRAN (95% contribution) - Creation
+//Template Mcgill Footer adapted.
 
 import { useState, useRef } from "react";
 import LGTMLogo2 from "../assets/LGTMLogo2.png";

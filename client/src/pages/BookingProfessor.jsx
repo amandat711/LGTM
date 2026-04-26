@@ -1,4 +1,4 @@
-// AMANDA TRAN
+// AMANDA TRAN (34% contribution) - Boostrap Calendar UI
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getProfessorPublicAvailabilities } from '../api/availabilities';

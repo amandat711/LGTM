@@ -1,4 +1,4 @@
-// AMANDA TRAN
+// AMANDA TRAN (41% contribution)
 import './App.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/landingPage';

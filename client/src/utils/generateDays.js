@@ -1,9 +1,10 @@
-// AMANDA TRAN
+// AMANDA TRAN (20% contribution) + ChatGPT (80% contribution)
+// OpenAI. (2026). ChatGPT. https://chat.openai.com/
 /**
  * Generates an array of day objects for the grid header.
  *
- * @param {string} startDate  – ISO date string e.g. "2026-04-07"
- * @param {number} numDays    – how many days to show (default 5)
+ * @param {string} startDate - ISO date string e.g. "2026-04-07"
+ * @param {number} numDays - how many days to show (default 5)
  * @returns {{ short: string, date: string, iso: string }[]}
  */
 export function generateDays(startDate, numDays = 5) {
@@ -26,8 +27,8 @@ export function generateDays(startDate, numDays = 5) {
 /**
  * Generates time slot labels from startHour to endHour in 30-min increments.
  *
- * @param {number} startHour  – e.g. 8  (8 AM)
- * @param {number} endHour    – e.g. 17 (5 PM)
+ * @param {number} startHour - e.g. 8 (8 AM)
+ * @param {number} endHour - e.g. 17 (5 PM)
  * @returns {string[]}
  */
 export function generateTimes(startHour = 8, endHour = 17) {

@@ -1,4 +1,4 @@
-/*AMANDA TRAN*/
+/* AMANDA TRAN (100% contribution) */
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';

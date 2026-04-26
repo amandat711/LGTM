@@ -1,4 +1,4 @@
-// AMANDA TRAN
+// AMANDA TRAN (100% contribution)
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';

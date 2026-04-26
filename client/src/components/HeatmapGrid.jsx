@@ -1,4 +1,6 @@
-// AMANDA TRAN
+// AMANDA TRAN (90% contribution) - ChatGPT (10% contribution) => understand how the strings are translated to the grid
+//penAI. (2026). ChatGPT. https://chat.openai.com/
+
 import React from 'react';
 import { studentAvailabilityColor, thresholdHeatColor } from '../utils/heatColor';
 import { useDragSelect } from '../hooks/useDragSelect';
@@ -152,20 +154,22 @@ export function GroupGrid({ days, times, participants, activeNames, selectedKeys
   );
 }
 
-// ─────────────────────────────────────────────────────────────
-// HeatmapLegend
-// ─────────────────────────────────────────────────────────────
+
+// HeatmapLegend - shows color gradient and threshold info for group heatmaps.
 export function HeatmapLegend({ max }) {
+  // The threshold is the minimum number of selected participants needed for the strongest color.
   const thresholdCount = Math.ceil(max * GROUP_MEETING_THRESHOLD_RATIO);
 
   return (
     <div className="legend">
       <span className="legend-label">0 available</span>
       <div className="legend-colors">
+        {/* Draw one swatch for every possible availability count, from 0 through max. */}
         {Array.from({ length: max + 1 }, (_, i) => (
           <div key={i} className="color-swatch" style={{ background: thresholdHeatColor(i, max, GROUP_MEETING_THRESHOLD_RATIO) }} />
         ))}
       </div>
+      {/* max can briefly be 0 while data is loading, so show 1 to avoid a confusing 0/0 label. */}
       <span className="legend-label">Threshold {thresholdCount}/{max || 1}</span>
     </div>
   );
@@ -174,6 +178,7 @@ export function HeatmapLegend({ max }) {
 export function GridPager({ rangeLabel, canGoBack, canGoForward, onPrev, onNext, children }) {
   return (
     <>
+      {/* Pager controls which group of days is visible above the grid. */}
       <div className="grid-pager">
         <button
           className="grid-pager-button"
@@ -197,16 +202,19 @@ export function GridPager({ rangeLabel, canGoBack, canGoForward, onPrev, onNext,
           ›
         </button>
       </div>
+      {/* The actual heatmap grid is passed in here by the parent page. */}
       {children}
     </>
   );
 }
 
+// Left-side time labels shared by all heatmap grid versions.
 function TimeLabels({ times }) {
   return (
     <div className="time-column">
       {times.map((t, i) => (
         <div key={i} className="time-label">
+          {/* Show labels on hour rows only; half-hour rows stay blank but keep spacing. */}
           {i % 2 === 0 ? t : ''}
         </div>
       ))}
@@ -214,6 +222,7 @@ function TimeLabels({ times }) {
   );
 }
 
+// Top label for each day column.
 function DayHeader({ day }) {
   return (
     <div className="day-header">

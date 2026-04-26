@@ -1,4 +1,4 @@
-/*AMANDA TRAN*/
+/* AMANDA TRAN (89% contribution) */
 // React state/effect hooks plus router helpers for route-based heatmap pages.
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
