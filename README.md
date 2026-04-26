@@ -94,6 +94,25 @@ pm2 start index.js --name lgtm --update-env
 pm2 logs lgtm
 ```
 
+### Calendar Live Sync (Google/Outlook demo)
+
+If hosting is VPN-only, calendar subscriptions will not refresh unless the feed URL is public.
+
+1. Start backend (check above for instructions)
+2. In another terminal, start temporary public tunnel:
+```
+~/bin/cloudflared tunnel --url http://127.0.0.1:3000
+```
+3. Copy the generated `https://...trycloudflare.com` and set in `server/.env`:
+```
+CALENDAR_SYNC_PUBLIC_BASE_URL=https://...trycloudflare.com
+```
+4. Restart backend (`NODE_ENV=production PORT=3000 npm start`) and use the new sync URL from the app modal.
+
+Notes:
+- Keep the tunnel running during the demo.
+- Google and Outlook refresh subscribed ICS feeds periodically (not instant).
+
 ## 📊 Database
 
 - SQLite3 is used (no external database server required)

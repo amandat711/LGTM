@@ -8,6 +8,19 @@ const router = express.Router();
 const feedRateWindowMs = 60 * 1000;
 const feedRateMaxPerWindow = 120;
 const feedRateByIp = new Map();
+const calendarSyncPublicBaseUrl = resolveCalendarSyncPublicBaseUrl();
+
+function resolveCalendarSyncPublicBaseUrl() {
+  const raw = String(process.env.CALENDAR_SYNC_PUBLIC_BASE_URL || '').trim();
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw);
+    return `${parsed.protocol}//${parsed.host}${parsed.pathname}`.replace(/\/+$/, '');
+  } catch (err) {
+    console.error('Invalid CALENDAR_SYNC_PUBLIC_BASE_URL. Falling back to request host.', err.message);
+    return null;
+  }
+}
 
 function dbGet(sql, params = []) {
   return new Promise((resolve, reject) => {
@@ -57,6 +70,9 @@ function createRawToken() {
 }
 
 function buildFeedUrl(req, rawToken) {
+  if (calendarSyncPublicBaseUrl) {
+    return `${calendarSyncPublicBaseUrl}/calendar-sync/feed/${rawToken}.ics`;
+  }
   const forwardedProto = req.get('x-forwarded-proto');
   const proto = forwardedProto ? String(forwardedProto).split(',')[0].trim() : req.protocol;
   const host = req.get('host');
