@@ -1,4 +1,5 @@
 // AMANDA TRAN (49% contribution)
+// SHIRLEY DING
 import { API_BASE } from '../constants/config';
 
 async function handleResponse(res) {

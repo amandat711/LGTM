@@ -1,3 +1,4 @@
+// SHIRLEY DING, Contribution: 98.7%
 const express = require('express');
 const crypto = require('crypto');
 const db = require('../config/db');

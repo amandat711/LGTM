@@ -1,3 +1,4 @@
+// SHIRLEY DING, Contribution: 100%
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');

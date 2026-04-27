@@ -1,4 +1,5 @@
 // AMANDA TRAN
+// SHIRLEY DING, Contribution: 99%
 const API_BASE = 'http://localhost:4000';
 
 const fetchOpts = { credentials: 'include' };

@@ -1,4 +1,5 @@
 -- AMANDA TRAN
+-- SHIRLEY DING
 PRAGMA foreign_keys = ON;
 
 DROP TABLE IF EXISTS appointment_history;

@@ -1,5 +1,6 @@
 /* AMANDA TRAN (95% contribution) - ChatGPT (5% contribution): recurring event expansion logic */
 // OpenAI. (2026). ChatGPT. https://chat.openai.com/
+// SHIRLEY DING
 
 import { makeKey } from '../components/HeatmapGrid';
 import { thresholdHeatColor } from './heatColor';

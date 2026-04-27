@@ -1,3 +1,4 @@
+// SHIRLEY DING
 const nodemailer = require('nodemailer');
 const { MAIL_FROM, FRONTEND_URL } = require('../constants/config');
 
