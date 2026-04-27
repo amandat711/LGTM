@@ -650,7 +650,7 @@
 }
 
 /* Phone-sized layout changes */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .landing-top-bar .top-bar-content {
     height: 58px;
     padding: 0 14px;

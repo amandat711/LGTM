@@ -300,9 +300,15 @@
     display: none;
   }
 
-  .top-bar-button {
-    height: 32px;
+  .top-bar-panel-button {
+    height: 34px;
+    width: 120px;
     padding: 4px 10px;
-    font-size: 11px;
+    font-size: 13px;
+  }
+
+  .top-bar-panel-button-first {
+    background: black;
+    color: white;
   }
 }

@@ -488,7 +488,7 @@
 }
 
 /* RESPONSIVENESS */
-@media (max-width: 480px) {
+@media (max-width: 568px) {
   .dash-cal-header {
     padding: 10px 16px;
   }

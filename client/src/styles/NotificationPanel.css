@@ -146,7 +146,7 @@
 }
 
 /* RESPONSIVENESS */
-@media (max-width: 480px) {
+@media (max-width: 568px) {
     .notif-dropdown {
         position: fixed;
         top: 70px;

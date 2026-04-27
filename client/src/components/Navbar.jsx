@@ -119,7 +119,7 @@ export default function Navbar({
               <button
                 key={i}
                 type="button"
-                className={['top-bar-panel-button', actionClassName]
+                className={['top-bar-panel-button', i === 0 ? 'top-bar-panel-button-first' : '', actionClassName]
                   .filter(Boolean)
                   .join(' ')}
                 onClick={() => {
