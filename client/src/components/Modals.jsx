@@ -714,7 +714,7 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
       onClose={onClose}
       footer={
         <>
-          <Button variant="text" onClick={onClose}>Done</Button>
+          {/* <Button variant="text" onClick={onClose}>Done</Button> */}
           <Button variant="contained" onClick={handleCopy}>
             {copied ? '✓ Copied!' : 'Copy link'}
           </Button>
@@ -724,7 +724,7 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
       <p style={{ fontSize: 13, color: '#666', marginBottom: 14, lineHeight: 1.6 }}>
         Share this link so students can open the heatmap, mark their availability, and send it back to you.
       </p>
-      <p style={{ fontSize: 14, color: '#aaa', marginBottom: 4, letterSpacing: '0.05em' }}>
+      <p style={{ fontSize: 14, color: '#aaa', marginBottom: 4 }}>
         Booking page for
       </p>
       <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{eventTitle || ownerEmail}</p>

@@ -506,7 +506,7 @@ export default function ProfessorDashboard() {
               {
                 id: 'export-calendar',
                 iconComponent: IosShareIcon,
-                label: 'export calendar',
+                label: 'Export Calendar',
                 onClick: () => setExportCalendarOpen(true),
               },
               { id: 'help', iconComponent: InfoIcon, label: 'Help', onClick: () => setModal('help') },
