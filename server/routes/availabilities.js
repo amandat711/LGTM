@@ -436,8 +436,7 @@ router.get('/', (req, res) => {
     include_full,
     include_past,
     include_creator,
-    search,
-    excludeBooked
+    search
   } = req.query;
 
   const conditions = [];
@@ -473,25 +472,14 @@ router.get('/', (req, res) => {
   }
 
   if (include_full !== 'true') {
-    if (excludeBooked === 'true') {
-      conditions.push(`
-        NOT EXISTS (
-          SELECT 1
-          FROM appointments ap
-          WHERE ap.created_from_availability = a.availability_id
-            AND ap.status != 'cancelled'
-        )
-      `);
-    } else {
-      conditions.push(`
-        (
-          SELECT COUNT(*)
-          FROM appointments ap
-          WHERE ap.created_from_availability = a.availability_id
-            AND ap.status != 'cancelled'
-        ) < a.capacity
-      `);
-    }
+    conditions.push(`
+      (
+        SELECT COUNT(*)
+        FROM appointments ap
+        WHERE ap.created_from_availability = a.availability_id
+          AND ap.status != 'cancelled'
+      ) < a.capacity
+    `);
   }
 
   if (search) {

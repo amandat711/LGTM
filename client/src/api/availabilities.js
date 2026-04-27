@@ -61,6 +61,6 @@ export async function getAvailableProfessors(search = '') {
 }
 
 export async function getProfessorPublicAvailabilities(createdBy) {
-  const res = await fetch(`${API_BASE}/availabilities?created_by=${encodeURIComponent(createdBy)}&visibility=public&excludeBooked=true&include_full=false&include_past=false`);
+  const res = await fetch(`${API_BASE}/availabilities?created_by=${encodeURIComponent(createdBy)}&visibility=public&include_full=false&include_past=false`);
   return handleResponse(res);
 }
