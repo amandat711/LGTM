@@ -122,3 +122,10 @@
     color: #777;
     font-size: 14px;
 }
+
+/* RESPONSIVENESS */
+@media (max-width: 480px) {
+    .notif-dropdown {
+        width: 100%;
+    }
+}

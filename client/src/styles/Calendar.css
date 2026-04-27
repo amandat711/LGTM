@@ -1,4 +1,6 @@
 /* AMANDA TRAN */
+/* Rita Zhang */
+
 /* ─── Calendar panel ─────────────────────────────────────── */
 .dash-calendar-panel {
   flex: 1;
@@ -495,7 +497,36 @@
     display: none;
   }
 
-  .dash-cal-time-label {
-    padding: 2px 0px 0 0;
+  /* .dash-time-label {
+    padding: 2px 0px 0 2px;
+    text-align: left;
+  } */
+
+  .dash-time-rows {
+    grid-template-columns: 48px repeat(7, minmax(0, 1fr));
+  }
+
+  .dash-week-days {
+    grid-template-columns: 48px repeat(7, minmax(0, 1fr));
+  }
+
+  /* event labels */
+  .dash-event {
+    padding: 4px 6px;
+    gap: 1px;
+  }
+
+  .dash-event-title,
+  .dash-event-time,
+  .dash-event-location {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+
+    white-space: nowrap;
+    overflow: hidden;
+
+    font-size: 10px;
+    line-height: 1.1;
   }
 }

@@ -1,5 +1,4 @@
 /* AMANDA TRAN (70% contribution) & JOCELYNE LI */
-/* rita zhang -> changed css */
 
 
 
@@ -171,6 +170,38 @@
   margin-bottom: 10px;
   letter-spacing: -0.2px;
 }
+
+/* RESPONSIVENESS */
+@media (max-width: 480px) {
+  .dash-calendar-panel {
+    /* order: 1; */
+    display: flex;
+  }
+
+  .main-content {
+    position: relative;
+    flex-direction: column;
+    /* overflow: visible; */
+  }
+
+  .side-panel {
+
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    width: 100%;
+    /* order: 2; */
+    border-top: 1px solid #e4e4e4;
+    flex: 1;
+    height: 100%;
+    max-height: none;
+    overflow-y: auto;
+    border-right: none;
+  }
+
+}
+
 
 
 /* 
@@ -1198,39 +1229,6 @@
   background: #E31429;
   margin-bottom: 10px;
 }
-
-
-/* 
-   RESPONSIVE 
-   Shrink the side panel on tablets and hide it entirely on
-   small screens so the calendar gets all the available space.
- */
-
-@media (max-width: 900px) {
-
-  /* Give the calendar more room on tablet-sized screens. */
-  .side-panel {
-    width: clamp(200px, 28vw, 240px);
-  }
-}
-
-@media (max-width: 700px) {
-
-  /* On phones, hide the side panel so the calendar stays usable. */
-  .side-panel {
-    display: none;
-  }
-
-  /* .side-menu responsive rule moved to Sidebar.css */
-
-  .help-guide-modal {
-    max-height: calc(100vh - 20px);
-    padding: 20px;
-  }
-}
-
-
-
 
 
 
