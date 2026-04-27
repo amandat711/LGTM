@@ -1344,6 +1344,48 @@
 }
 
 
+@media (max-width: 480px) {
+  .booking-box {
+    margin: 0 auto 16px;
+    padding: 16px;
+  }
+
+  .booking-help-text {
+    margin: 0 0 12px;
+    padding: 0;
+    color: #555;
+    line-height: 1.6;
+    font-size: 13px;
+  }
+
+  .booking-search-box {
+    font-size: 12px;
+    height: 34px;
+  }
+
+  .booking-search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 50%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f1f1;
+    color: #4b5563;
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+}
+
 /* 
    PROFESSOR SEARCH RESULTS
    The list of professors the student can book with.
@@ -1416,6 +1458,36 @@
   margin: 0 auto;
   color: #666;
   font-size: 15px;
+}
+
+@media (max-width: 480px) {
+  .professor-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px 16px 16px 16px;
+    gap: 16px;
+  }
+
+  /* Professor name */
+  .professor-card h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+  }
+
+  /* Department, email, and bio text below the name */
+  .professor-card-subtitle,
+  .professor-card-email,
+  .professor-card-description {
+    margin: 0 0 9px;
+    color: #666;
+    font-size: 12px;
+  }
+
+  .professor-card-button {
+    height: 34px;
+    font-size: 12px;
+    padding: 0 14px;
+  }
 }
 
 
