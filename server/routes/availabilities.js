@@ -501,10 +501,20 @@ router.get('/', (req, res) => {
   const whereClause =
     conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
+  const bookedCountSelect = `
+    (
+      SELECT COUNT(*)
+      FROM appointments ap
+      WHERE ap.created_from_availability = a.availability_id
+        AND ap.status != 'cancelled'
+    ) AS booked_count
+  `;
+
   const selectClause = joinCreator
     ? `
       SELECT
         a.*,
+        ${bookedCountSelect},
         u.user_id AS creator_user_id,
         u.first_name AS creator_first_name,
         u.last_name AS creator_last_name,
@@ -514,7 +524,9 @@ router.get('/', (req, res) => {
         u.staff_title AS creator_staff_title
     `
     : `
-      SELECT a.*
+      SELECT
+        a.*,
+        ${bookedCountSelect}
     `;
 
   const joinClause = joinCreator
