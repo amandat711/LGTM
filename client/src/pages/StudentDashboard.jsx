@@ -463,7 +463,7 @@ export default function StudentDashboard() {
                             </div>
                             <span className={`appointment-status-pill ${cls}`}>{label}</span>
                             {appt.status !== 'cancelled' && appt.attendeeStatus === 'pending' && (
-                              <div style={{ display: 'grid', gap: 6 }}>
+                              <div className="student-appointment-actions">
                                 <button
                                   type="button"
                                   className="invite-action-button"

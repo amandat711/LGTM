@@ -142,6 +142,27 @@
   flex-shrink: 0;
 } */
 
+.course-settings-pending-revoke-btn {
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+
+  border: 1px solid #c62828;
+  background: #fff;
+  color: #b71c1c;
+
+  cursor: pointer;
+  font-family: inherit;
+
+  opacity: 0.85;
+}
+
+.course-settings-pending-revoke-btn:hover:not(:disabled) {
+  background: #fff5f5;
+  border-style: solid;
+}
+
 .course-settings-empty {
   margin: 0 0 14px;
   font-size: 13px;
