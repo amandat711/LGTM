@@ -7,7 +7,7 @@
 import { useState, useRef } from "react";
 import LGTMLogo2 from "../assets/LGTMLogo2.png";
 import header from "../assets/header.png";
-import heatmapPreview from "../assets/HeatmapPreview.png";
+import updatedHeatmapPreview from "../assets/heatmap-screenshot.png";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import "../styles/LandingPage.css";
@@ -89,7 +89,7 @@ export default function LandingPage() {
         <div className="feature-row feature-row-reversed">
           <div className="feature-image-area">
             {/*Heatmap preview image displayed*/}
-            <img src={heatmapPreview} alt="Heatmap preview" className="feature-preview-image" />
+            <img src={updatedHeatmapPreview} alt="Heatmap preview" className="feature-preview-image" />
           </div>
           <div className="feature-text">
             <h2 className="feature-title">Additional features</h2>

@@ -158,7 +158,10 @@
 .hero-content {
   position: relative;
   z-index: 2;
-  width: 100%;
+  /* width: 100%;
+  padding: 0 32px; */
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 0 32px;
   display: flex;
   flex-direction: column;
@@ -168,11 +171,9 @@
 }
 
 .hero-subtitle {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.7);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
   margin: 0;
 }
 
@@ -182,7 +183,6 @@
   font-weight: 600;
   margin: 0;
   line-height: 1.2;
-  letter-spacing: -0.5px;
 }
 
 /* Main red button in the hero */
@@ -191,8 +191,8 @@
   color: #fff;
   border: none;
   border-radius: 5px;
-  padding: 10px 24px;
-  font-size: 13px;
+  padding: 10px 18px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s;
@@ -210,16 +210,17 @@
 }
 
 .intro-text {
-  font-size: 15px;
+  font-size: 16px;
   color: #444;
   line-height: 1.8;
-  margin: 0;
+  text-align: center;
+  margin: 0 auto;
 }
 
 /* Feature sections */
 .feature-section {
   padding: 32px 24px 56px;
-  max-width: 1000px;
+  max-width: 1500px;
   margin: 0 auto;
 }
 
@@ -231,7 +232,7 @@
 }
 
 .feature-section-light>.feature-row {
-  max-width: 1000px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 32px 24px 56px;
 }
@@ -259,7 +260,7 @@
   align-items: center;
   justify-content: center;
   padding: 12px;
-  background: linear-gradient(135deg, rgba(227, 20, 41, 0.04) 0%, rgba(227, 20, 41, 0.01) 100%);
+  /* background: linear-gradient(135deg, rgba(227, 20, 41, 0.04) 0%, rgba(227, 20, 41, 0.01) 100%); */
   border-radius: 16px;
 }
 
@@ -281,7 +282,7 @@
 
 .feature-button {
   background: transparent;
-  border: 1.5px solid #E31429;
+  border: 2px solid #E31429;
   color: #E31429;
   border-radius: 5px;
   padding: 8px 18px;
@@ -324,7 +325,6 @@
   background: #1d1d1d;
   color: #fff;
   border: 1px solid #9b9b9b;
-  border-radius: 0 0 14px 14px;
   overflow: hidden;
 }
 
@@ -526,7 +526,7 @@
 
 /* Heatmap accordion explainer section */
 .accordion-section {
-  max-width: 720px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 64px 24px 56px;
 }
@@ -543,7 +543,7 @@
   padding: 18px 0;
   cursor: pointer;
   text-align: left;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 500;
   color: #0f0f0f;
   transition: color 0.15s;
@@ -598,11 +598,11 @@
   }
 
   .intro-section {
-    padding: 32px 16px;
+    padding: 32px 24px;
   }
 
   .feature-section {
-    padding: 24px 16px 40px;
+    padding: 24px 24px 40px;
   }
 
   .feature-row,
@@ -650,7 +650,7 @@
 }
 
 /* Phone-sized layout changes */
-@media (max-width: 768px) {
+@media (max-width: 568px) {
   .landing-top-bar .top-bar-content {
     height: 58px;
     padding: 0 14px;
@@ -693,6 +693,8 @@
 
   .intro-text {
     font-size: 14px;
+    text-align: center;
+    margin: 0 auto;
   }
 
   .feature-title {
@@ -720,5 +722,42 @@
     flex-direction: column;
     gap: 10px;
     align-items: flex-start;
+  }
+}
+
+@media (max-width: 568px) {
+  .landing-page {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  .hero-content,
+  .intro-section,
+  .feature-section,
+  .feature-section-light > .feature-row,
+  .accordion-section {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .feature-row,
+  .feature-row-reversed {
+    margin: 0;
+    width: 100%;
+  }
+
+  .feature-image-area {
+    width: 100%;
+    min-width: 0;
+    padding: 8px;
+  }
+
+  .feature-preview-image {
+    max-width: 100%;
+  }
+
+  .landing-top-bar .top-bar-content {
+    width: 100%;
+    overflow: hidden;
   }
 }
