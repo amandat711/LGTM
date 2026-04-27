@@ -41,6 +41,21 @@
 .courses-shell {
   width: 100%;
   padding: 24px;
+  overflow-y: auto;
+}
+
+/* scrollbar */
+.courses-shell::-webkit-scrollbar {
+  width: 6px;
+}
+
+.courses-shell::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 10px;
+}
+
+.courses-shell::-webkit-scrollbar-thumb:hover {
+  background: #999;
 }
 
 .courses-title {

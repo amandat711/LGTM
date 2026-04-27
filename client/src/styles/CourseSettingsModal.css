@@ -11,7 +11,7 @@
 
 .course-settings-section-title {
   margin: 0 0 8px;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   color: #0f0f0f;
 }
@@ -45,6 +45,8 @@
 }
 
 .course-settings-staff-name {
+  flex: 1;
+  min-width: 0;
   font-size: 14px;
   font-weight: 600;
   color: #0f0f0f;
@@ -130,6 +132,15 @@
   opacity: 0.55;
   cursor: not-allowed;
 }
+
+/* remove TA button issues troubleshooting */
+/* .course-settings-undo-revoke-btn,
+.course-settings-revoke-btn {
+  width: auto;
+  min-width: 80px;
+  white-space: nowrap;
+  flex-shrink: 0;
+} */
 
 .course-settings-empty {
   margin: 0 0 14px;
@@ -235,11 +246,16 @@
 
 .course-settings-danger {
   padding-bottom: 4px;
+  gap: 10px;
+  flex-wrap: wrap;
+  display: flex;
 }
 
 .course-settings-delete-btn {
-  padding: 10px 16px;
-  font-size: 14px;
+  height: 34px;
+  padding: 0px 16px;
+  gap: 10px;
+  font-size: 13px;
   font-weight: 600;
   border-radius: 8px;
   border: 1px solid #c62828;
@@ -256,4 +272,38 @@
 .course-settings-delete-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+/* RESPONSIVENESS */
+@media (max-width: 480px) {
+  .course-settings-pending-add-note {
+    display: block;
+    font-style: italic;
+    font-weight: 500;
+    color: #0d3b66;
+  }
+
+  .course-settings-pending-revoke-note {
+    display: block;
+    font-style: italic;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .course-settings-danger {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .course-settings-delete-btn {
+    width: 100%;
+    max-width: 240px;
+    text-align: center;
+  }
+
+  .course-settings-delete-btn:last-child {
+    margin-top: 2px;
+  }
 }
