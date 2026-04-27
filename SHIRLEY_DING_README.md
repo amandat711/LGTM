@@ -1,5 +1,82 @@
-Contribution percentage to files (to update):
+# Shirley Ding: contributions
 
+What I worked on, grouped by topic. From highest ownership to lowest.
+
+## Authentication, session, and routing
+
+- The backend was done entirely by me.  I implemented most of the frontend as well, but others have modified the styling and/or layout since.
+- Login, register, forgotPassword, resetPassword pages, plus the early Tailwind setup for them.
+- Created `client/src/api/auth.js` and `server/routes/auth.js` along with the api endpoints required.
+- Swapped out placeholder/hardcoded auth for `authUtils`, `useRequireAuth`, `useRequirePageVariant`, `useAppShellSession`, and `AppShellLayout`.
+- Added logout and removed user id from URL paths.
+- Small UI changes on `AuthShell` and auth navbar modifications.
+
+---
+
+## Courses Pages
+
+- The backend was done entirely by me. I implemented most of the frontend as well, but others have made small changes to the styling and/or layout since.
+- Courses backend: `server/routes/courses.js`, small db schema changes.
+- Courses UI: `CourseSettingsModal`, `CreateCourseModal`, `CoursesListPage`, `CourseJoinPage`, `CourseDetailPage` and the CSS that goes with them.
+- Implemented for all 3 possible views: professor, TA and student
+
+---
+
+## Email Notifications
+
+- I own the entire email notifications feature. It is backend only.
+- Set up Nodemailer for mailing services and created `mailer.js`.
+- Worked on all email notifications from in-app triggers. `server/lib/appointmentNotifications.js` decides what to send when.
+- Updated the appointments, auth, availabilities, and heatmaps routes to include the corresponding email-sending functions.
+
+---
+
+## Online hosting
+
+- Set up SOCS deploy config/env for online hosting.
+- Emailed IT about reverse-proxy setup and forwarded headers (**X-Forwarded-Proto** / **Host**) for HTTPS and session cookies.
+- Resolved any issues and bugs we ran into while trying to host.
+
+---
+
+## Email, config, dates, utils (code cleanup and organization)
+
+- Added `server/lib/mailer.js` and shared `constants/config.js` (client + server) plus `server/constants/auth.js` for storing constants in one place. 
+- `ResetPasswordPage.jsx` is basically all mine (see numbers below).
+- Made dates/timezones behave the same way across appointments, availabilities, and heatmaps (`client` + `server` `dateTime.js` and the routes that use them).
+
+---
+
+## Search / booking discovery / heatmaps
+
+- Fixed multiple backend and frontend bugs in `BookingDiscovery.jsx`, `BookingProfessor.jsx`, `client/src/api/users.js`, and `server/routes/users.js`.
+  - Fixed wrong capacity behaviour on the booking page (`server/routes/availabilities.js`).
+  - Fixed bug where TAs were being returned on the Search page.
+  - Fixed bug where only professors with availabilities were being returned.
+- **`BookingProfessor.jsx`**: **Contact** (reach the slot owner) and **copy booking page link** (share the page URL).
+- **`BookingProfessor.jsx`**: professor **department** and **staff title** on the profile/header area.
+
+---
+
+## Bugfixes
+
+- Course admin edge case in `server/routes/courses.js`.
+- Search page issues and the availability capacity bug mentioned above.
+
+---
+
+## Branding and landing
+
+- Changed the public name to **DropIn** on the landing page and in `index.html`.
+- Cleaned up camelCase in those same files.
+
+---
+
+## File contribution percentages
+
+Rough share of lines per file that got counted as mine (rerun your script if the repo moves on).
+
+```
 client/src/api/auth.js                                      94     94  100.0%
 client/src/constants/config.js                               4      4  100.0%
 client/src/pages/ResetPasswordPage.jsx                     161    161  100.0%
@@ -52,11 +129,13 @@ client/src/components/Modals.jsx                            25    858    2.9%
 client/src/pages/BookingDiscovery.jsx                        5    172    2.9%
 client/src/pages/landingPage.jsx                             9    320    2.8%
 client/src/styles/Calendar.css                              14    533    2.6%
-client/src/pages/StudentDashboard.jsx                       15    644    2.3%
-client/src/components/calendar/WeekView.jsx                  8    381    2.1%
+client/src/pages/StudentDashboard.jsx                       15    644   2.3%
+client/src/components/calendar/WeekView.jsx                  8    381   2.1%
 client/src/utils/heatmapPageUtils.js                         3    158    1.9%
 client/src/api/heatmaps.js                                   2    109    1.8%
 client/src/styles/Dashboard.css                             24   1711    1.4%
 client/src/pages/ProfessorHeatmap.jsx                        7    963    0.7%
 client/src/components/calendar/calendarUtils.jsx             2    314    0.6%
 client/src/styles/LandingPage.css                            4    725    0.6%
+```
+
