@@ -954,11 +954,10 @@
   width: 100%;
   justify-content: flex-start;
   border-radius: 999px;
-  padding: 10px 24px;
+  padding: 5px 12px;
   font-family: 'Inter', sans-serif;
   font-size: 13px;
-  font-weight: 700;
-  font-size: 0.95rem;
+  font-weight: 500;
   text-transform: none;
   letter-spacing: normal;
   box-shadow: none;
@@ -979,12 +978,10 @@
 
 .modal--recurrence-scope .modal-footer .MuiButton-root {
   border-radius: 999px;
-  padding: 10px 24px;
+  padding: 5px 12px;
   font-family: 'Inter', sans-serif;
-  font-weight: 700;
-  font-size: 0.95rem;
-  text-transform: none;
-  letter-spacing: normal;
+  font-weight: 500;
+  font-size: 13px;
 }
 
 .button {
