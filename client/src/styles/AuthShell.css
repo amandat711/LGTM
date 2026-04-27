@@ -1,14 +1,24 @@
 /*Rita Zhang*/
 
 .auth-shell {
-    height: 100dvh;
+    min-height: 100dvh;
     background: #f5f3ee;
     color: #0f0f0f;
     font-family: inherit;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow: hidden;
+    overflow: auto;
     position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: #f5f3ee;
+    z-index: -1;
 }
 
 .auth-top-bar {
@@ -51,7 +61,7 @@
 }
 
 .auth-main {
-    height: 100%;
+    flex:1;
     display: grid;
     place-items: center;
     width: 100%;
