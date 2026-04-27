@@ -1177,7 +1177,7 @@ body {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .day-column {
     min-width: 56px;
   }

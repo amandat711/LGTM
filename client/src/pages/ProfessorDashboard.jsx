@@ -81,7 +81,12 @@ export default function ProfessorDashboard() {
   // Lightweight feedback state for loading, errors, and dismissed cancelled items.
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [rightPanelOpen, setRightPanelOpen] = useState(true);
+
+  // only on mobile view is the right panel closed by default
+  const [rightPanelOpen, setRightPanelOpen] = useState(() => {
+    return window.innerWidth > 768;
+  });
+
   const [infoMessage, setInfoMessage] = useState('');
   const [dismissedCancelledIds, setDismissedCancelledIds] = useState([]);
 

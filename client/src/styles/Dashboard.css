@@ -172,7 +172,7 @@
 }
 
 /* RESPONSIVENESS */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .dash-calendar-panel {
     /* order: 1; */
     display: flex;
@@ -1118,6 +1118,21 @@
   color: #b01020;
 }
 
+@media (max-width: 768px) {
+  .button-primary {
+    height: 34px;
+    font-size: 12px;
+    padding: 0 14px;
+  }
+
+  .button-ghost {
+    height: 34px;
+    font-size: 12px;
+    padding: 0 14px;
+  }
+}
+
+
 /* 
    HELP GUIDE MODAL
    Reusable pop-up opened by the info icon in the sidebar.
@@ -1270,7 +1285,7 @@
 .booking-box h2 {
   /* Shared heading treatment for discovery and booking confirmation cards. */
   margin: 0 0 10px;
-  font-size: 28px;
+  font-size: 32px;
   color: #111;
 }
 
@@ -1344,7 +1359,7 @@
 }
 
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .booking-box {
     margin: 0 auto 16px;
     padding: 16px;
@@ -1425,12 +1440,16 @@
 .professor-card-description {
   margin: 0 0 6px;
   color: #666;
-  font-size: 13px;
+  font-size: 14px;
+}
+
+.professor-card-email{
+  color: black;
 }
 
 /* Bio / description gets slightly more breathing room */
 .professor-card-description {
-  margin: 0 0 22px;
+  margin: 0 0 0px;
   color: #555;
   line-height: 1.6;
 }
@@ -1438,18 +1457,22 @@
 /* "View availability" call-to-action button on each professor card */
 .professor-card-button {
   background: #E31429;
-  border: none;
+  border: 2px solid #e31429;
   border-radius: 999px;
   color: #fff;
-  padding: 12px 20px;
+  padding: 0 20px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
-  transition: box-shadow 0.15s;
+  height:34px;
 }
 
 .professor-card-button:hover {
-  box-shadow: 0 8px 20px rgba(227, 20, 41, 0.18);
+  background: white;
+  border: 2px solid #e31429;
+  color: #e31429;
+  /* box-shadow: 0 8px 20px rgba(227, 20, 41, 0.18); */
+  box-shadow: none !important;
 }
 
 /* Shown when the search returns no results */
@@ -1460,21 +1483,19 @@
   font-size: 15px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .professor-card {
     flex-direction: column;
     align-items: flex-start;
     padding: 16px 16px 16px 16px;
-    gap: 16px;
+    gap: 6px;
   }
 
-  /* Professor name */
   .professor-card h2 {
     margin: 0 0 8px;
     font-size: 20px;
   }
 
-  /* Department, email, and bio text below the name */
   .professor-card-subtitle,
   .professor-card-email,
   .professor-card-description {
@@ -1483,13 +1504,16 @@
     font-size: 12px;
   }
 
+  .professor-card-email{
+    color: black;
+  }
+
   .professor-card-button {
-    height: 34px;
+    height: 54px;
     font-size: 12px;
-    padding: 0 14px;
+    padding: 12px 14px;
   }
 }
-
 
 /* 
    BOOKING CONFIRMATION PAGE (BookingProfessor.jsx)
@@ -1527,7 +1551,7 @@
 a.professor-card-button {
   /* Keeps mailto links visually identical to normal buttons. */
   text-decoration: none;
-  display: inline-block;
+  /* display: inline-block; */
   box-sizing: border-box;
 }
 
@@ -1536,6 +1560,29 @@ a.professor-card-button {
   padding: 10px 18px;
   font-size: 13px;
 }
+
+.booking-professor-email-btn:hover {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* forcing both button and <a> to have the same style */
+a.professor-card-button,
+button.professor-card-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-decoration: none;
+  line-height: 1;
+}
+
+button.professor-card-button {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+}
+
 
 /* Feedback message shown after a booking attempt.
    Use .success (green) or .error (red) as a modifier. */
@@ -1569,6 +1616,35 @@ a.professor-card-button {
   border: 1px solid #ececec;
   box-shadow: none;
 }
+
+/* .booking-calendar-kicker-outside {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #8f1d23;
+} */
+
+.booking-section-wrapper {
+  background: #fff;
+  padding: 26px 34px 34px;
+}
+
+.booking-section-header {
+  margin-bottom: 18px;
+}
+
+.booking-section-header .booking-calendar-kicker {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  color: black;
+  margin: 0;
+}
+
+.booking-section-wrapper .booking-layout {
+  padding: 0;
+}
+
 
 /* Three-column grid: monthly calendar + selected-day slots + booking summary */
 .booking-layout {
@@ -1636,14 +1712,12 @@ a.professor-card-button {
   /* Hover gives selectable slots the same card affordance as dashboard items. */
   border-color: #dadada;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
-  transform: translateY(-1px);
 }
 
 /* Highlighted state when the student has clicked this slot */
 .available-slot-card.selected {
   border-color: #E31429;
   background: #fff7f6;
-  box-shadow: 0 10px 24px rgba(227, 20, 41, 0.1);
 }
 
 /* Fully booked slot: shown greyed out, cannot be clicked */
@@ -1733,11 +1807,12 @@ a.professor-card-button {
 
 /* White outlined button used for secondary actions e.g. "Clear selection" */
 .secondary-button {
+  height: 34px;
   background: #fff;
   color: #333;
-  border: 1px solid #d8d8d8;
+  border: 2px solid #d8d8d8;
   border-radius: 999px;
-  padding: 12px 20px;
+  padding: 0 20px;
   cursor: pointer;
   font-size: 14px;
   font-weight: 600;
@@ -1745,8 +1820,9 @@ a.professor-card-button {
 }
 
 .secondary-button:hover {
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: none !important;
 }
+
 
 /* keep calendar beside the time list and move summary below */
 @media (max-width: 1120px) {
@@ -1761,7 +1837,7 @@ a.professor-card-button {
 }
 
 /* On phones the full booking flow stacks a scrollable column */
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .booking-page {
     padding: 18px;
   }
@@ -1779,4 +1855,86 @@ a.professor-card-button {
   .selected-slot-panel {
     grid-column: auto;
   }
+
+  .booking-professor-email-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .professor-card-email {
+    flex: 1 100%;
+    /* forces it to first row */
+  }
+
+  .professor-card-button {
+    flex: 1;
+  }
+
+  a.professor-card-button,
+  button.professor-card-button {
+    /* height: 34px; */
+    padding: 12px 14px;
+    font-size: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .booking-section-header .booking-calendar-kicker {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 700;
+    color: black;
+    margin: 0;
+  }
+
+
 }
+
+@media (max-width: 480px) {
+  .booking-professor-email-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .booking-professor-email-row .professor-card-email {
+    flex: 1 100%;
+  }
+
+  .booking-professor-email-row .professor-card-button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 34px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  /* slot card layout on mobile */
+  .available-slot-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .available-slot-status {
+    align-self: flex-start;
+  }
+}
+
+
+/* troubleshooting: remove box-shadow and transform on hover */
+/* button.professor-card-button.secondary-button.booking-professor-email-btn,
+button.professor-card-button.secondary-button.booking-professor-email-btn:hover,
+button.professor-card-button.secondary-button.booking-professor-email-btn:focus,
+button.professor-card-button.secondary-button.booking-professor-email-btn:active {
+  box-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+} */

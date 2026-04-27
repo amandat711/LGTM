@@ -28,11 +28,9 @@ reference, but the colors, spacing, and rounded shapes are tuned for LGTM.
 /* Small red label above the month. It nudges the user: start by choosing a day. */
 .booking-calendar-kicker {
   margin: 0 0 8px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
   color: #8f1d23;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 /* Visible month and year heading, e.g. "April 2026". */
@@ -52,8 +50,8 @@ reference, but the colors, spacing, and rounded shapes are tuned for LGTM.
   width: 34px;
   height: 34px;
   border-radius: 999px;
-  border: 1px solid #dedede;
-  background: #fff;
+  border: 2px solid #dedede;
+  background: white;
   color: #E31429;
   cursor: pointer;
   font-size: 20px;
@@ -64,10 +62,10 @@ reference, but the colors, spacing, and rounded shapes are tuned for LGTM.
   transition: border-color 0.15s, background 0.15s;
 }
 
-.booking-calendar-nav button:hover {
+/* .booking-calendar-nav button:hover {
   border-color: #E31429;
-  background: #fff4f4;
-}
+  background: white;
+} */
 
 /* Weekday labels and day cells use the same seven-column grid. This keeps
    everything aligned without needing table markup. */
@@ -105,7 +103,8 @@ reference, but the colors, spacing, and rounded shapes are tuned for LGTM.
 }
 
 .booking-calendar-day:not(.empty):hover {
-  background: #f5f5f5;
+  background: #dddddd;
+  border-color: #dddddd;
   color: #111;
 }
 
@@ -163,4 +162,65 @@ reference, but the colors, spacing, and rounded shapes are tuned for LGTM.
   height: 8px;
   border-radius: 999px;
   background: #E31429;
+}
+
+/* responsiveness */
+/* getting rid of the hover state stick on mobile */
+@media (hover: hover) and (pointer: fine) {
+  .booking-calendar-nav button:hover {
+    border-color: #E31429;
+    background: white;
+  }
+
+  .booking-calendar-day:not(.empty):hover {
+    background: #dddddd;
+    border-color: #dddddd;
+    color: #111;
+  }
+}
+
+@media (max-width: 480px) {
+  /* navigation buttons */
+  .booking-calendar-nav button:active {
+    border-color: #E31429;
+    background: #fff5f6;
+  }
+
+  .booking-calendar-day:not(.empty):active {
+    background: #eeeeee;
+  }
+  
+  .booking-calendar-grid {
+    gap: 6px;
+  }
+
+  .booking-calendar-day {
+    min-height: 44px;   /* 👈 bigger overall cells */
+    font-size: 10px;
+  }
+
+  .booking-calendar-day.selected {
+    transform: scale(1.15);
+    z-index: 2;
+  }
+
+  /* changing calendar text on mobile */
+  .booking-calendar-weekdays span {
+    font-size: 0; /* hide original text */
+    position: relative;
+  }
+
+  .booking-calendar-weekdays span::after {
+    font-size: 10px;
+    font-weight: 700;
+    color: #777;
+  }
+
+  .booking-calendar-weekdays span:nth-child(1)::after { content: 'S'; }
+  .booking-calendar-weekdays span:nth-child(2)::after { content: 'M'; }
+  .booking-calendar-weekdays span:nth-child(3)::after { content: 'T'; }
+  .booking-calendar-weekdays span:nth-child(4)::after { content: 'W'; }
+  .booking-calendar-weekdays span:nth-child(5)::after { content: 'T'; }
+  .booking-calendar-weekdays span:nth-child(6)::after { content: 'F'; }
+  .booking-calendar-weekdays span:nth-child(7)::after { content: 'S'; }
 }

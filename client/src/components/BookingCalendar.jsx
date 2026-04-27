@@ -143,7 +143,7 @@ export default function BookingCalendar({
     <aside className="booking-calendar-panel">
       <div className="booking-calendar-header">
         <div>
-          <p className="booking-calendar-kicker">{title}</p>
+          {/* <p className="booking-calendar-kicker">{title}</p> */}
           <h2>{calendarMonthLabel}</h2>
         </div>
 

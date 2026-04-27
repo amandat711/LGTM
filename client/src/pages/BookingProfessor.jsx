@@ -339,7 +339,14 @@ export default function BookingProfessor() {
           {message && <div className="booking-status-message success">{message}</div>}
           {error && <div className="booking-status-message error">{error}</div>}
 
-          <div className="booking-layout">
+          <div className="booking-section-wrapper">
+            <div className="booking-section-header">
+              <p className="booking-calendar-kicker">
+                Select a Date & Time
+              </p>
+            </div>
+              
+            <div className="booking-layout">
             <BookingCalendar
               monthDate={calendarMonth}
               selectedDate={selectedDate}
@@ -347,6 +354,7 @@ export default function BookingProfessor() {
               onSelectDate={handleDateSelect}
               onMonthChange={moveCalendarMonth}
             />
+            
 
             <div className="available-slots-panel">
               <div className="booking-section-title">{formatSelectedDate(selectedDate)}</div>
@@ -383,6 +391,7 @@ export default function BookingProfessor() {
                 </div>
               )}
             </div>
+            
 
             <aside className="selected-slot-panel">
               <h2>Selected slot</h2>
@@ -420,6 +429,8 @@ export default function BookingProfessor() {
               </button>
             </aside>
           </div>
+          </div>
+        
         </section>
       </div>
         </div>
