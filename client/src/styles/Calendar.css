@@ -484,3 +484,18 @@
   font-size: 13px;
   margin: 0;
 }
+
+/* RESPONSIVENESS */
+@media (max-width: 480px) {
+  .dash-cal-header {
+    padding: 10px 16px;
+  }
+
+  .dash-cal-range {
+    display: none;
+  }
+
+  .dash-cal-time-label {
+    padding: 2px 0px 0 0;
+  }
+}

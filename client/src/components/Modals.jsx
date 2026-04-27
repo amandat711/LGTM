@@ -724,15 +724,15 @@ export function InviteURLModal({ ownerEmail, eventTitle, inviteURL, onClose }) {
       <p style={{ fontSize: 13, color: '#666', marginBottom: 14, lineHeight: 1.6 }}>
         Share this link so students can open the heatmap, mark their availability, and send it back to you.
       </p>
-      <p style={{ fontSize: 11, color: '#aaa', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <p style={{ fontSize: 14, color: '#aaa', marginBottom: 4, letterSpacing: '0.05em' }}>
         Booking page for
       </p>
       <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 12 }}>{eventTitle || ownerEmail}</p>
       <div className="copy-row">
         <input className="copy-input" readOnly value={shareURL} />
-        <Button size="small" variant="outlined" onClick={handleCopy} sx={{ whiteSpace: 'nowrap' }}>
+        {/* <Button size="small" variant="outlined" onClick={handleCopy} sx={{ whiteSpace: 'nowrap' }}>
           {copied ? '✓ Copied' : 'Copy'}
-        </Button>
+        </Button> */}
       </div>
       <p style={{ marginTop: 12, fontSize: 12, color: '#bbb' }}>
         Tip: paste this into your course slides or email signature.

@@ -593,7 +593,7 @@ export default function ProfessorHeatmap() {
                               type="text"
                               value={editHeatmapTitle}
                               onChange={(e) => setEditHeatmapTitle(e.target.value)}
-                              placeholder="e.g.:COMP 307 project check-ins"
+                              placeholder="e.g.: COMP 307 project check-ins"
                               maxLength={120}
                             />
                           </label>
@@ -619,7 +619,7 @@ export default function ProfessorHeatmap() {
                             <textarea
                               value={editHeatmapDescription}
                               onChange={(e) => setEditHeatmapDescription(e.target.value)}
-                              placeholder="e.g.:Pick every time you could attend a 30-minute project meeting this week."
+                              placeholder="e.g.: Pick every time you could attend a 30-minute project meeting this week."
                               rows={4}
                               maxLength={500}
                             />
@@ -672,13 +672,13 @@ export default function ProfessorHeatmap() {
                 {/* Top mode cards switch between professor availability and the group heatmap. */}
                 <div className="mode-cards mode-cards-two">
                   <div className={`mode-card${tab === 'personal' ? ' active' : ''}`} onClick={() => setTab('personal')}>
-                    <div className="mode-card-icon professor"></div>
+                    {/* <div className="mode-card-icon professor"></div> */}
                     <h4>My availability</h4>
                     <p>Click and drag to mark times you're free. Set recurring or one-time.</p>
                   </div>
 
                   <div className={`mode-card${tab === 'group' ? ' active' : ''}`} onClick={() => setTab('group')}>
-                    <div className="mode-card-icon professor">🌡️</div>
+                    {/* <div className="mode-card-icon professor">🌡️</div> */}
                     <h4>Availability heatmap</h4>
                     <p>See all students' availability at once. Darker cells = more students free.</p>
                   </div>
@@ -753,7 +753,7 @@ export default function ProfessorHeatmap() {
                 {/* Personal tab: professor selects and saves their own available time slots. */}
                 {tab === 'personal' && (
                   <>
-                    <p className="section-label">Click or drag to mark when you're free</p>
+                    <p className="section-label">Click or drag to mark availability</p>
                     <div className="grid-outer">
                       <GridPager
                         rangeLabel={gridRangeLabel}
@@ -791,7 +791,7 @@ export default function ProfessorHeatmap() {
                           value={recurringWeeks}
                           onChange={(e) => setRecurringWeeks(Number(e.target.value))}
                           disabled={!isRecurring}
-                          style={{ padding: '5px 10px', borderRadius: 6, border: '1.5px solid var(--border-med)', background: isRecurring ? '#fff' : 'var(--surface2)', color: isRecurring ? 'var(--text)' : 'var(--text-faint)', fontSize: 13, cursor: isRecurring ? 'pointer' : 'default', fontFamily: 'inherit' }}
+                          style={{ padding: '5px 10px', borderRadius: 6, border: '1.5px solid var(--border-med)', background: isRecurring ? '#fff' : 'var(--surface2)', color: isRecurring ? 'var(--text)' : 'var(--text-faint)', fontSize: 13, cursor: isRecurring ? 'pointer' : 'default', fontFamily: "'Inter', sans-serif" }}
                         >
                           {[2, 3, 4, 5, 6, 8, 10, 12].map((w) => (
                             <option key={w} value={w}>{w} weeks</option>

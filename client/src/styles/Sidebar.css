@@ -1,4 +1,5 @@
-/* AMANDA TRAN (70% contribution) - Creation */
+/* AMANDA TRAN (84% contribution) - Creation */
+/* rita zhang -> changed css */
 /*
  * Sidebar.css — styles for the reusable Sidebar component.
  
@@ -33,7 +34,6 @@
   justify-content: center;
   gap: clamp(2px, 0.5vh, 4px);
   cursor: pointer;
-  /* font-family: 'DM Sans', Arial, sans-serif; */
   text-align: center;
   transition: background 0.15s, box-shadow 0.15s;
 }

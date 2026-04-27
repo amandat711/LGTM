@@ -41,7 +41,7 @@ export default function CourseJoinPage() {
 
   if (authLoading) {
     return (
-      <div style={{ padding: 48, textAlign: 'center', fontFamily: 'Segoe UI, sans-serif' }}>
+      <div style={{ padding: 48, textAlign: 'center', fontFamily: "'Inter', sans-serif" }}>
         <p>Loading…</p>
       </div>
     );
@@ -58,7 +58,7 @@ export default function CourseJoinPage() {
           padding: 48,
           maxWidth: 520,
           margin: '0 auto',
-          fontFamily: 'Segoe UI, sans-serif',
+          fontFamily: "'Inter', sans-serif",
         }}
       >
         <h1 style={{ fontSize: 20, marginBottom: 12 }}>Invite link</h1>
@@ -76,7 +76,7 @@ export default function CourseJoinPage() {
             background: '#f5f5f5',
             fontWeight: 600,
             cursor: 'pointer',
-            fontFamily: 'inherit',
+            fontFamily: "'Inter', sans-serif",
           }}
         >
           Back to courses
@@ -86,7 +86,7 @@ export default function CourseJoinPage() {
   }
 
   return (
-    <div style={{ padding: 48, textAlign: 'center', fontFamily: 'Segoe UI, sans-serif' }}>
+    <div style={{ padding: 48, textAlign: 'center', fontFamily: "'Inter', sans-serif" }}>
       <p>Joining course…</p>
     </div>
   );
