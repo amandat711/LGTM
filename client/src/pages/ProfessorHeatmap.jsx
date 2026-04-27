@@ -564,7 +564,7 @@ export default function ProfessorHeatmap() {
               <>
                 {/* Page intro explains what the professor is doing on this screen. */}
                 <div className="page-header">
-                  <div className="page-label">Professor Dashboard</div>
+                  {/* <div className="page-label">Professor Dashboard</div> */}
                   <h1 className="page-title">Set your availability</h1>
                   <p className="page-subtitle">Mark when you're free. Choose whether slots repeat weekly.</p>
                 </div>
@@ -648,7 +648,7 @@ export default function ProfessorHeatmap() {
                     ) : (
                       <>
                         <div className="heatmap-details-copy">
-                          <span>Heatmap appointment</span>
+                          {/* <span>Heatmap appointment</span> */}
                           <h3>{heatmap.title || 'Untitled heatmap'}</h3>
                           <p>{heatmap.description || 'No description added yet.'}</p>
                           {heatmap.courseId && (
