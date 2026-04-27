@@ -47,6 +47,7 @@
 .form-group {
   display: flex;
   flex-direction: column;
+  padding: 8px 0 0 0;
   gap: 5px;
 }
 
@@ -167,7 +168,7 @@
 .availability-modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 12px;
   margin-top: 2px;
 }
 

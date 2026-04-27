@@ -216,82 +216,41 @@ export default function CourseSettingsModal({
       }
     >
       <form onSubmit={handleSubmitCourse} className="availability-form-grid">
-          <div className="form-group form-group-full">
-            <label htmlFor="settings_course_name">Course name</label>
-            <input
-              id="settings_course_name"
-              value={form.course_name}
-              onChange={(e) => setForm((f) => ({ ...f, course_name: e.target.value }))}
-              required
-            />
-          </div>
-          <div className="form-group form-group-full">
-            <label htmlFor="settings_description">Description</label>
-            <textarea
-              id="settings_description"
-              rows={4}
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              placeholder="Optional"
-            />
-          </div>
+        <div className="form-group form-group-full">
+          <label htmlFor="settings_course_name">Course name</label>
+          <input
+            id="settings_course_name"
+            value={form.course_name}
+            onChange={(e) => setForm((f) => ({ ...f, course_name: e.target.value }))}
+            required
+          />
+        </div>
+        <div className="form-group form-group-full">
+          <label htmlFor="settings_description">Description</label>
+          <textarea
+            id="settings_description"
+            rows={4}
+            value={form.description}
+            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            placeholder="Optional"
+          />
+        </div>
 
-          <div className="course-settings-section form-group-full">
-            <h3 className="course-settings-section-title">Course admins</h3>
-            <p className="course-settings-hint">
-              Search by McGill email and click a name to add them here. Revoke removes access. New admins and revokes
-              are saved when you click &quot;Save course info&quot;.
-            </p>
+        <div className="course-settings-section form-group-full">
+          <h3 className="course-settings-section-title">Course admins</h3>
+          <p className="course-settings-hint">
+            Search by McGill email and click a name to add them here. Revoke removes access. New admins and revokes
+            are saved when you click &quot;Save course info&quot;.
+          </p>
 
-            {hasStaffRows ? (
-              <ul className="course-settings-staff-list">
-                {staff.map((s) => {
-                  const pending = pendingRevokeIds.has(staffUserKey(s.user_id));
-                  return (
-                    <li
-                      key={s.user_id}
-                      className={`course-settings-staff-row${pending ? ' course-settings-staff-row--pending-revoke' : ''}`}
-                    >
-                      <span className="course-settings-staff-name">
-                        {s.first_name} {s.last_name}
-                        <span className="course-settings-staff-meta">
-                          {s.mcgill_email}
-                          {s.user_type === 'student'
-                            ? ' · Student'
-                            : s.user_type
-                              ? ` · ${userTypeLabel(s.user_type)}`
-                              : ''}
-                          {pending ? (
-                            <span className="course-settings-pending-revoke-note"> · Removed when you save</span>
-                          ) : null}
-                        </span>
-                      </span>
-                      {pending ? (
-                        <button
-                          type="button"
-                          className="course-settings-undo-revoke-btn"
-                          onClick={() => unstageRevoke(s.user_id)}
-                          disabled={saving}
-                        >
-                          Undo
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          className="course-settings-revoke-btn"
-                          onClick={() => stageRevoke(s.user_id)}
-                          disabled={saving}
-                        >
-                          Revoke
-                        </button>
-                      )}
-                    </li>
-                  );
-                })}
-                {pendingAdds.map((s) => (
+          {hasStaffRows ? (
+            <ul className="course-settings-staff-list">
+              {staff.map((s) => {
+                const pending = pendingRevokeIds.has(staffUserKey(s.user_id));
+                return (
                   <li
-                    key={`pending-add-${staffUserKey(s.user_id)}`}
-                    className="course-settings-staff-row course-settings-staff-row--pending-add"
+                    key={s.user_id}
+                    className={`course-settings-staff-row${pending ? ' course-settings-staff-row--pending-revoke' : ''}`}
                   >
                     <span className="course-settings-staff-name">
                       {s.first_name} {s.last_name}
@@ -302,115 +261,156 @@ export default function CourseSettingsModal({
                           : s.user_type
                             ? ` · ${userTypeLabel(s.user_type)}`
                             : ''}
-                        <span className="course-settings-pending-add-note"> · Added when you save</span>
+                        {pending ? (
+                          <span className="course-settings-pending-revoke-note"> · Removed when you save</span>
+                        ) : null}
                       </span>
                     </span>
-                    <button
-                      type="button"
-                      className="course-settings-undo-revoke-btn"
-                      onClick={() => unstagePendingAdd(s.user_id)}
-                      disabled={saving}
-                    >
-                      Remove
-                    </button>
+                    {pending ? (
+                      <button
+                        type="button"
+                        className="course-settings-undo-revoke-btn"
+                        onClick={() => unstageRevoke(s.user_id)}
+                        disabled={saving}
+                      >
+                        Undo
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="course-settings-revoke-btn"
+                        onClick={() => stageRevoke(s.user_id)}
+                        disabled={saving}
+                      >
+                        Revoke
+                      </button>
+                    )}
                   </li>
-                ))}
+                );
+              })}
+              {pendingAdds.map((s) => (
+                <li
+                  key={`pending-add-${staffUserKey(s.user_id)}`}
+                  className="course-settings-staff-row course-settings-staff-row--pending-add"
+                >
+                  <span className="course-settings-staff-name">
+                    {s.first_name} {s.last_name}
+                    <span className="course-settings-staff-meta">
+                      {s.mcgill_email}
+                      {s.user_type === 'student'
+                        ? ' · Student'
+                        : s.user_type
+                          ? ` · ${userTypeLabel(s.user_type)}`
+                          : ''}
+                      <span className="course-settings-pending-add-note"> · Added when you save</span>
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    className="course-settings-pending-revoke-btn"
+                    onClick={() => unstagePendingAdd(s.user_id)}
+                    disabled={saving}
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="course-settings-empty">No course admins besides you.</p>
+          )}
+
+          <div className="course-settings-search-block">
+            <label className="course-settings-search-label" htmlFor="course-admin-email-search">
+              Add by McGill email (students &amp; faculty)
+            </label>
+            <input
+              id="course-admin-email-search"
+              type="search"
+              className="course-settings-search-input"
+              placeholder="e.g. @mail.mcgill.ca or @mcgill.ca"
+              value={emailQuery}
+              onChange={(e) => setEmailQuery(e.target.value)}
+              autoComplete="off"
+              disabled={saving}
+            />
+            {searching ? (
+              <p className="course-settings-search-status">Searching…</p>
+            ) : null}
+            {emailQuery.trim().length >= 2 && !searching && searchResults.length === 0 ? (
+              <p className="course-settings-search-status">No matching users.</p>
+            ) : null}
+            {searchResults.length > 0 && (
+              <ul className="course-settings-search-results" role="listbox">
+                {searchResults.map((u) => {
+                  const key = staffUserKey(u.id);
+                  const alreadyStaff = staffIdSet.has(key);
+                  const alreadyPending = pendingAddIdSet.has(key);
+                  const disabledHit = alreadyStaff || alreadyPending || saving;
+                  return (
+                    <li key={u.id}>
+                      <button
+                        type="button"
+                        className="course-settings-search-hit"
+                        disabled={disabledHit}
+                        onClick={() => stageAddFromSearch(u)}
+                      >
+                        <span className="course-settings-hit-name">{u.name}</span>
+                        <span className="course-settings-hit-email">{u.email}</span>
+                        {!alreadyStaff && !alreadyPending && u.userType ? (
+                          <span className="course-settings-hit-role">{userTypeLabel(u.userType)}</span>
+                        ) : null}
+                        {alreadyStaff ? (
+                          <span className="course-settings-hit-note">Already on teaching staff</span>
+                        ) : null}
+                        {alreadyPending ? (
+                          <span className="course-settings-hit-note">Already in your list</span>
+                        ) : null}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
-            ) : (
-              <p className="course-settings-empty">No course admins besides you.</p>
             )}
-
-            <div className="course-settings-search-block">
-              <label className="course-settings-search-label" htmlFor="course-admin-email-search">
-                Add by McGill email (students &amp; faculty)
-              </label>
-              <input
-                id="course-admin-email-search"
-                type="search"
-                className="course-settings-search-input"
-                placeholder="e.g. @mail.mcgill.ca or @mcgill.ca"
-                value={emailQuery}
-                onChange={(e) => setEmailQuery(e.target.value)}
-                autoComplete="off"
-                disabled={saving}
-              />
-              {searching ? (
-                <p className="course-settings-search-status">Searching…</p>
-              ) : null}
-              {emailQuery.trim().length >= 2 && !searching && searchResults.length === 0 ? (
-                <p className="course-settings-search-status">No matching users.</p>
-              ) : null}
-              {searchResults.length > 0 && (
-                <ul className="course-settings-search-results" role="listbox">
-                  {searchResults.map((u) => {
-                    const key = staffUserKey(u.id);
-                    const alreadyStaff = staffIdSet.has(key);
-                    const alreadyPending = pendingAddIdSet.has(key);
-                    const disabledHit = alreadyStaff || alreadyPending || saving;
-                    return (
-                      <li key={u.id}>
-                        <button
-                          type="button"
-                          className="course-settings-search-hit"
-                          disabled={disabledHit}
-                          onClick={() => stageAddFromSearch(u)}
-                        >
-                          <span className="course-settings-hit-name">{u.name}</span>
-                          <span className="course-settings-hit-email">{u.email}</span>
-                          {!alreadyStaff && !alreadyPending && u.userType ? (
-                            <span className="course-settings-hit-role">{userTypeLabel(u.userType)}</span>
-                          ) : null}
-                          {alreadyStaff ? (
-                            <span className="course-settings-hit-note">Already on teaching staff</span>
-                          ) : null}
-                          {alreadyPending ? (
-                            <span className="course-settings-hit-note">Already in your list</span>
-                          ) : null}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
           </div>
+        </div>
 
-          <div className="course-settings-section course-settings-danger form-group-full">
-            {!course?.is_closed && (
-              <button
-                type="button"
-                className="course-settings-delete-btn"
-                onClick={() => setShowCloseConfirm(true)}
-                disabled={closing}
-                style={{ marginBottom: 10 }}
-              >
-                {closing ? 'Closing…' : 'Close course'}
-              </button>
-            )}
+        <div className="course-settings-section course-settings-danger form-group-full">
+          {!course?.is_closed && (
             <button
               type="button"
               className="course-settings-delete-btn"
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={deleting}
+              onClick={() => setShowCloseConfirm(true)}
+              disabled={closing}
+            // style={{ marginBottom: 10 }}
             >
-              {deleting ? 'Deleting…' : 'Delete course'}
+              {closing ? 'Closing…' : 'Close course'}
             </button>
-          </div>
+          )}
+          <button
+            type="button"
+            className="course-settings-delete-btn"
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={deleting}
+          >
+            {deleting ? 'Deleting…' : 'Delete course'}
+          </button>
+        </div>
 
-          {error ? (
-            <p className="form-group-full" style={{ color: '#b00020', fontSize: 13, margin: 0 }}>
-              {error}
-            </p>
-          ) : null}
+        {error ? (
+          <p className="form-group-full" style={{ color: '#b00020', fontSize: 13, margin: 0 }}>
+            {error}
+          </p>
+        ) : null}
 
-          <div className="availability-modal-footer form-group-full">
-            <Button type="button" variant="text" onClick={onClose} disabled={saving}>
-              Cancel
-            </Button>
-            <Button type="submit" variant="contained" disabled={saving}>
-              {saving ? 'Saving…' : 'Save course info'}
-            </Button>
-          </div>
+        <div className="availability-modal-footer form-group-full">
+          {/* <Button type="button" variant="text" onClick={onClose} disabled={saving}>
+            Cancel
+          </Button> */}
+          <Button type="submit" variant="contained" disabled={saving}>
+            {saving ? 'Saving…' : 'Save course info'}
+          </Button>
+        </div>
       </form>
       {showCloseConfirm && (
         <ConfirmActionModal
