@@ -1,4 +1,4 @@
-// SHIRLEY DING
+// SHIRLEY DING, 20.8% contribution
 import { API_BASE } from '../constants/config';
 
 const fetchOpts = { credentials: 'include' };

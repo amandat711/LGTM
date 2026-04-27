@@ -1,4 +1,4 @@
-// SHIRLEY DING, Contribution: 96.9%
+// SHIRLEY DING, Contribution: 97.2%
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAppShellSession from '../hooks/useAppShellSession';

@@ -1,4 +1,4 @@
-// SHIRLEY DING, Contribution: 95.6%
+// SHIRLEY DING, 100% contribution
 import { Outlet } from 'react-router-dom';
 import useRequireAuth from '../hooks/useRequireAuth';
 import useRequirePageVariant from '../hooks/useRequirePageVariant';

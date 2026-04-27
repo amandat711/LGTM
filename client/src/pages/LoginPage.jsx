@@ -1,4 +1,4 @@
-// SHIRLEY DING
+// SHIRLEY DING, 29.5% contribution
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import IconButton from '@mui/material/IconButton';

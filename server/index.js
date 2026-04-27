@@ -1,5 +1,5 @@
 // AMANDA TRAN
-// SHIRLEY DING
+// SHIRLEY DING, 49.2% contribution
 const express = require("express");
 const cors = require("cors");
 const session = require("express-session");

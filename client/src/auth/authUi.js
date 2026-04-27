@@ -1,4 +1,4 @@
-// SHIRLEY DING
+// SHIRLEY DING, 95.8% contribution
 
 /** Shared Tailwind classes for auth pages (login, register, forgot password). */
 

@@ -1,5 +1,5 @@
 -- AMANDA TRAN
--- SHIRLEY DING
+-- SHIRLEY DING, 6.1% contribution
 PRAGMA foreign_keys = ON;
 
 DROP TABLE IF EXISTS appointment_history;

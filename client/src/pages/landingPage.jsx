@@ -4,7 +4,7 @@
 /* Rita Zhang: added the sign up button and changed the css to better fit the design, added our own logo
 */
 
-// SHIRLEY DING
+// SHIRLEY DING, 3.4% contribution
 
 import { useState, useRef } from "react";
 import LGTMLogo2 from "../assets/LGTMLogo2.png";

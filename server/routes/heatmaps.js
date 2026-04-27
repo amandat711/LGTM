@@ -1,6 +1,6 @@
 //AMANDA TRAN used - ChatGPT => to understand how translates between the visual heatmap grid and the real date/time data saved in the backend. */
 // OpenAI. (2026). ChatGPT. https://chat.openai.com/
-// SHIRLEY DING
+// SHIRLEY DING, 3.1% contribution
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');

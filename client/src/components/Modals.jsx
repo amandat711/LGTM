@@ -1,6 +1,6 @@
 /* AMANDA TRAN (30% contribution) - ChatGPT (7% contribution) for Amanda  */
 //penAI. (2026). ChatGPT. https://chat.openai.com/
-// SHIRLEY DING
+// SHIRLEY DING, 3.0% contribution
 import React, { useEffect, useMemo, useState } from 'react';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';

@@ -1,4 +1,4 @@
-// SHIRLEY DING
+// SHIRLEY DING, 49.3% contribution
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import useAppShellSession from '../hooks/useAppShellSession';

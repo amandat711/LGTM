@@ -1,4 +1,4 @@
-// SHIRLEY DING
+// SHIRLEY DING, 3.7% contribution
 import React from 'react';
 import '../styles/CreateAvailabilityModal.css';
 import CreateAvailabilityForm from './CreateAvailabilityForm';

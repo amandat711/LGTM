@@ -1,5 +1,5 @@
 // AMANDA TRAN (9% contribution) = >  Creation of Dashboard ( using bootstrap template from booking calendar UI)
-// SHIRLEY DING
+// SHIRLEY DING, 3.5% contribution
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllProfessors } from '../api/users';

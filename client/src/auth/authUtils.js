@@ -1,4 +1,4 @@
-// SHIRLEY DING
+// SHIRLEY DING, 100% contribution
 /* Decide which page variant a user belongs to for split student vs faculty routes */
 export function userPageVariant(userType) {
   return userType === 'general_admin' ? 'professor' : 'student';

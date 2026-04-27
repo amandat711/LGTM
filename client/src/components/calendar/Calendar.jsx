@@ -1,4 +1,4 @@
-// SHIRLEY DING
+// SHIRLEY DING, 59.4% contribution
 import React from 'react';
 import WeekView from './WeekView';
 import '../../styles/Calendar.css';
