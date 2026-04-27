@@ -237,6 +237,15 @@
   cursor: crosshair;
 }
 
+/* disabling crosshair for student dashboard calendar */
+.student-calendar-wrap {
+  display: contents;
+}
+
+.student-calendar-wrap .dash-slot-layer {
+  cursor: default !important;
+}
+
 .dash-slot-selection {
   position: absolute;
   left: 3px;
