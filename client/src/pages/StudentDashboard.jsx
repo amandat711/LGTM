@@ -396,7 +396,7 @@ export default function StudentDashboard() {
               {
                 id: 'export-calendar',
                 iconComponent: IosShareIcon,
-                label: 'export calendar',
+                label: 'Export Calendar',
                 onClick: () => setExportCalendarOpen(true),
               },
               { id: 'help', iconComponent: InfoIcon, label: 'Help', onClick: () => setModal('help') },
@@ -407,14 +407,16 @@ export default function StudentDashboard() {
           <div className="main-content">
             {!loading && (
               // Main week calendar. Clicking any event opens the detail modal below.
-              <Calendar
-                view="week"
-                appointments={weekCalendarAppointments}
-                onEventClick={(appt) => {
-                  setActiveAppt(appt);
-                  setModal('detail');
-                }}
-              />
+              <div className="student-calendar-wrap">
+                <Calendar
+                  view="week"
+                  appointments={weekCalendarAppointments}
+                  onEventClick={(appt) => {
+                    setActiveAppt(appt);
+                    setModal('detail');
+                  }}
+                />
+              </div>
             )}
 
             {/* Right panel with quick summaries so the student does not have to scan the whole calendar. */}

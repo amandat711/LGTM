@@ -1928,6 +1928,31 @@ button.professor-card-button {
   }
 }
 
+/* student upcoming appointments accept/reject buttons */
+@media (max-width: 480px) {
+  .appointment-item div[style*="grid"] {
+    display: flex !important;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: flex-end;
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+
+  .appointment-item .invite-action-button {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    border-radius: 50%;
+  }
+
+    /* remove reserved space on mobile */
+  .appointment-item > div:nth-child(2) {
+    padding-right: 0;
+  }
+}
+
 
 /* troubleshooting: remove box-shadow and transform on hover */
 /* button.professor-card-button.secondary-button.booking-professor-email-btn,

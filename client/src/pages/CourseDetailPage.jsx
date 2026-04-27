@@ -736,6 +736,7 @@ export default function CourseDetailPage() {
                               view="week"
                               appointments={courseCalendarEvents}
                               inlineEventPopup
+                              onEventClick={() => {}} //disabling click on calendar event
                               renderInlineEventPopup={(eventData) =>
                                 renderCourseCalendarPopup(eventData, {
                                   canManage: canManageCourseEvents,
