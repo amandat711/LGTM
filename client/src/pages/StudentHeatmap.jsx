@@ -263,7 +263,7 @@ export default function StudentHeatmap() {
           <div className="heatmap-page" style={{ width: '100%' }}>
         {/* Page intro explains whose availability the student is responding to. */}
         <div className="page-header">
-          <div className="page-label">Student View</div>
+          {/* <div className="page-label">Student View</div> */}
           <h1 className="page-title">Book a slot</h1>
           <p className="page-subtitle">
             Select times that work for you from {heatmap?.hostName || 'the professor'}'s available slots.
@@ -279,7 +279,7 @@ export default function StudentHeatmap() {
           <div className="mode-card active">
             <div className="mode-card-icon student"></div>
             <h4>Select your slots</h4>
-            <p>Pink cells are the professor's available times. Select yours.</p>
+            <p>Pink cells are the professor's available times.</p>
           </div>
         </div>
 
@@ -350,6 +350,7 @@ export default function StudentHeatmap() {
         )}
 
         {/* Legend explains professor availability, student selection, and peer heat intensity. */}
+        <div className="heatmap-legend-card">
         <div className="legend" style={{ marginBottom: '0.75rem', flexWrap: 'wrap', gap: '8px 16px' }}>
           {otherStudentData.total > 0 ? (
             <>
@@ -368,14 +369,31 @@ export default function StudentHeatmap() {
             </>
           ) : (
             <>
-              <div className="color-swatch" style={{ background: '#ffe0e3', border: '1.5px solid #f5b0b8', borderRadius: 3 }} />
+              {/* <div className="color-swatch" style={{ background: '#ffe0e3', border: '1.5px solid #f5b0b8', borderRadius: 3 }} />
               <span className="legend-label">Professor available</span>
               <div className="color-swatch" style={{ background: 'var(--red)', borderRadius: 3, marginLeft: 12 }} />
               <span className="legend-label">Your selection</span>
               <div className="color-swatch" style={{ background: 'var(--cell-empty)', borderRadius: 3, marginLeft: 12 }} />
-              <span className="legend-label">Not available</span>
+              <span className="legend-label">Not available</span> */}
+              <div className="legend">
+                <div className="legend-item">
+                  <div className="color-swatch" style={{ background: '#ffe0e3', border: '1.5px solid #f5b0b8' }}/>
+                  <span className="legend-label">Professor available</span>
+                </div>
+
+                <div className="legend-item">
+                  <div className="color-swatch" style={{ background: 'var(--red)', borderRadius: 3}}/>
+                  <span className="legend-label">Your selection</span>
+                </div>
+
+                <div className="legend-item">
+                  <div className="color-swatch" style={{ background: 'var(--cell-empty)', borderRadius: 3 }}  />
+                  <span className="legend-label">Not available</span>
+                </div>
+              </div>
             </>
           )}
+        </div>
         </div>
 
         {/* Main student grid: only professor-published slots can be clicked. */}

@@ -52,24 +52,24 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 2rem 4rem;
-  animation: fadeUp 0.3s ease both;
+  /* animation: fadeUp 0.3s ease both; */
 }
 
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    /* transform: translateY(12px); */
   }
 
   to {
     opacity: 1;
-    transform: translateY(0);
+    /* transform: translateY(0); */
   }
 }
 
 /* ─── Page header ────────────────────────────────────────── */
 .page-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .page-label {
@@ -106,10 +106,10 @@ body {
   gap: 1.25rem;
 }
 
-.heatmap-create-copy {
+/* .heatmap-create-copy {
   border-left: 4px solid var(--red);
   padding-left: 1rem;
-}
+} */
 
 .heatmap-create-copy h3 {
   font-family: 'Inter', sans-serif;
@@ -220,7 +220,7 @@ body {
 .heatmap-details-card {
   background: var(--white);
   border: 1px solid var(--border);
-  border-left: 4px solid var(--red);
+  /* border-left: 4px solid var(--red); */
   border-radius: var(--radius-lg);
   padding: 1.2rem 1.35rem;
   margin-bottom: 1.5rem;
@@ -246,7 +246,7 @@ body {
 
 .heatmap-details-copy h3 {
   font-family: 'Inter', sans-serif;
-  font-size: 17px;
+  font-size: 22px;
   font-weight: 600;
   color: var(--text);
   line-height: 1.3;
@@ -460,11 +460,9 @@ body {
 }
 
 .grid-pager-label {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
 }
 
 .grid-pager-button {
@@ -1190,4 +1188,91 @@ body {
   .navbar-user span:not(.navbar-avatar):not(.navbar-role-badge) {
     display: none;
   }
+}
+
+/* STUDENT VIEW */
+.heatmap-legend-card {
+  background: #fcfcfc;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.heatmap-legend-card .legend {
+  display: flex;
+  justify-content: center;   /* 👈 center horizontally */
+  align-items: center;
+  flex-wrap: wrap;           /* allow wrapping on larger screens */
+  gap: 16px;
+  margin: 0 !important;
+}
+
+
+
+@media (max-width: 480px) {
+  .setup-banner {
+    position: relative;
+    padding-bottom: 70px;
+  }
+
+  .setup-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .setup-field {
+    width: 100%;
+  }
+
+  .setup-field input,
+  .setup-field select {
+    width: 100%;
+  }
+
+  .setup-controls .setup-field:nth-child(1),
+  .setup-controls .setup-field:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
+  .setup-controls .button-primary {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+  }
+
+
+  .heatmap-legend-card .legend {
+    display: flex;
+    flex-direction: column;
+    /* gap: 8px; */
+    text-align:left;
+    align-items: center !important;
+    margin: 0 !important;
+  }
+  }
+
+  /* each legend item becomes a row */
+  .heatmap-legend-card .legend-label {
+    font-size: 12px;
+    text-align: left;
+  }
+
+  .heatmap-legend-card .color-swatch {
+    width: 16px;
+    height: 10px;
+    min-width: 18px;
+    box-sizing: border-box;
+    margin: 0 !important;
+    flex-shrink: 0;
+  }
+  
+  .heatmap-legend-card .legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 4px;
+    
 }
