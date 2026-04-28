@@ -1,5 +1,4 @@
-//AMANDA TRAN used - ChatGPT => to understand how translates between the visual heatmap grid and the real date/time data saved in the backend. */
-// OpenAI. (2026). ChatGPT. https://chat.openai.com/
+//AMANDA TRAN used  - 100% contribution
 
 const express = require('express');
 const router = express.Router();

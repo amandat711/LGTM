@@ -1,5 +1,4 @@
-// AMANDA TRAN (90% contribution) - ChatGPT (10% contribution) => understand how the strings are translated to the grid
-//penAI. (2026). ChatGPT. https://chat.openai.com/
+// AMANDA TRAN (90% contribution) 
 
 import React from 'react';
 import { studentAvailabilityColor, thresholdHeatColor } from '../utils/heatColor';

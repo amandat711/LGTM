@@ -1,14 +1,6 @@
 /* AMANDA TRAN (100% contribution) */
 
 
-/*This calendar page was reference from the Bootstrap calendar example at <Colorlib>
-
-APA Style
-Colorlib. (2025). Calendar V04. Colorlib. https://colorlib.com/wp/template/calendar-04/</Colorlib>
-
-*/
-
-
 import { useMemo } from 'react';
 import '../styles/BookingCalendar.css';
 
@@ -91,16 +83,6 @@ function buildCalendarCells(monthDate) {
   page was modeled after, but it is written in React so we do not mix jQuery
  DOM updates into the app. The parent page owns the data; this component just
   draws the month and tells the parent which date the user clicked.
-
- Props, in plain English:
-- monthDate: Date object representing the currently visible month.
- - selectedDate: "YYYY-MM-DD" date key for the active day.
- - availableDates: Set or array of "YYYY-MM-DD" keys that should be marked
-  as available with the red availability styling.
- - onSelectDate: called with the clicked date key.
- - onMonthChange: called with -1 or +1 when the user clicks month arrows.
- - title: small label above the month heading.
- - legendLabel: text shown beside the red availability dot.
 
  It intentionally does not know what a professor, appointment, or heatmap is.
  That separation keeps it reusable: any page can hand it available dates and

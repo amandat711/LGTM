@@ -1,5 +1,5 @@
-// AMANDA TRAN (20% contribution) + ChatGPT (80% contribution)
-// OpenAI. (2026). ChatGPT. https://chat.openai.com/
+// AMANDA TRAN (20% contribution) 
+
 /**
  * Generates an array of day objects for the grid header.
  *

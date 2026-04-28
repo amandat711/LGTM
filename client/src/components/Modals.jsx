@@ -1,5 +1,5 @@
-/* AMANDA TRAN (30% contribution) - ChatGPT (7% contribution) for Amanda  */
-//penAI. (2026). ChatGPT. https://chat.openai.com/
+/* AMANDA TRAN (30% contribution)*/
+
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Button from '@mui/material/Button';

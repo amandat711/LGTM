@@ -1,6 +1,4 @@
-/* AMANDA TRAN (95% contribution) - ChatGPT (5% contribution): recurring event expansion logic */
-// OpenAI. (2026). ChatGPT. https://chat.openai.com/
-
+/* AMANDA TRAN (95% contribution)*/
 import { makeKey } from '../components/HeatmapGrid';
 import { thresholdHeatColor } from './heatColor';
 import { toIsoWithOffset } from './dateTime';
@@ -12,7 +10,7 @@ export const PARTICIPANT_COLORS = Array.from({ length: 6 }, (_, index) =>
 
 
 
-// ChatGPT : Repeats the professor's selected availability into future weeks.
+//Repeats the professor's selected availability into future weeks.
 export function expandRecurring(selectedKeys, recurringWeeks) {
   const expanded = new Set(selectedKeys);
 

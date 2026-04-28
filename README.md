@@ -1,5 +1,11 @@
 # LGTM - COMP 307 Project
 
+TRAN,   	AMANDA,     	261158347 ;
+ZHANG,  	RITA,       	261167918 ;
+LI,     	JOCELYNE,   	261178604 ;
+DING,   	SHIRLEY,    	261168210 ;
+
+Each of our instructions are described in our seperate README files 
 ## Running URL Link
 
 [https://winter2026-comp307-group32.cs.mcgill.ca/](https://winter2026-comp307-group32.cs.mcgill.ca/)
