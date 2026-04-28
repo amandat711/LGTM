@@ -169,8 +169,8 @@ I also used AI for some utils/helpers and hooks:
 
 For email notifications, I used AI in `server/lib/appointmentNotifications.js` to write the SQL queries so about 30% of the file.
 
-I also used it to write comments in `server/routes/courses.js` as the file was getting big and i wanted some clarity to how to use each api route. So about 5% of the file.
+I also used it to write comments in `server/routes/courses.js` as the file was getting big and I wanted to leave clear documentation on how to use each api route. So about 5% of the file.
 
 In total, the percentage of my contributions being purely generated is around 20-25%.
 
-Other than that, I used Nodemailer as an SMTP/mail library (to connect and send emails), but didn't copy any external template code for email services so the contribution of the library to our project is minimal.
+Other than that, I used Nodemailer as an SMTP/mail library (to connect and send emails), but didn't use any external template code for email services so the contribution of the library to our project is minimal.
