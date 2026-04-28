@@ -12,7 +12,7 @@ export const authPrimaryBtnClass =
   'mt-1 rounded-[5px] bg-mcgill-red py-2.5 text-[13px] font-medium text-white transition-[background-color,transform] hover:bg-mcgill-redDark hover:-translate-y-px active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0';
 
 /** Temporary dev-only: non-McGill inbox for local testing (remove when no longer needed). */
-const AUTH_EMAIL_DOMAIN_EXCEPTION = 'kuplol123@gmail.com';
+const AUTH_EMAIL_DOMAIN_EXCEPTION = 'amandatxl711@gmail.com';
 
 /** McGill booking domains (+ optional dev exception above). */
 export function isAllowedMcGillEmail(email) {

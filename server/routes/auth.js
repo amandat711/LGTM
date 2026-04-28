@@ -33,7 +33,7 @@ function buildResetLink(token) {
 }
 
 /** Temporary dev-only: non-McGill inbox for local testing (remove when no longer needed). */
-const AUTH_EMAIL_DOMAIN_EXCEPTION = 'kuplol123@gmail.com';
+const AUTH_EMAIL_DOMAIN_EXCEPTION = 'amandatxl711@gmail.com';
 
 function isAllowedMcGillEmail(email) {
   const e = normalizeEmail(email);
