@@ -1,4 +1,5 @@
 // AMANDA TRAN
+// SHIRLEY DING, 5.1% contribution
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getProfessorPublicAvailabilities } from '../api/availabilities';

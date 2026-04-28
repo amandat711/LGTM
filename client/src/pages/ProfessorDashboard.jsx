@@ -1,4 +1,5 @@
 //AMANDA TRAN (40% Contribution) - Creation + Frontend logic 
+// SHIRLEY DING, 3.8% contribution
 import { useEffect, useMemo, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';

@@ -1,4 +1,5 @@
 /* AMANDA TRAN (100% contribution) */
+// SHIRLEY DING, 11.0% contribution
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';

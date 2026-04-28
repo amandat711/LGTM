@@ -1,3 +1,4 @@
+// SHIRLEY DING, 68.8% contribution
 const nodemailer = require('nodemailer');
 const { MAIL_FROM, FRONTEND_URL } = require('../constants/config');
 

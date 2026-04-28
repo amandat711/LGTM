@@ -1,4 +1,5 @@
 // AMANDA TRAN
+// SHIRLEY DING, Contribution: 99%
 import { API_BASE } from '../constants/config';
 
 const fetchOpts = { credentials: 'include' };

@@ -1,3 +1,4 @@
+// SHIRLEY DING, Contribution: 100%
 const db = require('../config/db');
 const {
   sendAppointmentUpdatedByOwnerEmail,

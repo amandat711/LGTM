@@ -1,3 +1,5 @@
+// SHIRLEY DING, 95.8% contribution
+
 /** Shared Tailwind classes for auth pages (login, register, forgot password). */
 
 export const authCardClass =
@@ -14,7 +16,7 @@ export const authPrimaryBtnClass =
 /** Temporary dev-only: non-McGill inbox for local testing (remove when no longer needed). */
 const AUTH_EMAIL_DOMAIN_EXCEPTION = 'amandatxl711@gmail.com';
 
-/** McGill booking domains (+ optional dev exception above). */
+/** McGill booking domains (+  dev exception above). */
 export function isAllowedMcGillEmail(email) {
   const e = email.trim().toLowerCase();
   if (e === AUTH_EMAIL_DOMAIN_EXCEPTION) return true;

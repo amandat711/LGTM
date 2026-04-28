@@ -1,3 +1,4 @@
+// SHIRLEY DING, 39.4% contribution
 import React from 'react';
 import '../styles/CreateAvailabilityModal.css';
 import { Modal } from './Modals';

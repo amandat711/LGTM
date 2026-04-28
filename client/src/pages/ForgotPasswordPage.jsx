@@ -1,3 +1,4 @@
+// SHIRLEY DING, 42.2% contribution
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AuthShell from '../components/AuthShell';

@@ -1,3 +1,4 @@
+// SHIRLEY DING, Contribution: 96.8%
 import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import useRequireAuth from '../hooks/useRequireAuth';

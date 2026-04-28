@@ -1,3 +1,4 @@
+// SHIRLEY DING, 100% contribution
 import { API_BASE } from '../constants/config';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };

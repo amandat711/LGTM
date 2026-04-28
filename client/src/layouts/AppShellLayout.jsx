@@ -1,3 +1,4 @@
+// SHIRLEY DING, 100% contribution
 import { Outlet } from 'react-router-dom';
 import useRequireAuth from '../hooks/useRequireAuth';
 import useRequirePageVariant from '../hooks/useRequirePageVariant';
@@ -11,9 +12,7 @@ function ShellLoading() {
   );
 }
 
-/**
- * variant: student or professor
- */
+/* variant: student or professor */
 function VariantBranch({ variant }) {
   const { user, userId, loading } = useRequirePageVariant({
     variant,
@@ -37,9 +36,7 @@ function LoginOnlyBranch() {
   return <Outlet context={{ user, userId }} />;
 }
 
-/**
- * One shell for all authenticated routes.
- */
+/* One shell for all authenticated routes */
 export default function AppShellLayout({ variant }) {
   if (variant === 'any') {
     return <LoginOnlyBranch />;

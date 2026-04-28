@@ -1,4 +1,5 @@
 // AMANDA TRAN
+// SHIRLEY DING, 5.2% contribution
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');

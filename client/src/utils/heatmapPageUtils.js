@@ -1,4 +1,6 @@
 /* AMANDA TRAN (95% contribution)*/
+// SHIRLEY DING
+
 import { makeKey } from '../components/HeatmapGrid';
 import { thresholdHeatColor } from './heatColor';
 import { toIsoWithOffset } from './dateTime';

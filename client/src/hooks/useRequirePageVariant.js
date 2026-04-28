@@ -1,3 +1,4 @@
+// SHIRLEY DING, 93.9% contribution
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getSession } from '../api/auth';

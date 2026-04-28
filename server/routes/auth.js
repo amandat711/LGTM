@@ -1,3 +1,4 @@
+// SHIRLEY DING, Contribution: 95.5%
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
