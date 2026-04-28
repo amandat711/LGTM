@@ -1,11 +1,19 @@
 # LGTM - COMP 307 Project
 
+## Running URL Link
+
+[https://winter2026-comp307-group32.cs.mcgill.ca/](https://winter2026-comp307-group32.cs.mcgill.ca/ "https://winter2026-comp307-group32.cs.mcgill.ca/")
+
 ## Tech Stack
 
 - Frontend: React
 - Backend: Node.js (Express)
 - Database: SQLite3
 - Hosting: SOCS + Cloudfare
+
+## Design
+
+[https://www.figma.com/design/8FH8U2YcMTHTTtA2lQAfGq/COMP-307---Design?node-id=57-6&amp;t=JcOsFhzaSJM2k7MX-1](https://www.figma.com/design/8FH8U2YcMTHTTtA2lQAfGq/COMP-307---Design?node-id=57-6&t=JcOsFhzaSJM2k7MX-1)
 
 ## Project Structure
 
@@ -50,10 +58,10 @@ npm install
 
 Run the API (default port **3000**):
 
-| Command | Use case |
-|--------|----------|
+| Command         | Use case                                                                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | `npm run dev` | **Recommended for development.** Uses [nodemon](https://nodemon.io/) to restart the server when you change `.js` files. |
-| `npm start` | Runs `node index.js` once; restart manually after edits. |
+| `npm start`   | Runs `node index.js` once; restart manually after edits.                                                                   |
 
 The React app is configured to call the API at `http://localhost:3000`. Keep the backend running while you use the frontend.
 
@@ -101,16 +109,21 @@ If hosting is VPN-only, calendar subscriptions will not refresh unless the feed 
 
 1. Start backend (check above for instructions)
 2. In another terminal, start temporary public tunnel:
+
 ```
 ~/bin/cloudflared tunnel --url http://127.0.0.1:3000
 ```
+
 3. Copy the generated `https://...trycloudflare.com` and set in `server/.env`:
+
 ```
 CALENDAR_SYNC_PUBLIC_BASE_URL=https://...trycloudflare.com
 ```
+
 4. Restart backend (`NODE_ENV=production PORT=3000 npm start`) and use the new sync URL from the app modal.
 
 Notes:
+
 - Keep the tunnel running during the demo.
 - Google and Outlook refresh subscribed ICS feeds periodically (not instant).
 
@@ -129,6 +142,7 @@ To quickly populate the database with sample users, availabilities, and appointm
 ```
 
 This will:
+
 - Recreate the database schema
 - Seed one professor and one student
 - Create sample availabilities and appointments
