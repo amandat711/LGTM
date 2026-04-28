@@ -37,7 +37,7 @@ My work included:
 I worked on the reusable navigation system used across the application.
 This included the navbar, sidebar, and related styling so that the landing page, dashboards, booking pages, and heatmap pages felt consistent.
 
-Relevant files I worked on included:
+
 
 
 ### 4. Navbar
