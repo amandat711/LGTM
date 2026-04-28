@@ -525,7 +525,7 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
 
 /**
  * POST /courses/join
- * Body: { token: string } — must match courses.invitation_link (opaque token).
+ * Body: { token: string } — must match courses.invitation_link.
  * Students only; creates or reactivates enrollment.
  */
 router.post('/join', requireAuth, loadUser, (req, res) => {

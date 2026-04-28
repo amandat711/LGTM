@@ -145,3 +145,32 @@ client/src/styles/LandingPage.css                            5    725    0.7%
 client/src/pages/StudentHeatmap.jsx                          2    439    0.5%
 ```
 
+---
+
+## AI usage
+
+In the early development phase, when our figma designs weren't done yet, I used generative AI for placeholder CSS and styling, though most of it has been replaced with manually written css since. Most noticeably in these files. Note that the percentages written are relative to my contributions to the file only and not to the entire file length.
+
+- client/src/styles/CourseSettingsModal.css -> 100% of my contributions to the file (note that it could have been overwritten with manual code so the current file itself might not be 100% AI-generated anymore)
+- client/src/styles/CoursesListPage.css -> 100%
+- client/src/styles/CourseDetailPage.css -> 100%
+- client/src/pages/LoginPage.jsx -> 10%
+- client/src/pages/RegisterPage.jsx -> 10%
+- client/src/pages/ResetPasswordPage.jsx -> 10%
+
+I also used AI for some utils/helpers and hooks:
+
+- client/src/layouts/AppShellLayout.jsx -> 100%
+- server/utils/dateTime.js -> 100%
+- client/src/auth/authUi.js -> 50%
+- client/src/hooks/useRequirePageVariant.js -> 100%
+- client/src/hooks/useRequireAuth.js -> 100%
+- client/src/auth/authUtils.js -> 100%
+
+For email notifications, I used AI in `server/lib/appointmentNotifications.js` to write the SQL queries so about 30% of the file.
+
+I also used it to write comments in `server/routes/courses.js` as the file was getting big and i wanted some clarity to how to use each api route. So about 5% of the file.
+
+In total, the percentage of my contributions being purely generated is around 20-25%.
+
+Other than that, I used Nodemailer as an SMTP/mail library (to connect and send emails), but didn't copy any external template code for email services so the contribution of the library to our project is minimal.
