@@ -1,6 +1,7 @@
 /* AMANDA TRAN (30% contribution)*/
 
 
+// JOCELYNE LI (47% estimated contribution) => Feature implementation, integration work, and quality refinements
 import React, { useEffect, useMemo, useState } from 'react';
 import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';

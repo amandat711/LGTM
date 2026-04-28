@@ -1,3 +1,4 @@
+// JOCELYNE LI (93% estimated contribution) => Calendar export/sync implementation and integration
 const express = require('express');
 const crypto = require('crypto');
 const db = require('../config/db');

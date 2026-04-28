@@ -1,5 +1,6 @@
 /** Shared Tailwind classes for auth pages (login, register, forgot password). */
 
+// JOCELYNE LI (5% estimated contribution) => Auth flow and UI polish/integration
 export const authCardClass =
   'mx-auto w-full max-w-[400px] rounded-lg border border-[#e4e4e4] bg-white p-8 shadow-[0_1px_6px_rgba(0,0,0,0.06)]';
 

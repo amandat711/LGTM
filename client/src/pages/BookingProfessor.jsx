@@ -1,4 +1,5 @@
 // AMANDA TRAN
+// JOCELYNE LI (55% estimated contribution) => Frontend booking flow integration and UX refinement
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getProfessorPublicAvailabilities } from '../api/availabilities';

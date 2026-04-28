@@ -4,6 +4,7 @@
 /* Rita Zhang: added the sign up button and changed the css to better fit the design, added our own logo
 */
 
+// JOCELYNE LI (0% estimated contribution) => Feature implementation, integration work, and quality refinements
 import { useState, useRef } from "react";
 import LGTMLogo2 from "../assets/LGTMLogo2.png";
 import header from "../assets/header.png";

@@ -2,6 +2,7 @@
 /* Rita Zhang */
 
 /* ─── Calendar panel ─────────────────────────────────────── */
+// JOCELYNE LI (81% estimated contribution) => Styling polish and cross-page visual consistency improvements
 .dash-calendar-panel {
   flex: 1;
   min-width: 0;

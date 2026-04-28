@@ -7,6 +7,7 @@
 
 /* ─── CONTAINER ──────────────────────────────────────────── */
 
+// JOCELYNE LI (31% estimated contribution) => Dashboard/navigation consistency and UI polish
 .side-menu {
   width: clamp(76px, 8.5vw, 116px);
   background: #fff;

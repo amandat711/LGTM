@@ -1,4 +1,5 @@
 // AMANDA TRAN
+// JOCELYNE LI (33% estimated contribution) => Feature implementation, integration work, and quality refinements
 const express = require("express");
 const cors = require("cors");
 const session = require("express-session");

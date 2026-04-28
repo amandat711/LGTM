@@ -1,3 +1,4 @@
+// JOCELYNE LI (100% estimated contribution) => Feature implementation, integration work, and quality refinements
 const NEVER_MAX_WEEKS_DEFAULT = 12; // safety cap for "never"
 
 function toSqliteDateTime(date) {

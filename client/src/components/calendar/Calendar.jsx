@@ -1,3 +1,4 @@
+// JOCELYNE LI (45% estimated contribution) => Core calendar interactions, recurrence UX, and scheduling behavior
 import React from 'react';
 import WeekView from './WeekView';
 import '../../styles/Calendar.css';

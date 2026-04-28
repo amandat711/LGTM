@@ -1,3 +1,4 @@
+// JOCELYNE LI (100% estimated contribution) => Dashboard/navigation consistency and UI polish
 import React from 'react';
 import { formatDate, statusLabel, includeAppointmentOnWeekCalendar } from '../calendar/calendarUtils';
 

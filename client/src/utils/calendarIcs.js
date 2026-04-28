@@ -2,6 +2,7 @@
  * Build a minimal RFC 5545 .ics document for Google Calendar, Outlook, etc.
  */
 
+// JOCELYNE LI (100% estimated contribution) => Calendar export/sync implementation and integration
 function escapeIcsText(value) {
   if (value == null) return '';
   return String(value)

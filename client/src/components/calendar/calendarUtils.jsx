@@ -1,4 +1,5 @@
 // AMANDA TRAN
+// JOCELYNE LI (91% estimated contribution) => Core calendar interactions, recurrence UX, and scheduling behavior
 export const DAYS_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const MONTHS = [

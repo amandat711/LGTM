@@ -1,5 +1,6 @@
 /* AMANDA TRAN (100% contribution) */
 
+// JOCELYNE LI (81% estimated contribution) => Dashboard/navigation consistency and UI polish
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../api/auth';

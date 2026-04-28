@@ -1,3 +1,4 @@
+// JOCELYNE LI (1% estimated contribution) => Backend integration, route wiring, and system stability improvements
 const express = require('express');
 const crypto = require('crypto');
 const db = require('../config/db');

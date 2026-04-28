@@ -1,3 +1,4 @@
+// JOCELYNE LI (2% estimated contribution) => Feature implementation, integration work, and quality refinements
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAppShellSession from '../hooks/useAppShellSession';

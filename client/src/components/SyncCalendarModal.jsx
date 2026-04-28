@@ -1,3 +1,4 @@
+// JOCELYNE LI (100% estimated contribution) => Calendar export/sync implementation and integration
 import { useEffect, useState } from 'react';
 import { Modal } from './Modals';
 import { getCalendarSyncFeed, rotateCalendarSyncFeed } from '../api/calendarSync';

@@ -1,4 +1,5 @@
 // AMANDA TRAN
+// JOCELYNE LI (81% estimated contribution) => Backend integration, route wiring, and system stability improvements
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 

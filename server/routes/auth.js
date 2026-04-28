@@ -1,3 +1,4 @@
+// JOCELYNE LI (0% estimated contribution) => Auth flow and UI polish/integration
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');

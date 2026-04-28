@@ -1,3 +1,4 @@
+<!-- JOCELYNE LI (41% estimated contribution) => Project documentation and integration notes -->
 # Server API Endpoints
 
 This file documents the currently implemented backend endpoints in `server/`.

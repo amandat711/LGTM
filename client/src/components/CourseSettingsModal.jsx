@@ -1,3 +1,4 @@
+// JOCELYNE LI (4% estimated contribution) => Feature implementation, integration work, and quality refinements
 import { useEffect, useMemo, useState } from 'react';
 import Button from '@mui/material/Button';
 import { getUsers } from '../api/users';

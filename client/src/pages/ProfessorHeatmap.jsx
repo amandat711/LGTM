@@ -1,5 +1,6 @@
 /* AMANDA TRAN (89% contribution) */
 // React state/effect hooks plus router helpers for route-based heatmap pages.
+// JOCELYNE LI (7% estimated contribution) => Feature implementation, integration work, and quality refinements
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 // Shared heatmap styling for the setup panel, tabs, grids, and modals.

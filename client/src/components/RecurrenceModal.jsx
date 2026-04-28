@@ -1,3 +1,4 @@
+// JOCELYNE LI (68% estimated contribution) => Feature implementation, integration work, and quality refinements
 import React, { useEffect, useState } from 'react';
 import Button from '@mui/material/Button';
 import '../styles/RecurrenceModal.css';

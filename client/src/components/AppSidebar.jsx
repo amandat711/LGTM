@@ -1,4 +1,5 @@
 // AMANDA TRAN (3% contribution)
+// JOCELYNE LI (97% estimated contribution) => Dashboard/navigation consistency and UI polish
 import React, { useMemo, useState } from 'react';
 import Sidebar from './Sidebar';
 import { isFacultyAdmin, resolvePath } from '../auth/authUtils';

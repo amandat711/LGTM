@@ -1,3 +1,4 @@
+// JOCELYNE LI (100% estimated contribution) => Feature implementation, integration work, and quality refinements
 import React, { useEffect, useMemo, useState } from 'react';
 import RecurrenceModal from './RecurrenceModal';
 import { getUsers } from '../api/users';

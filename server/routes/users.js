@@ -1,5 +1,6 @@
 // AMANDA TRAN
 
+// JOCELYNE LI (5% estimated contribution) => Backend integration, route wiring, and system stability improvements
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');

@@ -1,3 +1,4 @@
+// JOCELYNE LI (69% estimated contribution) => Auth flow and UI polish/integration
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import IconButton from '@mui/material/IconButton';

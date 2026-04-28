@@ -1,3 +1,4 @@
+// JOCELYNE LI (10% estimated contribution) => Feature implementation, integration work, and quality refinements
 import { useState } from 'react';
 import Button from '@mui/material/Button';
 import '../styles/CreateAvailabilityModal.css';

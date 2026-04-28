@@ -1,6 +1,7 @@
 //AMANDA TRAN (40% Contribution) - Creation + Frontend logic 
 
 // Core React hooks plus router navigation for moving between pages.
+// JOCELYNE LI (40% estimated contribution) => Dashboard/navigation consistency and UI polish
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAppShellSession from '../hooks/useAppShellSession';

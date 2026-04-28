@@ -1,6 +1,7 @@
 /* AMANDA TRAN (99% contribution) - Creation */
 /* Rita Zhang -> added the mobile responsiveness and dropdown menu for smaller screens */
 
+// JOCELYNE LI => Dashboard/navigation consistency and UI polish
 import React, { useState } from 'react';
 import { createPortal } from 'react-dom';
 import '../styles/Navbar.css';

@@ -1,3 +1,4 @@
+// JOCELYNE LI (100% estimated contribution) => Feature implementation, integration work, and quality refinements
 import React, { useMemo, useState } from 'react';
 import '../styles/CreateAvailabilityModal.css';
 import CreateAppointmentForm from './CreateAppointmentForm';

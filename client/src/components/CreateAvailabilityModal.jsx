@@ -1,3 +1,4 @@
+// JOCELYNE LI (100% estimated contribution) => Feature implementation, integration work, and quality refinements
 import React from 'react';
 import '../styles/CreateAvailabilityModal.css';
 import CreateAvailabilityForm from './CreateAvailabilityForm';

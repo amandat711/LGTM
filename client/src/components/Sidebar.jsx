@@ -1,5 +1,6 @@
 /* AMANDA TRAN (84% contribution) - Creation */
 
+// JOCELYNE LI (16% estimated contribution) => Dashboard/navigation consistency and UI polish
 import React from 'react';
 import '../styles/Sidebar.css';
 
