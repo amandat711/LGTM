@@ -1,5 +1,6 @@
 // AMANDA TRAN (41% contribution)
 // JOCELYNE LI (4% estimated contribution) => Feature implementation, integration work, and quality refinements
+// SHIRLEY DING, 58.2% contribution
 import './App.css';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './pages/landingPage';

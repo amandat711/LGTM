@@ -1,4 +1,5 @@
 //AMANDA TRAN (40% Contribution) - Creation + Frontend logic 
+// SHIRLEY DING
 
 // Core React hooks plus router navigation for moving between pages.
 // JOCELYNE LI (40% estimated contribution) => Dashboard/navigation consistency and UI polish

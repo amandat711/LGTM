@@ -1,4 +1,5 @@
 /* AMANDA TRAN (100% contribution) */
+// SHIRLEY DING, 11.0% contribution
 
 // JOCELYNE LI (81% estimated contribution) => Dashboard/navigation consistency and UI polish
 import React from 'react';

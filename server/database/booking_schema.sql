@@ -1,5 +1,6 @@
 -- AMANDA TRAN
 -- JOCELYNE LI (91% estimated contribution) => Schema design, recurrence support, and data-model integration
+-- SHIRLEY DING, 6.1% contribution
 PRAGMA foreign_keys = ON;
 
 DROP TABLE IF EXISTS appointment_history;

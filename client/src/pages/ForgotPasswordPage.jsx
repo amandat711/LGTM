@@ -1,4 +1,5 @@
 // JOCELYNE LI (59% estimated contribution) => Feature implementation, integration work, and quality refinements
+// SHIRLEY DING, 42.2% contribution
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AuthShell from '../components/AuthShell';

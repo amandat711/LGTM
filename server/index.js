@@ -1,5 +1,6 @@
 // AMANDA TRAN
 // JOCELYNE LI (33% estimated contribution) => Feature implementation, integration work, and quality refinements
+// SHIRLEY DING, 49.2% contribution
 const express = require("express");
 const cors = require("cors");
 const session = require("express-session");

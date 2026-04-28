@@ -1,4 +1,5 @@
 // JOCELYNE LI (45% estimated contribution) => Core calendar interactions, recurrence UX, and scheduling behavior
+// SHIRLEY DING, 59.4% contribution
 import React from 'react';
 import WeekView from './WeekView';
 import '../../styles/Calendar.css';

@@ -1,3 +1,4 @@
+# SHIRLEY DING, 3.1% contribution
 #!/usr/bin/env bash
 set -euo pipefail
 

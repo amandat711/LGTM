@@ -1,5 +1,6 @@
 /* AMANDA TRAN (90% contribution) 
  */ 
+// SHIRLEY DING
 // React state/effect hooks plus router helpers for route-based heatmap pages.
 // JOCELYNE LI (6% estimated contribution) => Feature implementation, integration work, and quality refinements
 import { useEffect, useMemo, useState } from 'react';

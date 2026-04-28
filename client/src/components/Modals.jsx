@@ -1,5 +1,5 @@
 /* AMANDA TRAN (30% contribution)*/
-
+// SHIRLEY DING, 3.0% contribution
 
 // JOCELYNE LI (47% estimated contribution) => Feature implementation, integration work, and quality refinements
 import React, { useEffect, useMemo, useState } from 'react';

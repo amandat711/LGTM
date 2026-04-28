@@ -1,4 +1,5 @@
 // JOCELYNE LI (91% estimated contribution) => Feature implementation, integration work, and quality refinements
+// SHIRLEY DING, 11.9% contribution
 import { API_BASE } from '../constants/config';
 
 const fetchOpts = { credentials: 'include' };

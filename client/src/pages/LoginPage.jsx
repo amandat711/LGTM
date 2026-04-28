@@ -1,4 +1,5 @@
 // JOCELYNE LI (32% estimated contribution) => Auth flow and UI polish/integration
+// SHIRLEY DING, 29.5% contribution
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import IconButton from '@mui/material/IconButton';

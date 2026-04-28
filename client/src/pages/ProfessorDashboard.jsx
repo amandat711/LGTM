@@ -1,5 +1,6 @@
 //AMANDA TRAN (40% Contribution) - Creation + Frontend logic 
 // JOCELYNE LI (63% estimated contribution) => Dashboard/navigation consistency and UI polish
+// SHIRLEY DING, 3.8% contribution
 import { useEffect, useMemo, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';

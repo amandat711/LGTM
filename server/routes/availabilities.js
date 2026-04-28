@@ -1,4 +1,5 @@
 // JOCELYNE LI (93% estimated contribution) => Availability creation, overlap checks, and recurrence logic
+// SHIRLEY DING, 6.7% contribution
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');

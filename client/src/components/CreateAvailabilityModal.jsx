@@ -1,4 +1,5 @@
 // JOCELYNE LI (100% estimated contribution) => Feature implementation, integration work, and quality refinements
+// SHIRLEY DING, 3.7% contribution
 import React from 'react';
 import '../styles/CreateAvailabilityModal.css';
 import CreateAvailabilityForm from './CreateAvailabilityForm';

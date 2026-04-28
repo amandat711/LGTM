@@ -1,5 +1,7 @@
 /* AMANDA TRAN (95% contribution)*/
 // JOCELYNE LI (0% estimated contribution) => Feature implementation, integration work, and quality refinements
+// SHIRLEY DING
+
 import { makeKey } from '../components/HeatmapGrid';
 import { thresholdHeatColor } from './heatColor';
 import { toIsoWithOffset } from './dateTime';

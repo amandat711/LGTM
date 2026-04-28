@@ -1,13 +1,10 @@
-/**
- * Decide which page variant a user belongs to for split student vs faculty routes.
- */
+// SHIRLEY DING, 100% contribution
+/* Decide which page variant a user belongs to for split student vs faculty routes */
 export function userPageVariant(userType) {
   return userType === 'general_admin' ? 'professor' : 'student';
 }
 
-/**
- * Resolve the path for a given key and session user.
- */
+/* Resolve the path for a given key and session user */
 export function resolvePath(key, sessionUser) {
   if (key === 'dashboard') {
     if (sessionUser.user_type === 'general_admin') {
@@ -18,12 +15,12 @@ export function resolvePath(key, sessionUser) {
   throw new Error(`resolvePath: unknown key "${key}"`);
 }
 
-/** Check if a user is a faculty admin. */
+/* Check if a user is a faculty admin */
 export function isFacultyAdmin(userType) {
   return userPageVariant(userType) === 'professor';
 }
 
-/** Convert a session user to a navigation user. */
+/* Convert a session user to a navigation user */
 export function sessionUserToNavUser(sessionUser) {
   if (!sessionUser) return null;
   const faculty = isFacultyAdmin(sessionUser.user_type);

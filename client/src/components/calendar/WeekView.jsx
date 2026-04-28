@@ -1,4 +1,5 @@
 // JOCELYNE LI (98% estimated contribution) => Core calendar interactions, recurrence UX, and scheduling behavior
+// SHIRLEY DING
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   DAYS_SHORT,

@@ -1,5 +1,6 @@
 /* AMANDA TRAN (99% contribution) - Creation */
 /* Rita Zhang -> added the mobile responsiveness and dropdown menu for smaller screens */
+// SHIRLEY DING
 
 // JOCELYNE LI => Dashboard/navigation consistency and UI polish
 import React, { useState } from 'react';

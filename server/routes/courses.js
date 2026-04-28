@@ -1,4 +1,5 @@
 // JOCELYNE LI (1% estimated contribution) => Backend integration, route wiring, and system stability improvements
+// SHIRLEY DING, Contribution: 98.8%
 const express = require('express');
 const crypto = require('crypto');
 const db = require('../config/db');
@@ -525,7 +526,7 @@ router.get('/:courseId', requireAuth, loadUser, (req, res) => {
 
 /**
  * POST /courses/join
- * Body: { token: string } — must match courses.invitation_link (opaque token).
+ * Body: { token: string } — must match courses.invitation_link.
  * Students only; creates or reactivates enrollment.
  */
 router.post('/join', requireAuth, loadUser, (req, res) => {

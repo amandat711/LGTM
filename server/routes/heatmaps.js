@@ -1,4 +1,5 @@
 //AMANDA TRAN used  - 100% contribution
+// SHIRLEY DING, 3.1% contribution
 
 // JOCELYNE LI (4% estimated contribution) => Backend integration, route wiring, and system stability improvements
 const express = require('express');

@@ -1,4 +1,5 @@
 // JOCELYNE LI (5% estimated contribution) => Auth flow and UI polish/integration
+// SHIRLEY DING, 100% contribution
 import { API_BASE } from '../constants/config';
 
 const jsonHeaders = { 'Content-Type': 'application/json' };

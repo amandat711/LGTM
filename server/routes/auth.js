@@ -1,4 +1,5 @@
 // JOCELYNE LI (0% estimated contribution) => Auth flow and UI polish/integration
+// SHIRLEY DING, Contribution: 95.5%
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');

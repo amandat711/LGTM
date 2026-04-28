@@ -1,8 +1,7 @@
+// SHIRLEY DING, 100% contribution
 import { useOutletContext } from 'react-router-dom';
 
-/**
- * Get the session user and user id from the AppShellLayout (nested route).
- */
+/* Get the session user and user id from the AppShellLayout (nested route) */
 export default function useAppShellSession() {
   const ctx = useOutletContext();
   if (!ctx?.user || ctx.userId == null) {

@@ -5,6 +5,8 @@
 */
 
 // JOCELYNE LI (0% estimated contribution) => Feature implementation, integration work, and quality refinements
+// SHIRLEY DING, 3.4% contribution
+
 import { useState, useRef } from "react";
 import LGTMLogo2 from "../assets/LGTMLogo2.png";
 import header from "../assets/header.png";

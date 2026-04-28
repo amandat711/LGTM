@@ -1,4 +1,5 @@
 // JOCELYNE LI (19% estimated contribution) => Auth flow and UI polish/integration
+// SHIRLEY DING, 64.7% contribution
 import '../styles/AuthShell.css';
 import Navbar from './Navbar';
 import LGTMLogo2 from '../assets/LGTMLogo2.png';
