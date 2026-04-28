@@ -2,7 +2,27 @@
 
 ## Running URL Link
 
-[https://winter2026-comp307-group32.cs.mcgill.ca/](https://winter2026-comp307-group32.cs.mcgill.ca/ "https://winter2026-comp307-group32.cs.mcgill.ca/")
+[https://winter2026-comp307-group32.cs.mcgill.ca/](https://winter2026-comp307-group32.cs.mcgill.ca/)
+
+Full demo run:
+
+```
+cd client         # frontend
+npm install
+npm run build
+
+cd ../server      # backend
+npm install
+npm run init-db                                             # creates app.db in server/database
+~/bin/cloudflared tunnel --url http://127.0.0.1:3000        # demo cloudflared tunnel for calendar sync
+NODE_ENV=production PORT=3000 npm start
+```
+
+Important: Copy the generated `https://...trycloudflare.com` and set in `server/.env`:
+
+```
+CALENDAR_SYNC_PUBLIC_BASE_URL=https://...trycloudflare.com
+```
 
 ## Tech Stack
 
@@ -13,7 +33,7 @@
 
 ## Design
 
-[https://www.figma.com/design/8FH8U2YcMTHTTtA2lQAfGq/COMP-307---Design?node-id=57-6&amp;t=JcOsFhzaSJM2k7MX-1](https://www.figma.com/design/8FH8U2YcMTHTTtA2lQAfGq/COMP-307---Design?node-id=57-6&t=JcOsFhzaSJM2k7MX-1)
+[https://www.figma.com/design/8FH8U2YcMTHTTtA2lQAfGq/COMP-307---Design?node-id=57-6&t=JcOsFhzaSJM2k7MX-1](https://www.figma.com/design/8FH8U2YcMTHTTtA2lQAfGq/COMP-307---Design?node-id=57-6&t=JcOsFhzaSJM2k7MX-1)
 
 ## Project Structure
 
@@ -58,10 +78,12 @@ npm install
 
 Run the API (default port **3000**):
 
-| Command         | Use case                                                                                                                     |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+
+| Command       | Use case                                                                                                                |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `npm run dev` | **Recommended for development.** Uses [nodemon](https://nodemon.io/) to restart the server when you change `.js` files. |
-| `npm start`   | Runs `node index.js` once; restart manually after edits.                                                                   |
+| `npm start`   | Runs `node index.js` once; restart manually after edits.                                                                |
+
 
 The React app is configured to call the API at `http://localhost:3000`. Keep the backend running while you use the frontend.
 
@@ -81,7 +103,7 @@ npm install
 npm run build
 ```
 
-4. Start backend in production:
+1. Start backend in production:
 
 ```
 cd /home/cs307-user/app/server
@@ -89,7 +111,7 @@ npm install
 NODE_ENV=production PORT=3000 npm start
 ```
 
-5. Quick health check:
+1. Quick health check:
 
 ```
 curl -i http://127.0.0.1:3000/api/health
@@ -114,13 +136,13 @@ If hosting is VPN-only, calendar subscriptions will not refresh unless the feed 
 ~/bin/cloudflared tunnel --url http://127.0.0.1:3000
 ```
 
-3. Copy the generated `https://...trycloudflare.com` and set in `server/.env`:
+1. Copy the generated `https://...trycloudflare.com` and set in `server/.env`:
 
 ```
 CALENDAR_SYNC_PUBLIC_BASE_URL=https://...trycloudflare.com
 ```
 
-4. Restart backend (`NODE_ENV=production PORT=3000 npm start`) and use the new sync URL from the app modal.
+1. Restart backend (`NODE_ENV=production PORT=3000 npm start`) and use the new sync URL from the app modal.
 
 Notes:
 
@@ -225,3 +247,4 @@ If needed to cancel rebase:
 ```
 git rebase --abort
 ```
+
