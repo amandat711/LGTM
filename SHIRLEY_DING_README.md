@@ -5,7 +5,7 @@ What I worked on, grouped by topic. From highest ownership to lowest.
 ## Authentication, session, and routing
 
 - The backend was done entirely by me.  I implemented most of the frontend as well, but others have modified the styling and/or layout since.
-- Login, register, forgotPassword, resetPassword pages, plus the early Tailwind setup for them.
+- Own the Login, register, forgotPassword, resetPassword pages, plus the early Tailwind setup for them.
 - Created `client/src/api/auth.js` and `server/routes/auth.js` along with the api endpoints required.
 - Swapped out placeholder/hardcoded auth for `authUtils`, `useRequireAuth`, `useRequirePageVariant`, `useAppShellSession`, and `AppShellLayout`.
 - Added logout and removed user id from URL paths.
@@ -16,9 +16,10 @@ What I worked on, grouped by topic. From highest ownership to lowest.
 ## Courses Pages
 
 - The backend was done entirely by me. I implemented most of the frontend as well, but others have made small changes to the styling and/or layout since.
-- Courses backend: `server/routes/courses.js`, small db schema changes.
+- Courses backend: `server/routes/courses.js` and small db schema changes.
 - Courses UI: `CourseSettingsModal`, `CreateCourseModal`, `CoursesListPage`, `CourseJoinPage`, `CourseDetailPage` and the CSS that goes with them.
 - Implemented for all 3 possible views: professor, TA and student
+- Implemented all features related to Courses
 
 ---
 
@@ -42,7 +43,6 @@ What I worked on, grouped by topic. From highest ownership to lowest.
 ## Email, config, dates, utils (code cleanup and organization)
 
 - Added `server/lib/mailer.js` and shared `constants/config.js` (client + server) plus `server/constants/auth.js` for storing constants in one place. 
-- `ResetPasswordPage.jsx` is basically all mine (see numbers below).
 - Made dates/timezones behave the same way across appointments, availabilities, and heatmaps (`client` + `server` `dateTime.js` and the routes that use them).
 
 ---
@@ -52,15 +52,15 @@ What I worked on, grouped by topic. From highest ownership to lowest.
 - Fixed multiple backend and frontend bugs in `BookingDiscovery.jsx`, `BookingProfessor.jsx`, `client/src/api/users.js`, and `server/routes/users.js`.
   - Fixed wrong capacity behaviour on the booking page (`server/routes/availabilities.js`).
   - Fixed bug where TAs were being returned on the Search page.
-  - Fixed bug where only professors with availabilities were being returned.
-- **`BookingProfessor.jsx`**: **Contact** (reach the slot owner) and **copy booking page link** (share the page URL).
-- **`BookingProfessor.jsx`**: professor **department** and **staff title** on the profile/header area.
+  - Fixed bug where only professors with availabilities were being returned on the Search Page.
+- **`BookingProfessor.jsx`**: Added **Contact** (reach the slot owner) and **copy booking page link** (share the page URL) buttons and their logic.
+- **`BookingProfessor.jsx`**: Added professor **department** and **staff title** on the profile/header area.
 
 ---
 
 ## Bugfixes
 
-- Course admin edge case in `server/routes/courses.js`.
+- Fixed a bug where assigning a student as TA wasn't changing his user_type to course_admin in the db in `server/routes/courses.js`.
 - Search page issues and the availability capacity bug mentioned above.
 
 ---
@@ -69,6 +69,13 @@ What I worked on, grouped by topic. From highest ownership to lowest.
 
 - Changed the public name to **DropIn** on the landing page and in `index.html`.
 - Cleaned up camelCase in those same files.
+
+---
+
+## Database and App Design
+
+- Jocelyne is the main owner of our database design, but I collaborated, reviewed and provided feedback on some design decisions when we had team meetings. I also actively added small changes to the schema (adding a new table column, etc) when necessary during development. 
+- Contributed to the early discussions of the design of our website including which features to include and the big strokes of how everything would work together.
 
 ---
 
@@ -149,28 +156,28 @@ client/src/pages/StudentHeatmap.jsx                          2    439    0.5%
 
 ## AI usage
 
-In the early development phase, when our figma designs weren't done yet, I used generative AI for placeholder CSS and styling, though most of it has been replaced with manually written css since. Most noticeably in these files. Note that the percentages written are relative to my contributions to the file only and not to the entire file length.
+In the early development phase, when our figma designs weren't done yet, I used generative AI for placeholder CSS and styling, though most of it has been replaced with manually written css since. Most noticeably in these files:
 
-- client/src/styles/CourseSettingsModal.css -> 100% of my contributions to the file (note that it could have been overwritten with manual code so the current file itself might not be 100% AI-generated anymore)
-- client/src/styles/CoursesListPage.css -> 100%
-- client/src/styles/CourseDetailPage.css -> 100%
-- client/src/pages/LoginPage.jsx -> 10%
-- client/src/pages/RegisterPage.jsx -> 10%
-- client/src/pages/ResetPasswordPage.jsx -> 10%
+- `client/src/styles/CourseSettingsModal.css` -> 80%
+- `client/src/styles/CoursesListPage.css` -> 75%
+- `client/src/styles/CourseDetailPage.css` -> 75%
+- `client/src/pages/LoginPage.jsx` -> 10%
+- `client/src/pages/RegisterPage.jsx` -> 10%
+- `client/src/pages/ResetPasswordPage.jsx` -> 10%
 
-I also used AI for some utils/helpers and hooks:
+I also used AI to generate some helpers functions, utility files and hooks:
 
-- client/src/layouts/AppShellLayout.jsx -> 100%
-- server/utils/dateTime.js -> 100%
-- client/src/auth/authUi.js -> 50%
-- client/src/hooks/useRequirePageVariant.js -> 100%
-- client/src/hooks/useRequireAuth.js -> 100%
-- client/src/auth/authUtils.js -> 100%
+- `client/src/layouts/AppShellLayout.jsx` -> 100%
+- `server/utils/dateTime.js` -> 100%
+- `client/src/auth/authUi.js` -> 50%
+- `client/src/hooks/useRequirePageVariant.js` -> 100%
+- `client/src/hooks/useRequireAuth.js` -> 100%
+- `client/src/auth/authUtils.js` -> 100%
 
-For email notifications, I used AI in `server/lib/appointmentNotifications.js` to write the SQL queries so about 30% of the file.
+For email notifications, I used AI in `server/lib/appointmentNotifications.js` to write some SQL queries so about 30% of the file.
 
-I also used it to write comments in `server/routes/courses.js` as the file was getting big and I wanted to leave clear documentation on how to use each api route. So about 5% of the file.
+I also used it to write comments in `server/routes/courses.js` as the file was getting big and I wanted to leave clear documentation on how to use each api route. 5% of the file.
 
-In total, the percentage of my contributions being purely generated is around 20-25%.
+In total, the percentage of my contributions being purely generated is around 20-25%. Any generated code's implementation and behaviour is designed by me first and I thoroughly review the code before being approved, sometimes having to modify the generated code to improve quality, correctness, and maintainability.
 
 Other than that, I used Nodemailer as an SMTP/mail library (to connect and send emails), but didn't use any external template code for email services so the contribution of the library to our project is minimal.
