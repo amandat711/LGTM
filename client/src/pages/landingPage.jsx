@@ -301,7 +301,7 @@ export default function LandingPage() {
                 <img src={LGTMLogo2} alt="McGill logo" className="footer-logo-mark" />
 
               </div>
-              <div>Copyright &copy; 2026 McGill University.</div>
+
             </div>
 
             <div className="footer-links">
