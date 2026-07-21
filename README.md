@@ -1,0 +1,2 @@
+# LGTM
+McGill Website
