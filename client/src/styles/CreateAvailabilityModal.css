@@ -1,0 +1,422 @@
+/* JOCELYNE LI (95% estimated contribution) => Styling polish and cross-page visual consistency improvements */
+.availability-modal {
+  width: min(920px, 100%);
+}
+
+.availability-modal-body {
+  max-height: calc(92vh - 180px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.availability-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+  margin-bottom: 14px;
+}
+
+.availability-modal-subtitle {
+  margin: 6px 0 0;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+.availability-modal-recurrence {
+  margin: 6px 0 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #5b6470;
+  line-height: 1.35;
+}
+
+.availability-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 12px;
+}
+
+.form-group-full {
+  grid-column: 1 / -1;
+}
+
+.form-group-span-2 {
+  grid-column: span 2;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0 0 0;
+  gap: 5px;
+}
+
+.form-group label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  background: #ffffff;
+  color: #111827;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 70px;
+  max-height: 120px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #e33244;
+  box-shadow: inset 0 0 0 4px rgba(227, 50, 68, 0.12);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: #9ca3af;
+}
+
+.recurrence-display {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  background: #fafafa;
+  padding: 10px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recurrence-display:hover {
+  border-color: #c4c9d4;
+  background: #f7f7f8;
+}
+
+.recurrence-display:focus {
+  outline: none;
+  border-color: #e33244;
+  box-shadow: 0 0 0 4px rgba(227, 50, 68, 0.12);
+}
+
+.recurrence-display-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.recurrence-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.recurrence-badge.active {
+  background: rgba(227, 50, 68, 0.12);
+  color: #b4232f;
+}
+
+.recurrence-summary {
+  color: #374151;
+  font-size: 0.84rem;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.recurrence-display-action {
+  flex-shrink: 0;
+  color: #e33244;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.create-av-error {
+  margin: 0;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-size: 0.84rem;
+}
+
+.availability-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 2px;
+}
+
+/* Keep MUI modal action buttons visually consistent with app buttons. */
+.availability-modal-footer .MuiButton-root {
+  border-radius: 6px;
+  height: 34px;
+  min-height: 36px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  box-shadow: none;
+  font-family: 'Inter', sans-serif;
+  background-color: black;
+  color: white;
+}
+
+.availability-modal-footer .MuiButton-text {
+  border: 1.5px solid #ccc;
+  background: #fff;
+  color: #111;
+}
+
+.availability-modal-footer .MuiButton-text:hover {
+  background: #f8f8f8;
+  border-color: #bdbdbd;
+}
+
+.availability-modal-footer .MuiButton-containedPrimary {
+  background: #E31429;
+  border: 1.5px solid #E31429;
+  color: #fff;
+}
+
+.availability-modal-footer .MuiButton-containedPrimary:hover {
+
+  background: #b01020;
+  border-color: #b01020;
+  box-shadow: none;
+}
+
+.modal-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.2s ease;
+}
+
+.modal-btn:hover {
+  transform: none;
+}
+
+.modal-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.modal-btn.secondary {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.modal-btn.secondary:hover {
+  background: #e5e7eb;
+}
+
+.modal-btn.primary {
+  background: #e33244;
+  color: #ffffff;
+}
+
+.modal-btn.primary:hover {
+  background: #cf2436;
+}
+
+.invite-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.invite-results-list {
+  margin-top: 6px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow-y: auto;
+  max-height: 140px;
+}
+
+.invite-result-item {
+  display: flex;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  cursor: pointer;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.appointment-compact-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 12px;
+}
+
+.availability-compact-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 12px;
+}
+
+.appointment-left-column,
+.appointment-right-column,
+.availability-left-column,
+.availability-right-column {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.appointment-time-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.availability-time-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.right-meta-row {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 10px;
+  align-items: end;
+}
+
+.availability-meta-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  align-items: end;
+}
+
+.visibility-toggle {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  overflow: hidden;
+  width: fit-content;
+  box-sizing: border-box;
+}
+
+.visibility-toggle-btn {
+  border: none;
+  background: #fff;
+  color: #6b7280;
+  padding: 9px 14px;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.visibility-toggle-btn.active {
+  background: #e33244;
+  color: #fff;
+}
+
+.event-color-picker {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.event-color-swatch {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgba(17, 24, 39, 0.08);
+}
+
+.event-color-swatch.selected {
+  border-color: #111827;
+}
+
+.availability-tab-btn {
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #fff;
+  color: #374151;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.availability-tab-btn.active {
+  background: #e33244;
+  border-color: #e33244;
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .availability-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .appointment-compact-layout,
+  .availability-compact-layout,
+  .appointment-time-row,
+  .availability-time-row,
+  .right-meta-row,
+  .availability-meta-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group-span-2 {
+    grid-column: auto;
+  }
+
+  .availability-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .recurrence-display {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .recurrence-display-action {
+    align-self: flex-end;
+  }
+}

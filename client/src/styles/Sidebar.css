@@ -1,0 +1,160 @@
+/* AMANDA TRAN (84% contribution) - Creation */
+/* rita zhang -> changed css */
+/*
+ * Sidebar.css — styles for the reusable Sidebar component.
+ 
+ */
+
+/* ─── CONTAINER ──────────────────────────────────────────── */
+
+/* JOCELYNE LI (31% estimated contribution) => Dashboard/navigation consistency and UI polish */
+.side-menu {
+  width: clamp(76px, 8.5vw, 116px);
+  background: #fff;
+  border-right: 1px solid #e4e4e4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0 16px;
+  gap: 24px;
+  flex-shrink: 0;
+}
+
+/* ─── BUTTON ─────────────────────────────────────────────── */
+
+.side-menu-button {
+  width: min(96%, 96px);
+  height: 73px;
+  flex: 0 0 73px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2px, 0.5vh, 4px);
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.side-menu-button:hover {
+  background: #fafafa;
+}
+
+.side-menu-button.active {
+  background: transparent;
+  box-shadow: inset 3px 0 0 #e31429;
+}
+
+/* ─── IMAGE ICON ─────────────────────────────────────────── */
+
+.side-menu-button.active .side-menu-icon {
+  color: #E31429;
+}
+
+.side-menu-icon {
+  width: 75%;
+  height: auto;
+  max-width: 56px;
+  max-height: 56px;
+  font-size: clamp(40px, 5vw, 56px);
+  color: #000;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.side-menu-icon-img {
+  width: clamp(32px, 4.5vw, 52px);
+  height: clamp(32px, 4.5vw, 52px);
+  object-fit: contain;
+  display: block;
+  background: transparent;
+}
+
+.side-menu-icon-img-search {
+  width: clamp(30px, 4.2vw, 48px);
+  height: clamp(30px, 4.2vw, 48px);
+}
+
+.side-menu-icon-img-info {
+  width: clamp(24px, 3vw, 32px);
+  height: clamp(24px, 3vw, 32px);
+}
+
+/* ─── TEXT ICON (e.g. the "+" button) ───────────────────── */
+
+.side-menu-icon-text {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1;
+  color: #888;
+  transition: color 0.15s;
+}
+
+.side-menu-button.active .side-menu-icon-text {
+  color: #E31429;
+}
+
+/* ─── LABEL ──────────────────────────────────────────────── */
+
+.side-menu-label {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: #888;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow-wrap: normal;
+  word-break: normal;
+  transition: color 0.15s;
+}
+
+.side-menu-button.active .side-menu-label {
+  color: #E31429;
+}
+
+/* ─── SPACER ─────────────────────────────────────────────── */
+
+.side-menu-spacer {
+  flex: 1;
+}
+
+/* ─── RESPONSIVE ─────────────────────────────────────────── */
+
+@media (max-width: 700px) {
+  .side-menu {
+    width: 78px;
+    padding-top: 16px;
+    gap: 16px;
+  }
+
+  .side-menu-button {
+    width: 72px;
+    height: 56px;
+    flex: 0 0 56px;
+  }
+
+  .side-menu-icon-img {
+    width: 32px;
+    height: 32px;
+  }
+
+  .side-menu-icon-img-search {
+    width: 30px;
+    height: 30px;
+  }
+
+  .side-menu-icon-img-info {
+    width: 22px;
+    height: 22px;
+  }
+}

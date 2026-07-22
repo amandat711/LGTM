@@ -1,0 +1,408 @@
+/* JOCELYNE LI (66% estimated contribution) => Styling polish and cross-page visual consistency improvements */
+.recurrence-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2100;
+  padding: 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-modal {
+  width: min(560px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.24);
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 22px 22px 18px;
+  border-bottom: 1px solid #eceff3;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-modal-header h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1f2937;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-modal-subtitle {
+  margin: 6px 0 0;
+  font-size: 0.92rem;
+  color: #6b7280;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-close-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #6b7280;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-close-btn:hover {
+  background: #f3f4f6;
+  color: #111827;
+  font-family: 'Inter', sans-serif;
+}
+
+.modal--recurrence .modal-header {
+  margin-bottom: 6px;
+}
+
+.modal--recurrence .modal-meta-row {
+  margin-top: 2px;
+}
+
+.modal--recurrence .modal-body {
+  padding-top: 0;
+  margin-bottom: 12px;
+}
+
+/* Native controls + text selection: red instead of system blue */
+.modal--recurrence .recurrence-modal-content input[type='radio'] {
+  accent-color: #e33244;
+}
+
+.modal--recurrence .recurrence-modal-content ::selection {
+  background-color: rgba(227, 50, 68, 0.28);
+  color: #111827;
+}
+
+.modal--recurrence .recurrence-modal-content ::-moz-selection {
+  background-color: rgba(227, 50, 68, 0.28);
+  color: #111827;
+}
+
+.recurrence-modal-content {
+  padding: 0 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #374151;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-repeat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-interval-input,
+.recurrence-date-input,
+.recurrence-count-input {
+  border: 1px solid #d1d5db;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  background: #ffffff;
+  color: #111827;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-interval-input {
+  width: 88px;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-count-input {
+  width: 88px;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-date-input:focus,
+.recurrence-count-input:focus,
+.recurrence-interval-input:focus {
+  outline: none;
+  border-color: #e33244;
+  box-shadow: 0 0 0 4px rgba(227, 50, 68, 0.12);
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-inline-label {
+  color: #4b5563;
+  font-size: 0.95rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-weekday-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-weekday-chip {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-weekday-chip:hover {
+  border-color: #e33244;
+  background: #fff5f6;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-weekday-chip.selected {
+  background: #e33244;
+  border-color: #e33244;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-radio-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #fafafa;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Let the end-date field use remaining row width; keep count + label tight */
+.recurrence-radio-row .recurrence-date-input {
+  flex: 1;
+  min-width: 160px;
+}
+
+.recurrence-radio-row input[type='radio'] {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-radio-row span {
+  color: #374151;
+  font-size: 0.95rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-date-input:disabled,
+.recurrence-count-input:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-error-message {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-size: 0.92rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 22px 22px;
+  border-top: 1px solid #eceff3;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-modal-footer-right {
+  display: flex;
+  gap: 10px;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-modal-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-modal-footer-actions .MuiButton-root {
+  /* transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; */
+  font-family: 'Inter', sans-serif;
+  border-radius: 999px;
+  padding: 10px 24px;
+}
+
+.recurrence-modal-footer-actions .MuiButton-root:hover {
+  transform: none;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 11px 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  /* transition: background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.2s ease; */
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-btn:hover {
+  transform: none;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-btn.ghost {
+  background: transparent;
+  color: #b4232f;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-btn.ghost:hover {
+  background: #fef2f2;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-btn.secondary {
+  background: #f3f4f6;
+  color: #374151;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-btn.secondary:hover {
+  background: #e5e7eb;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-btn.primary {
+  background: #e33244;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-btn.primary:hover {
+  background: #cf2436;
+  font-family: 'Inter', sans-serif;
+}
+
+.recurrence-modal-footer-actions .MuiButton-contained.recurrence-btn.footer {
+  box-shadow: none;
+}
+
+.recurrence-modal-footer-actions .MuiButton-contained.recurrence-btn.footer:hover {
+  box-shadow: none;
+}
+
+.recurrence-btn.footer {
+  background-color: black;
+  color: white;
+  border-radius: 999px;
+  font-family: 'Inter', sans-serif;
+  box-shadow: none;
+}
+
+.recurrence-btn.footer:hover {
+  background-color: #a5a5a5;
+  color: black;
+  transform: none;
+  font-family: 'Inter', sans-serif;
+  box-shadow: none;
+}
+
+.recurrence-btn.footer:text {
+  background-color: transparent;
+  color: black;
+  font-family: 'Inter', sans-serif;
+  border: none;
+}
+
+@media (max-width: 640px) {
+  .recurrence-modal {
+    border-radius: 16px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .recurrence-modal-header,
+  .recurrence-modal-footer {
+    padding-left: 18px;
+    padding-right: 18px;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .recurrence-radio-row .recurrence-date-input {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .recurrence-modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .recurrence-modal-footer-right {
+    display: flex;
+    flex-direction: column-reverse;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .recurrence-btn,
+  .recurrence-btn.ghost {
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+  }
+}

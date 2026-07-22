@@ -1,0 +1,297 @@
+/* Rita Zhang */
+
+/*JOCELYNE LI (61% estimated contribution) => Auth flow and UI polish/integration*/
+.register-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.register-panel {
+  width: min(100%, 920px);
+  height: min(100%, 560px);
+  display: grid;
+  grid-template-columns: 1.06fr 1fr;
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #d9d9d9;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.register-panel-left {
+  background: #f6f6f6;
+  position: relative;
+  margin: 14px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.register-side-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.register-panel-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 18px clamp(16px, 1.8vw, 28px);
+  min-width: 0;
+  position: relative;
+}
+
+.register-back-link {
+  position: absolute;
+  top: 18px;
+  right: clamp(16px, 1.8vw, 28px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #555;
+  text-decoration: none;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.register-back-link:hover {
+  color: #111;
+}
+
+.register-title {
+  margin: 0;
+  text-align: left;
+  font-size: clamp(1.55rem, 1.8vw, 1.95rem);
+  line-height: 1.08;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #0f0f0f;
+}
+
+.register-subtitle {
+  margin: 12px 0 0;
+  font-size: 15px;
+  color: #666;
+}
+
+.register-inline-link {
+  color: #333;
+  text-decoration: underline;
+}
+
+.register-inline-link:hover {
+  color: #000;
+}
+
+.register-error {
+  margin: 10px 0 0;
+  border: 1px solid #f1c5c5;
+  background: #fff3f3;
+  color: #9e1c1c;
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: 15px;
+}
+
+.register-form {
+  margin-top: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.register-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.register-field {
+  position: relative;
+}
+
+.register-field-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a1a1a1;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-input {
+  width: 100%;
+  height: 36px;
+  border: 1px solid #cbcbcb;
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 0 12px 0 36px;
+  box-sizing: border-box;
+  font-size: 15px;
+  color: #0f0f0f;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.register-input-with-toggle {
+  padding-right: 46px;
+}
+
+.register-password-toggle {
+  position: absolute !important;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #777 !important;
+}
+
+.register-password-toggle:hover {
+  color: #222 !important;
+}
+
+.register-input::placeholder {
+    color: #a1a1a1;
+}
+
+.register-input:focus {
+    border-color: #8f8f8f;
+    box-shadow: inset 0 0 0 2px #dadada;
+}
+
+.register-input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.register-input-no-icon {
+  padding-left: 12px;
+}
+
+/* staff fields animation */
+.register-staff-fields {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: grid-template-rows 0.35s ease, opacity 0.35s ease, transform 0.35s ease;
+  overflow: hidden;
+}
+
+.register-staff-fields-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.register-staff-fields-inner {
+  overflow: hidden;
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.register-password-group {
+  gap: 4px;
+}
+
+.register-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #777;
+  padding-left: 4px;
+}
+
+.register-submit {
+  margin: 14px auto 0;
+  min-width: 148px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: #000;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 0 20px;
+  cursor: pointer;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.register-submit:hover:not(:disabled) {
+  background: #2f2f2f;
+}
+
+.register-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.register-footer-text {
+  display: none;
+}
+
+.register-login-link {
+    color: #E31429;
+    font-weight: 600;
+    text-decoration: underline;
+}
+
+.register-login-link:hover {
+    color: #b50f21;
+}
+
+@media (max-width: 900px) {
+  .register-panel {
+    width: min(100%, 860px);
+    height: min(100%, 520px);
+    grid-template-columns: 0.95fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-back-link {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 0; /* hide original text */
+  }
+
+  .register-back-link::before {
+    content: "Back →";
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .register-back-link span {
+    display: none;
+  }
+
+  .register-panel {
+    width: min(100%, 520px);
+    height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .register-panel-left {
+    display: block;
+    margin: 12px 12px 0;
+    min-height: 160px;
+    max-height: 210px;
+    border-radius: 10px;
+  }
+  
+  .register-side-image {
+    height: 100%;
+  }
+
+  .register-panel-right {
+    padding: 16px;
+  }
+}

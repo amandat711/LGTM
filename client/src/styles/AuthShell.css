@@ -1,0 +1,114 @@
+/*Rita Zhang*/
+
+/*JOCELYNE LI (67% estimated contribution) => Auth flow and UI polish/integration*/
+.auth-shell {
+    min-height: 100dvh;
+    background: #f5f3ee;
+    color: #0f0f0f;
+    font-family: inherit;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: auto;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: #f5f3ee;
+    z-index: -1;
+}
+
+.auth-top-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 120;
+    box-shadow: 0 1px 0 #e4e4e4;
+}
+
+.auth-top-bar .top-bar {
+    border-bottom: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.92) 100%);
+    box-shadow: none;
+}
+
+.auth-top-bar .top-bar-content {
+    height: 72px;
+    padding: 0 26px;
+}
+
+.auth-top-bar .top-bar-right {
+    display: none;
+}
+
+.auth-top-bar .top-bar-left-button {
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: none;
+}
+
+.auth-top-bar .top-bar-logo {
+    height: 56px;
+    width: auto;
+    max-width: none;
+    filter: none;
+}
+
+.auth-main {
+    flex:1;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 84px 16px 16px;
+    overflow: hidden;
+}
+
+@media (min-width: 640px) {
+    .auth-main {
+        padding: 92px 24px 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-top-bar .top-bar-content {
+        height: 66px;
+        padding: 0 16px;
+    }
+
+    .auth-top-bar .top-bar-left-button {
+        padding: 6px 10px;
+    }
+
+    .auth-top-bar .top-bar-logo {
+        height: 48px;
+        max-width: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-top-bar .top-bar-content {
+        height: 58px;
+        padding: 0 14px;
+    }
+
+    .auth-top-bar .top-bar-left-button {
+        padding: 4px 8px;
+    }
+
+    .auth-top-bar .top-bar-logo {
+        height: 40px;
+        max-width: none;
+    }
+
+    .auth-main {
+        padding: 68px 10px 10px;
+    }
+}

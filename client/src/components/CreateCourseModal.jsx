@@ -1,0 +1,150 @@
+// JOCELYNE LI (10% estimated contribution) => Feature implementation, integration work, and quality refinements
+// SHIRLEY DING, 90.6% contribution
+import { useState } from 'react';
+import Button from '@mui/material/Button';
+import '../styles/CreateAvailabilityModal.css';
+import { Modal } from './Modals';
+
+const TERMS = ['Winter', 'Fall', 'Summer'];
+
+export default function CreateCourseModal({ onClose, onSubmit }) {
+  const defaultYear = String(new Date().getFullYear());
+  const [form, setForm] = useState({
+    course_code: '',
+    course_name: '',
+    course_term: 'Winter',
+    course_year: defaultYear,
+    description: '',
+  });
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  function updateField(key, value) {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setError('');
+
+    const course_code = form.course_code.trim();
+    const course_name = form.course_name.trim();
+    const course_term = form.course_term.trim();
+    const year = parseInt(form.course_year, 10);
+
+    if (!course_code || !course_name || !course_term) {
+      setError('Course code, name, and term are required.');
+      return;
+    }
+    if (Number.isNaN(year)) {
+      setError('Enter a valid year.');
+      return;
+    }
+
+    const description = form.description.trim();
+
+    try {
+      setSaving(true);
+      await onSubmit({
+        course_code,
+        course_name,
+        course_term,
+        course_year: year,
+        ...(description ? { description } : {}),
+      });
+    } catch (err) {
+      setError(err.message || 'Failed to create course.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      title="Create course"
+      onClose={onClose}
+      className="availability-modal create-item-modal"
+      meta={<span className="modal-kind-pill modal-kind-pill--event">Course</span>}
+    >
+      <form onSubmit={handleSubmit} className="availability-form-grid">
+          <div className="form-group">
+            <label htmlFor="course_code">Course code</label>
+            <input
+              id="course_code"
+              type="text"
+              value={form.course_code}
+              onChange={(e) => updateField('course_code', e.target.value)}
+              placeholder="e.g. COMP 307"
+              autoComplete="off"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="course_name">Course name</label>
+            <input
+              id="course_name"
+              type="text"
+              value={form.course_name}
+              onChange={(e) => updateField('course_name', e.target.value)}
+              placeholder="Course title"
+              autoComplete="off"
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="course_term">Term</label>
+            <select
+              id="course_term"
+              value={form.course_term}
+              onChange={(e) => updateField('course_term', e.target.value)}
+            >
+              {TERMS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="course_year">Year</label>
+            <input
+              id="course_year"
+              type="number"
+              min="2000"
+              max="2100"
+              value={form.course_year}
+              onChange={(e) => updateField('course_year', e.target.value)}
+            />
+          </div>
+          <div className="form-group form-group-full">
+            <label htmlFor="course_description">Description (optional)</label>
+            <textarea
+              id="course_description"
+              rows={3}
+              value={form.description}
+              onChange={(e) => updateField('description', e.target.value)}
+              placeholder="Short description"
+            />
+          </div>
+
+          {error && (
+            <div className="form-group-full" style={{ color: '#b00020', fontSize: '13px' }}>
+              {error}
+            </div>
+          )}
+
+          <div className="availability-modal-footer form-group-full">
+            <Button
+              type="button"
+              variant="text"
+              onClick={onClose}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" variant="contained" disabled={saving}>
+              {saving ? 'Creating…' : 'Create course'}
+            </Button>
+          </div>
+      </form>
+    </Modal>
+  );
+}

@@ -1,0 +1,35 @@
+/* AMANDA TRAN (100% contribution) */
+/* Rita Zhang -> uniformized font usage throughout the app */
+/* SHIRLEY DING, 15.2% contribution */
+/* JOCELYNE LI (15% estimated contribution) => Styling polish and cross-page visual consistency improvements */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  min-width: 390px;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  overflow-x: auto;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}

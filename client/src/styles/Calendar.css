@@ -1,0 +1,543 @@
+/* AMANDA TRAN */
+/* Rita Zhang */
+/* SHIRLEY DING */
+
+/* ─── Calendar panel ─────────────────────────────────────── */
+/* JOCELYNE LI (81% estimated contribution) => Styling polish and cross-page visual consistency improvements */
+.dash-calendar-panel {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border-right: 1px solid #e4e4e4;
+}
+
+.dash-cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid #e4e4e4;
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.dash-cal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f0f0f;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+}
+
+.dash-cal-timezone {
+  font-size: 10px;
+  color: #6b7280;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+
+.dash-week-timezone-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 4px;
+  text-align: center;
+}
+
+.dash-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dash-cal-nav-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  border: 1px solid #e4e4e4;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #555;
+  transition: border-color 0.15s;
+}
+
+.dash-cal-nav-btn:hover {
+  border-color: #999;
+}
+
+.dash-cal-today-btn {
+  height: 34px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #e4e4e4;
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.dash-cal-today-btn:hover {
+  border-color: #E31429;
+  color: #E31429;
+}
+
+.dash-cal-range {
+  font-size: 13px;
+  color: #555;
+  font-weight: 500;
+  min-width: 190px;
+  text-align: center;
+}
+
+/* ─── Week grid ──────────────────────────────────────────── */
+.dash-week-grid {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: #fff;
+}
+
+.dash-week-days {
+  display: grid;
+  grid-template-columns: 64px repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid #e4e4e4;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 20;
+}
+
+.dash-week-day-header {
+  display: grid;
+  grid-template-rows: auto 42px;
+  justify-items: center;
+  padding: 10px 4px;
+  text-align: center;
+  border-right: 1px solid #f0f0f0;
+  background: #fff;
+  position: relative;
+  z-index: 21;
+}
+
+.dash-week-day-header.dash-week-timezone-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dash-week-day-header:first-child {
+  border-right: 1px solid #e4e4e4;
+}
+
+.dash-day-name {
+  grid-row: 1;
+  font-size: 10px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* Second row is fixed height so every column’s date lines up; today uses a larger circle centered in that row */
+.dash-day-num {
+  grid-row: 2;
+  align-self: stretch;
+  justify-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  color: #0f0f0f;
+  line-height: 1;
+}
+
+.dash-day-num.today {
+  align-self: center;
+  justify-self: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  background: #e31429;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* ─── Time grid ──────────────────────────────────────────── */
+.dash-time-rows {
+  display: grid;
+  grid-template-columns: 64px repeat(7, minmax(0, 1fr));
+  align-items: start;
+  min-width: 0;
+  position: relative;
+}
+
+.dash-day-column {
+  position: relative;
+  background: #fff;
+}
+
+.dash-time-label {
+  height: var(--slot-height, 64px);
+  font-size: 11px;
+  color: #9aa0a6;
+  text-align: right;
+  padding: 2px 8px 0 0;
+  border-right: 1px solid #e4e4e4;
+  box-sizing: border-box;
+}
+
+.dash-time-cell {
+  height: var(--slot-height, 64px);
+  border-right: 1px solid #f0f0f0;
+  border-bottom: 1px solid #f3f3f3;
+  box-sizing: border-box;
+  width: 100%;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  border-top: none;
+  border-left: none;
+}
+
+.dash-time-cell:hover {
+  background: rgba(227, 20, 41, 0.04);
+}
+
+.dash-time-cell:focus-visible {
+  outline: 2px solid rgba(227, 20, 41, 0.35);
+  outline-offset: -2px;
+}
+
+.dash-day-column {
+  position: relative;
+}
+
+.dash-slot-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: transparent;
+  cursor: crosshair;
+}
+
+/* disabling crosshair for student dashboard calendar */
+.student-calendar-wrap {
+  display: contents;
+}
+
+.student-calendar-wrap .dash-slot-layer {
+  cursor: default !important;
+}
+
+.dash-slot-selection {
+  position: absolute;
+  left: 3px;
+  right: 7px;
+  z-index: 3;
+  border-radius: 10px;
+  background: rgba(227, 20, 41, 0.10);
+  border: 1px solid rgba(227, 20, 41, 0.28);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  pointer-events: none;
+}
+
+.dash-now-line {
+  position: absolute;
+  left: 3px;
+  right: 7px;
+  height: 2px;
+  background: #e31429;
+  border-radius: 999px;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.dash-now-dot {
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e31429;
+  transform: translateY(-50%);
+}
+
+.dash-day-column:last-child .dash-time-cell {
+  border-right: none;
+}
+
+/* ─── Events ─────────────────────────────────────────────── */
+.dash-event {
+  position: absolute;
+  left: 0;
+  right: 4px;
+  min-height: 32px;
+  border-radius: 10px;
+  padding: 8px 10px 8px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  /* Keep content inside the chip (no ellipsis, but prevent spill). */
+  overflow: hidden;
+  cursor: pointer;
+  z-index: 2;
+  transition: opacity 0.15s, box-shadow 0.15s;
+  box-sizing: border-box;
+  text-align: left;
+  border-top: none;
+  border-right: none;
+  border-bottom: none;
+  outline: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2px;
+  white-space: normal;
+  background-clip: padding-box;
+}
+
+.dash-event:hover {
+  opacity: 0.96;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.10);
+}
+
+.dash-event:focus-visible {
+  box-shadow: 0 0 0 2px rgba(227, 20, 41, 0.18);
+}
+
+.dash-event-title {
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.15;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.dash-event-time {
+  font-size: 11px;
+  line-height: 1.1;
+  opacity: 0.85;
+  white-space: normal;
+}
+
+.dash-event-location {
+  font-size: 11px;
+  line-height: 1.15;
+  opacity: 0.8;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.dash-event.compact {
+  padding: 4px 7px 4px 8px;
+  min-height: 24px;
+  gap: 1px;
+}
+
+.dash-event-compact-line {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+  line-height: 1.1;
+  /* Avoid wrapping in compact mode; we prefer showing both and clipping if needed. */
+  white-space: nowrap;
+}
+
+.dash-event-compact-title,
+.dash-event-compact-time {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dash-event-compact-title {
+  font-weight: 650;
+}
+
+.dash-event-compact-sep {
+  opacity: 0.9;
+}
+
+/* If space is very tight, slightly reduce font size (still no ellipsis). */
+@media (max-width: 840px) {
+
+  .dash-event-compact-title,
+  .dash-event-compact-time {
+    font-size: 11px;
+  }
+
+  .dash-event-title {
+    font-size: 12px;
+  }
+}
+
+.calendar-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.calendar-create-modal {
+  width: min(680px, 100%);
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.calendar-create-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 12px;
+}
+
+.calendar-create-header h2 {
+  margin: 0;
+  font-size: 24px;
+  color: #172554;
+}
+
+.calendar-create-close {
+  border: none;
+  background: transparent;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.calendar-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 24px 24px;
+}
+
+.calendar-create-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: #334155;
+}
+
+.calendar-create-form input,
+.calendar-create-form textarea,
+.calendar-create-form select {
+  border: 1px solid #dbe3ef;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  outline: none;
+}
+
+.calendar-create-form input:focus,
+.calendar-create-form textarea:focus,
+.calendar-create-form select:focus {
+  border-color: #6366f1;
+}
+
+.calendar-create-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.calendar-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.calendar-create-primary,
+.calendar-create-secondary {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.calendar-create-primary {
+  background: #4f46e5;
+  color: white;
+}
+
+.calendar-create-secondary {
+  background: #eef2ff;
+  color: #312e81;
+}
+
+.calendar-create-error {
+  color: #dc2626;
+  font-size: 13px;
+  margin: 0;
+}
+
+/* RESPONSIVENESS */
+@media (max-width: 568px) {
+  .dash-cal-header {
+    padding: 10px 16px;
+  }
+
+  .dash-cal-range {
+    display: none;
+  }
+
+  /* .dash-time-label {
+    padding: 2px 0px 0 2px;
+    text-align: left;
+  } */
+
+  .dash-time-rows {
+    grid-template-columns: 48px repeat(7, minmax(0, 1fr));
+  }
+
+  .dash-week-days {
+    grid-template-columns: 48px repeat(7, minmax(0, 1fr));
+  }
+
+  /* event labels */
+  .dash-event {
+    padding: 4px 6px;
+    gap: 1px;
+  }
+
+  .dash-event-title,
+  .dash-event-time,
+  .dash-event-location {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+
+    white-space: nowrap;
+    overflow: hidden;
+
+    font-size: 10px;
+    line-height: 1.1;
+  }
+}

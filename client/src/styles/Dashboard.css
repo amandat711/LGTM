@@ -1,0 +1,2011 @@
+/* AMANDA TRAN (70% contribution) & JOCELYNE LI */
+/* SHIRLEY DING */
+
+/*
+// JOCELYNE LI (39% estimated contribution) => Dashboard/navigation consistency and UI polish
+  Dashboard.css
+  ─────────────
+  Styles shared across the Student and Professor dashboard pages (AMANDA),
+  as well as the Booking pages (professor search + slot confirmation) (JOCELYNE).
+
+ 
+*/
+
+
+
+.dashboard-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: 'Inter', sans-serif;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+/* Floating status: errors, confirmations, loading — does not consume main-content width */
+.dashboard-toast {
+  position: fixed;
+  top: 62px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  max-width: min(560px, calc(100vw - 32px));
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+  pointer-events: auto;
+}
+
+.dashboard-toast-text {
+  flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+}
+
+.dashboard-toast--error {
+  background: #fff5f5;
+  border: 1px solid #f1c1c1;
+  color: #8f1d23;
+}
+
+.dashboard-toast--success {
+  background: #e8f7ec;
+  border: 1px solid #b7e4c0;
+  color: #1a5c2a;
+}
+
+.dashboard-toast--loading {
+  background: #f8f9fa;
+  border: 1px solid #e4e4e4;
+  color: #444;
+}
+
+.dashboard-toast-dismiss {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0 2px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+}
+
+.dashboard-toast-dismiss:hover {
+  opacity: 1;
+}
+
+/*  TOP NAVIGATION BAR  */
+/* Navbar styles live in Navbar.css — imported by Navbar.jsx */
+
+/* 
+   DASHBOARD LAYOUT
+   Sits below the navbar and fills the remaining height.
+   flex: 1 makes it grow to take up whatever space the navbar
+   doesn't use. Contains the sidebar on the left and the main
+   content area on the right.
+ */
+
+.dashboard-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/*  LEFT SIDEBAR NAVIGATION  */
+/* Sidebar styles live in Sidebar.css — imported by Sidebar.jsx */
+
+
+/* 
+   MAIN CONTENT AREA
+   Fills the horizontal space left after the sidebar.
+   
+ */
+
+.main-content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  gap: 0;
+}
+
+
+/* 
+   RIGHT SIDE PANEL
+   Fixed-width panel on the far right of the dashboard.
+   Shows upcoming appointments and heatmap invitations.
+   Scrolls independently so long lists don't affect the calendar.
+ */
+
+.side-panel {
+  width: clamp(220px, 24vw, 300px);
+  flex-shrink: 0;
+  /* never squish the panel when space is tight */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* panel stays fixed; inner sections can scroll */
+  background: #fff;
+  padding: clamp(10px, 1.2vw, 16px);
+  gap: 20px;
+  min-height: 0;
+  /* allows the panel to scroll within a flex parent */
+}
+
+.side-panel-section {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-panel-section-upcoming {
+  flex: 5 1 0;
+}
+
+.side-panel-section-heatmap {
+  flex: 3 1 0;
+}
+
+.side-panel-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+/* Section headings inside the side panel e.g. "Upcoming appointments" */
+.side-panel-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f0f0f;
+  margin-bottom: 10px;
+  letter-spacing: -0.2px;
+}
+
+/* RESPONSIVENESS */
+@media (max-width: 768px) {
+  .dash-calendar-panel {
+    /* order: 1; */
+    display: flex;
+  }
+
+  .main-content {
+    position: relative;
+    flex-direction: column;
+    /* overflow: visible; */
+  }
+
+  .side-panel {
+
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    width: 100%;
+    /* order: 2; */
+    border-top: 1px solid #e4e4e4;
+    flex: 1;
+    height: 100%;
+    max-height: none;
+    overflow-y: auto;
+    border-right: none;
+  }
+
+}
+
+
+
+/* 
+   APPOINTMENT CARDS
+   Each upcoming appointment is shown as a clickable card.
+   Clicking opens the SlotDetailModal for full details.
+ */
+
+.appointment-item {
+  border: 1px solid #e4e4e4;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
+  column-gap: 10px;
+  row-gap: 6px;
+  align-items: start;
+  position: relative;
+}
+
+.appointment-item>div:nth-child(2) {
+  grid-column: 2;
+  grid-row: 1;
+  flex: 1;
+  min-width: 0;
+  padding-right: 90px;
+}
+
+.appointment-item:hover {
+  /* Subtle lift so clickable appointment cards feel interactive. */
+  border-color: #ccc;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Small coloured circle on the left of each appointment card.
+   Its colour is set inline to match the calendar event colour. */
+.appointment-color-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  margin-top: 6px;
+  /* aligns the dot with the first line of text */
+}
+
+/* Appointment title — the meeting name */
+.appointment-item h4 {
+  font-size: 13px;
+  font-weight: 500;
+  color: #0f0f0f;
+  margin: 0 0 3px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.appointment-item h6 {
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  line-height: 1.35;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Secondary info: date, location, participant name */
+.appointment-item p {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  font-size: 11px;
+  color: #888;
+  margin: 0;
+  line-height: 1.5;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+}
+
+.appointment-recurrence-line {
+  color: #5b6470;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* Status pill pushed to the far right of the appointment card.
+   Colour variant is applied by the status-* classes below. */
+.appointment-status-pill {
+  margin-left: 0;
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.side-panel .appointment-item .appointment-status-pill {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+/* Green — the appointment is locked in */
+.status-confirmed {
+  background: #d4edda;
+  color: #1a5c2a;
+  border-color: #2a8c5f;
+}
+
+/* Yellow — waiting for one side to respond */
+.status-pending {
+  background: #fff8e1;
+  color: #7a5800;
+  border-color: #f59e0b;
+}
+
+/* Blue — waiting for final confirmation after a response */
+.status-waiting {
+  background: #e8f4fd;
+  color: #1565a8;
+  border-color: #3b82f6;
+}
+
+/* Red/muted — appointment was cancelled */
+.status-cancelled {
+  background: #fff0f1;
+  color: #b01020;
+  border-color: #dc2626;
+}
+
+/* appointment item accept/reject buttons side by side */
+.student-appointment-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  width: fit-content;
+  margin-left: auto;
+}
+
+/* 
+   HEATMAP INVITATION CARDS
+   Shown in the student dashboard side panel.
+   Each card represents one heatmap the professor shared.
+   The dot on the left changes colour based on whether the
+   student has already submitted their availability.
+   */
+
+.invite-item {
+  border: 1px solid #e4e4e4;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* Red dot = student has not responded yet */
+.invite-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #E31429;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+/* Grey dot = student already submitted their availability */
+.invite-dot.responded {
+  background: #888;
+}
+
+/* Professor name shown as the card title */
+.invite-item h4 {
+  font-size: 13px;
+  font-weight: 500;
+  color: #0f0f0f;
+  margin: 0 0 3px;
+}
+
+/* Heatmap title and due date shown below the name */
+.invite-item p {
+  font-size: 11px;
+  color: #888;
+  margin: 0;
+}
+
+/* Circular button on the far right.
+   Shows "+" if the student hasn't responded (action needed),
+   or ">" if they already have (view only). */
+.invite-action-button {
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid #e4e4e4;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #555;
+  transition: border-color 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.invite-action-button:hover {
+  /* Red hover state matches the main app accent and signals this is actionable. */
+  border-color: #E31429;
+  color: #E31429;
+}
+
+.appointment-delete-button {
+  width: auto;
+  min-width: 64px;
+  padding: 0 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+
+/* 
+   PANEL DIVIDER
+   Thin horizontal rule separating sections inside the side panel,
+   e.g. between "Upcoming appointments" and "Heatmap tools".
+ */
+
+.side-panel-divider {
+  height: 1px;
+  background: #f0f0f0;
+  margin: 4px 0;
+}
+
+/* 
+   SHARED MODAL SHELL
+   Used by appointment detail pop-ups and the page help guide.
+ */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 15, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  width: 100%;
+  max-width: 560px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 22px;
+  box-shadow: 0 16px 56px rgba(15, 23, 42, 0.2);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 8px;
+}
+
+.modal-header-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111;
+  font-family: 'Inter', sans-serif;
+}
+
+.modal-close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #f8f8f8;
+  color: #666;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: #f0f0f0;
+  color: #111;
+}
+
+.modal-body {
+  margin-bottom: 16px;
+  overflow-y: auto;
+  padding-top: 0px;
+  font-family: 'Inter', sans-serif;
+}
+
+.modal-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.modal-titleblock {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 14px;
+  font-family: 'Inter', sans-serif;
+}
+
+.modal-titleblock-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  font-family: 'Inter', sans-serif;
+}
+
+.modal-recurrence-line {
+  font-size: 13px;
+  color: #5b6470;
+  line-height: 1.35;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+}
+
+.modal-recurrence-line--spaced {
+  margin: 0 0 14px;
+}
+
+.modal-subtitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: #444;
+  font-size: 13px;
+  line-height: 1.4;
+  font-family: 'Inter', sans-serif;
+}
+
+.modal-subtitle-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-subtitle-sep {
+  color: #bbb;
+}
+
+.modal-kind-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  line-height: 1.2;
+}
+
+.modal-kind-pill--availability {
+  background: #f3f4f6;
+  color: #4b5563;
+  border-color: #e5e7eb;
+}
+
+.modal-kind-pill--event {
+  background: #ffe1e4;
+  color: #ad0d1d;
+  border-color: #E31429;
+}
+
+.modal-kind-pill--appointment {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.modal-kind-pill--course {
+  background: #fff8e1;
+  color: #92400e;
+  border-color: #fcd34d;
+}
+
+.modal-titleblock-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-section {
+  margin-top: 14px;
+}
+
+.modal-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #666;
+  margin: 0 0 10px;
+}
+
+.modal-section-title-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-row-label-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modal-inline-icon {
+  font-size: 14px;
+  opacity: 0.75;
+}
+
+.modal-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: #f5f5f5;
+  color: #444;
+}
+
+.modal-row-multiline {
+  align-items: flex-start;
+}
+
+.modal-row-value-block {
+  text-align: left;
+  font-weight: 500;
+  white-space: pre-wrap;
+  max-width: 280px;
+}
+
+.modal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 13px;
+}
+
+.modal-row:last-child {
+  border-bottom: none;
+}
+
+.modal-row-label {
+  color: #666;
+}
+
+.modal-row-value {
+  color: #111;
+  font-weight: 600;
+  text-align: right;
+}
+
+.participant-list {
+  display: grid;
+  gap: 10px;
+}
+
+.participant-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.participant-row:last-child {
+  border-bottom: none;
+}
+
+.participant-avatar-wrap {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.participant-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.participant-status-dot {
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+.participant-status-confirmed {
+  background: #2a8c5f;
+}
+
+.participant-status-pending {
+  background: #f59e0b;
+}
+
+.participant-status-cancelled {
+  background: #dc2626;
+}
+
+.participant-meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.participant-name {
+  font-size: 13px;
+  color: #111;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.participant-email {
+  font-size: 11px;
+  color: #666;
+}
+
+.participant-role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #374151;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.participant-status-actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.participant-status-edit-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.participant-status-icon {
+  color: #6b7280;
+}
+
+.participant-status-select {
+  height: 24px;
+  border: 1px solid #d6d6d6;
+  border-radius: 999px;
+  padding: 0 8px;
+  font-size: 11px;
+  color: #444;
+  background: #fff;
+}
+
+.modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding-top: 16px;
+  border-top: 1px solid #e4e4e4;
+}
+
+/* MUI modal footers: match app button chrome (CreateAvailability / dashboard actions) */
+.modal-footer .MuiButton-root {
+  border-radius: 6px;
+  min-height: 36px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  box-shadow: none;
+}
+
+/* Secondary: Cancel / Keep it */
+.modal-footer .MuiButton-text,
+.modal-footer .MuiButton-textPrimary {
+  border: 1.5px solid #ccc;
+  background: #fff;
+  color: #111;
+}
+
+.modal-footer .MuiButton-text:hover,
+.modal-footer .MuiButton-textPrimary:hover {
+  background: #f8f8f8;
+  border-color: #bdbdbd;
+  color: #000;
+}
+
+/* Destructive confirm (e.g. Yes, delete availability) */
+.modal-footer .MuiButton-outlined.MuiButton-colorError {
+  background: #E31429;
+  border: 1.5px solid #E31429;
+  color: #fff;
+}
+
+.modal-footer .MuiButton-outlined.MuiButton-colorError:hover {
+  background: #f26373;
+  border-color: #f26373;
+  color: #fff;
+  box-shadow: none;
+}
+
+/* Primary actions in the same row (e.g. Confirm) */
+.modal-footer .MuiButton-containedPrimary {
+  background: #E31429;
+  border: 1.5px solid #E31429;
+  color: #fff;
+}
+
+.modal-footer .MuiButton-containedPrimary:hover {
+  background: #b01020;
+  border-color: #b01020;
+  color: #fff;
+  box-shadow: none;
+}
+
+/* url field in modal */
+.copy-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  min-width: 0;
+}
+
+.copy-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 5px;
+  border: 1px solid #e4e4e4;
+  background: #f8f8f8;
+  font-size: 12px;
+  color: #6b6b6b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+}
+
+/*modifying recurring events -> this menu*/
+.modal--recurrence-scope .modal-header {
+  margin-bottom: 6px;
+}
+
+.modal--recurrence-scope .modal-body {
+  padding-top: 0;
+}
+
+.modal--recurrence-scope .modal-recurrence-line--spaced {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.modal--recurrence-scope .modal-recurrence-line--spaced+.modal-detail-stack--recurrence-scope {
+  margin-top: 10px;
+}
+
+.modal--recurrence-scope .modal-detail-stack--recurrence-scope {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
+}
+
+.modal--recurrence-scope .modal-detail-stack--recurrence-scope .MuiButton-root {
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  box-shadow: none;
+}
+
+.modal--recurrence-scope .modal-detail-stack--recurrence-scope .MuiButton-outlined {
+  border-width: 1.5px;
+  border-color: #111111;
+  color: #111111;
+}
+
+.modal--recurrence-scope .modal-detail-stack--recurrence-scope .MuiButton-outlined:hover {
+  border-color: #111111;
+  color: white;
+  background-color: black;
+  box-shadow: none;
+}
+
+.modal--recurrence-scope .modal-footer .MuiButton-root {
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  font-family: 'Inter', sans-serif;
+}
+
+.button-primary {
+  background: #E31429;
+  color: #fff;
+  border: 1.5px solid #E31429;
+  box-shadow: none;
+}
+
+.button-primary:hover {
+  background: #b01020;
+  border-color: #b01020;
+  box-shadow: none;
+}
+
+.button-outline {
+  background: #fff;
+  color: #111;
+  border: 1.5px solid #ccc;
+}
+
+.button-ghost {
+  background: transparent;
+  border: none;
+  color: #666;
+}
+
+.button-danger {
+  background: #fff;
+  border: 1.5px solid #cc2222;
+  color: #cc2222;
+}
+
+.button-small {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+.badge-pending,
+.badge-success {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-pending {
+  background: #fff8e1;
+  color: #7a5800;
+}
+
+.badge-success {
+  background: #d4edda;
+  color: #1a5c2a;
+}
+
+/* 
+   Export Calendar MODAL
+   Same modal shell as appointment detail / help; LGTM red accent and dashboard type.
+ */
+
+.export-calendar-modal {
+  max-width: 480px;
+}
+
+.export-calendar-modal .modal-body {
+  margin-bottom: 0;
+}
+
+.export-calendar-intro {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #5b6470;
+  font-weight: 500;
+}
+
+.export-calendar-participant-note {
+  margin: 0;
+}
+
+.export-calendar-radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.export-calendar-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.export-calendar-radio-option:hover {
+  border-color: #d0d0d0;
+  background: #fafafa;
+}
+
+.export-calendar-radio-option--selected {
+  border-color: #e31429;
+  background: #fff5f6;
+}
+
+.export-calendar-radio-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: #e31429;
+  flex-shrink: 0;
+}
+
+.export-calendar-radio-option:has(input:disabled) {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.export-calendar-error {
+  margin: 14px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b01020;
+}
+
+.sync-calendar-modal {
+  max-width: 560px;
+}
+
+.sync-calendar-url-block {
+  margin-top: 10px;
+}
+
+.sync-calendar-url-label {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sync-calendar-url-input {
+  width: 100%;
+  font-size: 12px;
+}
+
+.sync-calendar-instructions {
+  margin-top: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.sync-calendar-instructions p {
+  margin: 0;
+  font-size: 13px;
+  color: #444;
+  line-height: 1.45;
+}
+
+.sync-calendar-note {
+  margin: 14px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .button-primary {
+    height: 34px;
+    font-size: 12px;
+    padding: 0 14px;
+  }
+
+  .button-ghost {
+    height: 34px;
+    font-size: 12px;
+    padding: 0 14px;
+  }
+}
+
+
+/* 
+   HELP GUIDE MODAL
+   Reusable pop-up opened by the info icon in the sidebar.
+   It uses the same red accent, white surfaces, and compact dashboard typography.
+ */
+
+.help-guide-modal {
+  max-width: 760px;
+  max-height: calc(100vh - 32px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.create-item-modal {
+  max-width: 940px;
+}
+
+.help-guide-modal .modal-body {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  overflow-y: auto;
+  padding-right: 10px;
+  padding-bottom: 8px;
+  margin-bottom: 0;
+  overscroll-behavior: contain;
+}
+
+.help-guide-modal .modal-footer {
+  flex-shrink: 0;
+  background: #fff;
+}
+
+.help-guide {
+  display: grid;
+  gap: 18px;
+}
+
+.help-guide-eyebrow {
+  margin-top: 6px;
+  color: #E31429;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.help-guide-intro {
+  margin: 0;
+  color: #444;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.help-guide-tips {
+  border: 1px solid #f2c9ce;
+  background: #fff7f8;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.help-guide-tips h4,
+.help-guide-section h4 {
+  margin: 0 0 10px;
+  color: #111;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.help-guide-tips ul,
+.help-guide-section ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.help-guide-tips li,
+.help-guide-section li {
+  margin-bottom: 6px;
+}
+
+.help-guide-tips li:last-child,
+.help-guide-section li:last-child {
+  margin-bottom: 0;
+}
+
+.help-guide-sections {
+  display: grid;
+  gap: 12px;
+}
+
+.help-guide-section {
+  border: 1px solid #e9e9e9;
+  background: #fff;
+  border-radius: 12px;
+  padding: 15px 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* .help-guide-section::before {
+  content: '';
+  display: block;
+  width: 34px;
+  height: 3px;
+  border-radius: 999px;
+  background: #E31429;
+  margin-bottom: 10px;
+} */
+
+
+
+/* 
+   BOOKING PAGES
+   Styles below are shared between:
+     BookingDiscovery.jsx  — professor search page
+     BookingProfessor.jsx  — slot selection + confirmation page
+   Both pages are accessible to students from their dashboard.
+ */
+
+/* Scrollable full-height container for the booking pages */
+.booking-page {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px;
+  background: #f5f5f5;
+}
+
+/* White rounded card used to group page sections,
+   e.g. the search bar block or the professor info block */
+.booking-box {
+  max-width: 920px;
+  margin: 0 auto 32px;
+  background: #fff;
+  border: 1px solid #e4e4e4;
+  border-radius: 18px;
+  padding: 28px;
+}
+
+.booking-flow-box {
+  max-width: 1180px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 18px 48px rgba(20, 20, 20, 0.06);
+}
+
+.booking-box h1,
+.booking-box h2 {
+  /* Shared heading treatment for discovery and booking confirmation cards. */
+  margin: 0 0 10px;
+  font-size: 32px;
+  color: #111;
+}
+
+/* Descriptive text shown under the heading e.g. "Search for a professor..." */
+.booking-help-text {
+  margin: 0 0 22px;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* Professor discovery: field + custom clear (avoids ugly native search cancel). */
+.booking-search-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.booking-search-wrap--has-value .booking-search-box {
+  padding-right: 48px;
+}
+
+/* Search input on the professor discovery page.
+   Turns red on focus to match the McGill accent colour. */
+.booking-search-box {
+  width: 100%;
+  border: 1px solid #d8d8d8;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 15px;
+  font-family: inherit;
+  color: #111;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.booking-search-box:focus {
+  /* Focus ring helps keyboard users see exactly where they are typing. */
+  border-color: #E31429;
+  box-shadow: inset 0 0 0 4px rgba(227, 20, 41, 0.1);
+}
+
+.booking-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f1f1;
+  color: #4b5563;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.booking-search-clear:hover {
+  background: #e8e8e8;
+  color: #111827;
+}
+
+.booking-search-clear:focus-visible {
+  outline: 2px solid #e31429;
+  outline-offset: 2px;
+}
+
+
+@media (max-width: 768px) {
+  .booking-box {
+    margin: 0 auto 16px;
+    padding: 16px;
+  }
+
+  .booking-help-text {
+    margin: 0 0 12px;
+    padding: 0;
+    color: #555;
+    line-height: 1.6;
+    font-size: 13px;
+  }
+
+  .booking-search-box {
+    font-size: 12px;
+    height: 34px;
+  }
+
+  .booking-search-clear {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 50%;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f1f1f1;
+    color: #4b5563;
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+}
+
+/* 
+   PROFESSOR SEARCH RESULTS
+   The list of professors the student can book with.
+   Each card shows the professor's name, department, email,
+   and a button to go to their booking page.
+ */
+
+/* Vertically stacked list of professor cards */
+.professor-list {
+  max-width: 920px;
+  margin: 0 auto;
+  display: grid;
+  gap: 18px;
+}
+
+/* Individual professor card */
+.professor-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 22px;
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid #ebe8e8;
+}
+
+/* Professor name */
+.professor-card h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+}
+
+/* Department, email, and bio text below the name */
+.professor-card-subtitle,
+.professor-card-email,
+.professor-card-description {
+  margin: 0 0 6px;
+  color: #666;
+  font-size: 14px;
+}
+
+.professor-card-email{
+  color: black;
+}
+
+/* Bio / description gets slightly more breathing room */
+.professor-card-description {
+  margin: 0 0 0px;
+  color: #555;
+  line-height: 1.6;
+}
+
+/* "View availability" call-to-action button on each professor card */
+.professor-card-button {
+  background: #E31429;
+  border: 2px solid #e31429;
+  border-radius: 999px;
+  color: #fff;
+  padding: 0 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  height:34px;
+}
+
+.professor-card-button:hover {
+  background: white;
+  border: 2px solid #e31429;
+  color: #e31429;
+  /* box-shadow: 0 8px 20px rgba(227, 20, 41, 0.18); */
+  box-shadow: none !important;
+}
+
+/* Shown when the search returns no results */
+.booking-empty-message {
+  max-width: 920px;
+  margin: 0 auto;
+  color: #666;
+  font-size: 15px;
+}
+
+@media (max-width: 768px) {
+  .professor-card {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px 16px 16px 16px;
+    gap: 6px;
+  }
+
+  .professor-card h2 {
+    margin: 0 0 8px;
+    font-size: 20px;
+  }
+
+  .professor-card-subtitle,
+  .professor-card-email,
+  .professor-card-description {
+    margin: 0 0 9px;
+    color: #666;
+    font-size: 12px;
+  }
+
+  .professor-card-email{
+    color: black;
+  }
+
+  .professor-card-button {
+    height: 54px;
+    font-size: 12px;
+    padding: 12px 14px;
+  }
+}
+
+/* 
+   BOOKING CONFIRMATION PAGE (BookingProfessor.jsx)
+   After the student picks a professor, this page shows their
+   available slots on the left and a booking summary on the right.
+ */
+
+/* Top row with professor name on the left and a back button on the right */
+.booking-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 0;
+  padding: 30px 34px 24px;
+  background: #fff;
+  border-bottom: 1px solid #eeeeee;
+}
+
+/* Row showing the professor's email alongside a mailto button */
+.booking-professor-email-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.booking-professor-email-row .professor-card-email {
+  /* Removes paragraph spacing so the email aligns with the button. */
+  margin: 0;
+}
+
+/* When .professor-card-button is used as an <a> tag (mailto link) */
+a.professor-card-button {
+  /* Keeps mailto links visually identical to normal buttons. */
+  text-decoration: none;
+  /* display: inline-block; */
+  box-sizing: border-box;
+}
+
+/* Smaller variant of the red button used for the email button */
+.booking-professor-email-btn {
+  padding: 10px 18px;
+  font-size: 13px;
+}
+
+.booking-professor-email-btn:hover {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* forcing both button and <a> to have the same style */
+a.professor-card-button,
+button.professor-card-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  text-decoration: none;
+  line-height: 1;
+}
+
+button.professor-card-button {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+}
+
+
+/* Feedback message shown after a booking attempt.
+   Use .success (green) or .error (red) as a modifier. */
+.booking-status-message {
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin: 20px 34px 0;
+  font-size: 14px;
+}
+
+.booking-status-message.success {
+  /* Green feedback means the booking action completed successfully. */
+  background: #e6ffed;
+  color: #1f7255;
+  border: 1px solid #b7f0c3;
+}
+
+.booking-status-message.error {
+  /* Red feedback means the booking action failed or needs attention. */
+  background: #ffe8e8;
+  color: #8f1d23;
+  border: 1px solid #f1c1c1;
+}
+
+.booking-week-calendar {
+  padding: 0 34px 28px;
+  background: #fff;
+}
+
+.booking-week-calendar .dash-calendar-panel {
+  border: 1px solid #ececec;
+  box-shadow: none;
+}
+
+/* .booking-calendar-kicker-outside {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #8f1d23;
+} */
+
+.booking-section-wrapper {
+  background: #fff;
+  padding: 26px 34px 34px;
+}
+
+.booking-section-header {
+  margin-bottom: 18px;
+}
+
+.booking-section-header .booking-calendar-kicker {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
+  color: black;
+  margin: 0;
+}
+
+.booking-section-wrapper .booking-layout {
+  padding: 0;
+}
+
+
+/* Three-column grid: monthly calendar + selected-day slots + booking summary */
+.booking-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.9fr) minmax(360px, 1.25fr) minmax(280px, 0.9fr);
+  gap: 22px;
+  align-items: start;
+  padding: 26px 34px 34px;
+  background: #fff;
+}
+
+/* Middle panel — list of the professor's open time slots for the selected date */
+.available-slots-panel {
+  background: #fafafa;
+  border: 1px solid #ececec;
+  border-radius: 22px;
+  padding: 22px;
+  min-height: 100%;
+}
+
+/* Heading above the slot list or the summary panel */
+.booking-section-title {
+  margin: 0 0 18px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #111;
+}
+
+/* Groups slots by day e.g. "Monday, April 14" */
+.booking-day-block {
+  margin-top: 18px;
+}
+
+.booking-day-block:first-child {
+  /* The first day group does not need extra top spacing. */
+  margin-top: 0;
+}
+
+/* Day heading inside each group */
+.booking-day-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+/* Individual time slot button the student can click to select */
+.available-slot-card {
+  width: 100%;
+  border: 1px solid #e6e6e6;
+  border-radius: 18px;
+  background: #fff;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.available-slot-card:hover {
+  /* Hover gives selectable slots the same card affordance as dashboard items. */
+  border-color: #dadada;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+}
+
+/* Highlighted state when the student has clicked this slot */
+.available-slot-card.selected {
+  border-color: #E31429;
+  background: #fff7f6;
+}
+
+/* Fully booked slot: shown greyed out, cannot be clicked */
+.available-slot-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.available-slot-card.disabled:hover {
+  /* Disabled slots should not lift or look selectable. */
+  box-shadow: none;
+  border-color: #e6e6e6;
+}
+
+/* "X spots left" text shown on each slot card */
+.available-slot-status {
+  font-size: 12px;
+  font-weight: 700;
+  color: #8f1d23;
+  background: #fff1f2;
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+
+.available-slot-status.full {
+  color: #b01020;
+}
+
+.available-slot-title {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #444;
+  line-height: 1.4;
+}
+
+.available-slot-location {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.selected-slot-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #fafafa;
+  border: 1px solid #ececec;
+  border-radius: 18px;
+  padding: 20px;
+  position: sticky;
+  top: 18px;
+}
+
+.selected-slot-panel h2 {
+  /* Keeps the summary heading compact beside the slot list. */
+  margin: 0;
+  font-size: 18px;
+  color: #111;
+}
+
+.selected-slot-panel .booking-empty-message {
+  color: #666;
+}
+
+/* Card summarising the selected slot details */
+.selected-slot-card {
+  border: 1px solid #e4e4e4;
+  border-radius: 16px;
+  padding: 18px;
+  background: #fff;
+  color: #111;
+}
+
+.selected-slot-date {
+  margin: 0 0 6px;
+  color: #555;
+  font-size: 13px;
+}
+
+.slot-detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  color: #444;
+  font-size: 14px;
+}
+
+/* White outlined button used for secondary actions e.g. "Clear selection" */
+.secondary-button {
+  height: 34px;
+  background: #fff;
+  color: #333;
+  border: 2px solid #d8d8d8;
+  border-radius: 999px;
+  padding: 0 20px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: box-shadow 0.15s;
+}
+
+.secondary-button:hover {
+  box-shadow: none !important;
+}
+
+
+/* keep calendar beside the time list and move summary below */
+@media (max-width: 1120px) {
+  .booking-layout {
+    grid-template-columns: minmax(300px, 0.95fr) minmax(340px, 1.2fr);
+  }
+
+  .selected-slot-panel {
+    grid-column: 1 / -1;
+    position: static;
+  }
+}
+
+/* On phones the full booking flow stacks a scrollable column */
+@media (max-width: 768px) {
+  .booking-page {
+    padding: 18px;
+  }
+
+  .booking-header,
+  .booking-layout {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .booking-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .selected-slot-panel {
+    grid-column: auto;
+  }
+
+  .booking-professor-email-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .professor-card-email {
+    flex: 1 100%;
+    /* forces it to first row */
+  }
+
+  .professor-card-button {
+    flex: 1;
+  }
+
+  a.professor-card-button,
+  button.professor-card-button {
+    /* height: 34px; */
+    padding: 12px 14px;
+    font-size: 14px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .booking-section-header .booking-calendar-kicker {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 700;
+    color: black;
+    margin: 0;
+  }
+
+
+}
+
+@media (max-width: 480px) {
+  .booking-professor-email-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .booking-professor-email-row .professor-card-email {
+    flex: 1 100%;
+  }
+
+  .booking-professor-email-row .professor-card-button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 34px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  /* slot card layout on mobile */
+  .available-slot-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .available-slot-status {
+    align-self: flex-start;
+  }
+}
+
+/* student upcoming appointments accept/reject buttons */
+@media (max-width: 480px) {
+  .appointment-item div[style*="grid"] {
+    display: flex !important;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: flex-end;
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: end;
+  }
+
+  .appointment-item .invite-action-button {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+    border-radius: 50%;
+  }
+
+    /* remove reserved space on mobile */
+  .appointment-item > div:nth-child(2) {
+    padding-right: 0;
+  }
+}
+
+
+/* troubleshooting: remove box-shadow and transform on hover */
+/* button.professor-card-button.secondary-button.booking-professor-email-btn,
+button.professor-card-button.secondary-button.booking-professor-email-btn:hover,
+button.professor-card-button.secondary-button.booking-professor-email-btn:focus,
+button.professor-card-button.secondary-button.booking-professor-email-btn:active {
+  box-shadow: none !important;
+  filter: none !important;
+  transform: none !important;
+} */
