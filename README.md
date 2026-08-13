@@ -2,10 +2,6 @@
 
 McGill Website
 
-TRAN,   	AMANDA,     	261158347 ;
-ZHANG,  	RITA,       	261167918 ;
-LI,     	JOCELYNE,   	261178604 ;
-DING,   	SHIRLEY,    	261168210 ;
 
 Each of our instructions are described in our seperate README files
 ## Running URL Link
